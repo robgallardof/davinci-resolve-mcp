@@ -7,6 +7,7 @@ import hmac
 import json
 import math
 import os
+import queue
 import secrets
 import socketserver
 import sys
@@ -78,12 +79,41 @@ class _Server(socketserver.TCPServer):
 
 class Bridge:
     """One listener, one native call at a time; project operations are injected."""
-    def __init__(self, resolve, config, dispatch):
+    def __init__(self, resolve, config, dispatch, alive=None, alive_every_s=5.0):
         self.config, self.dispatch = config, dispatch
+        # A bridge whose Resolve has closed must release the port, or the next session cannot start.
+        self.alive, self.alive_every_s = alive, alive_every_s
         self.auth = Authenticator(config["token"], config.get("auth_clock_skew_seconds", 60))
         self.session = secrets.token_hex(16)
         self._server = self._thread = None
         self.stop_mode = None
+        # Resolve's objects only answer on the script's own thread (fuscript.exe): when serve() blocks,
+        # the listener hands each call to that thread through this queue instead of calling Resolve itself.
+        self._jobs = queue.Queue()
+        self._pumping = False
+
+    def execute(self, operation, arguments, timeout=300):
+        if not self._pumping:
+            return self.dispatch(operation, arguments)
+        box, done = {}, threading.Event()
+        self._jobs.put((operation, arguments, box, done))
+        if not done.wait(timeout):
+            raise TimeoutError("Resolve did not answer in time; the call may still complete.")
+        if "error" in box:
+            raise box["error"]
+        return box["value"]
+
+    def _drain(self, wait_s=.05):
+        try:
+            operation, arguments, box, done = self._jobs.get(timeout=wait_s)
+        except queue.Empty:
+            return
+        try:
+            box["value"] = self.dispatch(operation, arguments)
+        except Exception as exc:
+            box["error"] = exc
+        finally:
+            done.set()
 
     @property
     def port(self):
@@ -100,7 +130,7 @@ class Bridge:
                         raise ValueError("Request too large or incomplete.")
                     message = json.loads(raw)
                     owner.auth.verify(message)
-                    value = owner.dispatch(message["operation"], message.get("arguments", {}))
+                    value = owner.execute(message["operation"], message.get("arguments", {}))
                     if message["operation"] == "health":
                         value = {**value, "session": owner.session}
                     response = {"id": message.get("id"), "ok": True, "result": value}
@@ -131,8 +161,19 @@ class Bridge:
         return self._wait()
 
     def _wait(self):
-        while self.stop_mode is None and self._thread.is_alive():
-            time.sleep(.1)
+        self._pumping = True
+        checked = time.monotonic()
+        try:
+            while self.stop_mode is None and self._thread.is_alive():
+                self._drain()
+                if self.alive is not None and time.monotonic() - checked >= self.alive_every_s:
+                    checked = time.monotonic()
+                    if not self.alive():
+                        self.stop_mode = "resolve_gone"
+        finally:
+            self._pumping = False
+            while not self._jobs.empty():  # never leave a caller hanging on shutdown
+                self._drain(0)
         self.stop()
         return {"stop_reason": self.stop_mode or "listener_closed"}
 

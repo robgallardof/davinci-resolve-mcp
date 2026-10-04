@@ -150,3 +150,26 @@ def test_resources_read_state_and_errors(forge):
     assert "warm_push" in asyncio.run(read("forge://styles"))
     forge.project.current = None
     assert asyncio.run(read("resolve://timeline"))["code"] == "NO_TIMELINE"
+
+
+def test_assembled_timeline_takes_the_source_rate_not_the_project_default(forge, tmp_path):
+    """A 30 fps phone clip in a 24 fps project must not be conformed to 24 (judder) on the new timeline."""
+    forge.project.settings["timelineFrameRate"] = "24"
+    clip = tmp_path / "phone.mp4"
+    clip.write_bytes(b"x")
+    result = forge("assemble_timeline", source=str(clip), cuts=[[1, 3], [5, 6]], name="Phone cut", format="tiktok")
+    assert result["ok"] and result["fps"] == 30 and result["resolution"] == "1080x1920"
+    assert forge.project.current.settings["timelineFrameRate"] == "30"
+    assert result["duration_s"] == 3
+
+
+def test_text_cards_keep_their_length_when_timeline_and_project_rates_differ(forge, tmp_path):
+    """Image sequences import at the project rate (24); on a 30 fps timeline a 3 s card must stay 3 s."""
+    forge.project.settings["timelineFrameRate"] = "24"
+    clip = tmp_path / "phone.mp4"
+    clip.write_bytes(b"x")
+    assert forge("assemble_timeline", source=str(clip), cuts=[[0, 10]], name="Rates", format="tiktok")["fps"] == 30
+    result = forge("add_text_overlay", text="Quise barrer mi cuarto", start_s=1.0, duration_s=3.0, style="creator")
+    assert result["ok"], result
+    card = forge.project.current.tracks[result["track"] - 1][0]
+    assert card.duration == 90 and card.mpi.fps == 30

@@ -27,6 +27,12 @@ class MediaPoolItem:
     def GetName(self): return self.name
 
     def GetMetadata(self): return dict(self.metadata)
+
+    def SetClipProperty(self, key, value):
+        if key != "FPS":
+            return False
+        self.fps = float(value)
+        return True
     def SetMetadata(self, values):
         self.metadata.update(values)
         return True
@@ -79,7 +85,8 @@ class MediaPool:
                 frames = sorted(p.glob("*.png"))
                 if not frames:
                     continue
-                item = MediaPoolItem(f"{p.name}_[0000-{len(frames) - 1:04d}].png", path=str(p), frames=len(frames))
+                item = MediaPoolItem(f"{p.name}_[0000-{len(frames) - 1:04d}].png", path=str(p), frames=len(frames),
+                                     fps=float(self.project.settings.get("timelineFrameRate", "30")))
             elif p.is_file():
                 item = MediaPoolItem(p.name, path=str(p), frames=self.project.resolve.import_frames)
             else:
@@ -97,7 +104,7 @@ class MediaPool:
         return True
 
     def CreateEmptyTimeline(self, name):
-        tl = Timeline(self.project, name, [[]])
+        tl = Timeline(self.project, name, [[]], fps=self.project.settings.get("timelineFrameRate", "30"))
         self.project.timelines.append(tl)
         return tl
 
@@ -108,9 +115,12 @@ class MediaPool:
             target_tracks = tl.audio_tracks if info.get("mediaType") == 2 else tl.tracks
             while len(target_tracks) < track:
                 target_tracks.append([])
-            item = TimelineItem(info["mediaPoolItem"], int(info["recordFrame"]),
-                                int(info["endFrame"]) - int(info["startFrame"]), edition=self.project.resolve,
-                                left=int(info["startFrame"]))
+            source_frames = int(info["endFrame"]) - int(info["startFrame"])
+            clip_fps = float(getattr(info["mediaPoolItem"], "fps", 0) or 0)
+            tl_fps = float(tl.GetSetting("timelineFrameRate") or 30)
+            frames = round(source_frames * tl_fps / clip_fps) if clip_fps else source_frames
+            item = TimelineItem(info["mediaPoolItem"], int(info["recordFrame"]), frames,
+                                edition=self.project.resolve, left=int(info["startFrame"]))
             target_tracks[track - 1].append(item)
             placed.append(item)
         return placed
@@ -334,7 +344,9 @@ class Timeline:
         return True
 
     def SetSetting(self, key, value):
-        if key.startswith("timelineResolution") and self.settings["useCustomSettings"] != "1":
+        if key == "timelineFrameRate" and any(self.tracks) and any(any(track) for track in self.tracks):
+            return False  # Resolve locks the rate once a timeline has clips
+        if (key.startswith("timelineResolution") or key == "timelineFrameRate") and self.settings["useCustomSettings"] != "1":
             return False  # Resolve requires custom settings before per-timeline resolution
         self.settings[key] = str(value)
         return True

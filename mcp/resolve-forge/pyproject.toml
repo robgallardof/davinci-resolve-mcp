@@ -7,7 +7,7 @@ dependencies = ["mcp[cli]>=1.30,<2", "pillow>=10.1", "imageio-ffmpeg>=0.6"]
 
 [project.optional-dependencies]
 # face anchors + highlight detection
-vision = ["opencv-python-headless>=4.9"]
+vision = ["opencv-python-headless>=4.9,<5"]  # 5.x dropped CascadeClassifier (face anchor)
 # local transcription (Free-edition captions / cut points). GPU when CUDA works, CPU otherwise.
 speech = ["faster-whisper>=1.1", "av>=12", "nvidia-cublas-cu12; sys_platform == 'win32' or sys_platform == 'linux'",
           "nvidia-cudnn-cu12<10; sys_platform == 'win32' or sys_platform == 'linux'"]

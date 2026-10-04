@@ -14,4 +14,16 @@
 - Rangos de audio: el startFrame/endFrame de un clip de audio usa el FPS que reporta el clip (o el del timeline);
   el redondeo a frames puede mover un corte al beat hasta un frame.
 
+- Frame rate: un timeline nuevo hereda el rate del PROYECTO (a menudo 24 fps). Con useCustomSettings=1 y antes de
+  añadir clips se fija timelineFrameRate al rate estándar más cercano a la fuente (un móvil reporta 29.92 → 30).
+- Secuencias de imágenes (tarjetas de texto/subtítulos) se importan al rate del PROYECTO: en un timeline de 30 fps
+  dentro de un proyecto de 24 duraban 1.25× y la animación iba lenta. Se fija SetClipProperty("FPS") al rate del
+  timeline tras importar (Resolve 21 Free lo acepta) y, si no, se recalcula endFrame.
+- Bridge en Free: los scripts corren en fuscript.exe y los objetos de Resolve solo responden en el hilo del script.
+  Las llamadas se encolan al hilo principal. Un fuscript huérfano de una sesión anterior de Resolve puede retener el
+  puerto (todos los objetos devuelven vacío): el bridge sale solo cuando su Resolve deja de responder, y `health`
+  informa `root_type`. Diagnóstico: proceso que escucha en el puerto vs hora de inicio de Resolve.
+- Proxies nativos pueden devolver dir() vacío: la lista de métodos se sondea contra la allowlist.
+- OpenCV 5 eliminó CascadeClassifier: `vision` fija opencv<5 y el ancla de cara cae a la posición por defecto si falta.
+
 Guardas correspondientes: tests/unit/test_bridge.py, test_edit_decisions.py, tests/integration/test_authoring_tools.py y test_story_and_beat_tools.py; render/Fusion cuentan además con la suite live existente.

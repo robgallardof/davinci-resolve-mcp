@@ -7,7 +7,7 @@ from ..domain import formats
 from ..gateway import Session, call
 from .context import ForgeError, current
 from .media_lookup import find_or_import
-from .native import mark_working
+from .native import mark_working, setup_new_timeline
 
 
 def assemble(session: Session, source: str, cuts: list[list[float]], *, name: str,
@@ -27,11 +27,7 @@ def assemble(session: Session, source: str, cuts: list[list[float]], *, name: st
     if timeline is None:
         raise ForgeError("CreateEmptyTimeline failed.", code=E.RESOLVE_REFUSED)
     project.SetCurrentTimeline(timeline)
-    if format:
-        fmt = formats.get(format)
-        for key, value in (("useCustomSettings", "1"), ("timelineResolutionWidth", str(fmt.width)),
-                           ("timelineResolutionHeight", str(fmt.height))):
-            timeline.SetSetting(key, value)
+    applied = setup_new_timeline(timeline, formats.get(format) if format else None, src_fps)
     record = int(timeline.GetStartFrame())
     tl_fps = float(timeline.GetSetting("timelineFrameRate") or ctx.fps)
     infos = []
@@ -44,4 +40,5 @@ def assemble(session: Session, source: str, cuts: list[list[float]], *, name: st
     return {"timeline": name, "clips": len(placed), "requested": len(cuts),
             "duration_s": round((record - int(timeline.GetStartFrame())) / tl_fps, 2),
             "resolution": f"{timeline.GetSetting('timelineResolutionWidth')}x{timeline.GetSetting('timelineResolutionHeight')}",
+            "fps": tl_fps, "settings": applied,
             "next": "apply_motion / add_text_overlay / render_for"}

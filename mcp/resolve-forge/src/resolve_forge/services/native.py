@@ -115,3 +115,31 @@ def verify(expected, actual, label):
         same = False
     if not same:
         raise ForgeError(f"Resolve did not retain {label}: expected {expected!r}, got {actual!r}.", code="READBACK_FAILED")
+
+
+STANDARD_RATES = (23.976, 24.0, 25.0, 29.97, 30.0, 47.952, 48.0, 50.0, 59.94, 60.0)
+
+
+def standard_rate(fps):
+    """Nearest standard timeline rate (phone video reports e.g. 29.92 for a 30 fps recording)."""
+    return min(STANDARD_RATES, key=lambda rate: abs(rate - float(fps)))
+
+
+def setup_new_timeline(timeline, fmt=None, fps=None):
+    """Resolution of a platform format and the source's frame rate on a timeline that has no clips yet.
+
+    Without this a new timeline inherits the project rate (often 24 fps) and a 30 fps phone clip judders.
+    Returns the readback so callers can report it; a refused rate is reported, not hidden.
+    """
+    settings = []
+    if fmt is not None:
+        settings += [("timelineResolutionWidth", str(fmt.width)), ("timelineResolutionHeight", str(fmt.height))]
+    if fps:
+        rate = standard_rate(fps)
+        settings.append(("timelineFrameRate", str(int(rate)) if rate == int(rate) else str(rate)))
+    if not settings:
+        return {}
+    timeline.SetSetting("useCustomSettings", "1")
+    for key, value in settings:
+        timeline.SetSetting(key, value)
+    return {key: timeline.GetSetting(key) for key, _ in settings}

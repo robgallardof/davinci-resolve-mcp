@@ -7,7 +7,7 @@ from ..errors import ForgeError
 from ..gateway import call
 from .context import current
 from .media_lookup import find_or_import
-from .native import accepted, mark_working, number, name as validate_name
+from .native import accepted, mark_working, number, name as validate_name, setup_new_timeline
 
 
 def assemble(session, shots, name, format=None, music_source=None, music_start_s=0.0, dry_run=True):
@@ -64,9 +64,7 @@ def assemble(session, shots, name, format=None, music_source=None, music_start_s
     timeline = accepted(ctx.media_pool, "CreateEmptyTimeline", name)
     accepted(ctx.project, "SetCurrentTimeline", timeline)
     mark_working(session, current(session))
-    if fmt:
-        for key, value in (("useCustomSettings", "1"), ("timelineResolutionWidth", str(fmt.width)), ("timelineResolutionHeight", str(fmt.height))):
-            accepted(timeline, "SetSetting", key, value)
+    setup_new_timeline(timeline, fmt, source_ranges[0][1])
     tl_fps = float(timeline.GetSetting("timelineFrameRate") or ctx.fps)
     origin = int(timeline.GetStartFrame())
     record, infos = origin, []

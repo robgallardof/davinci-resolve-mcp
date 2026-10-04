@@ -51,3 +51,20 @@ def test_scene_boundaries_are_measured_in_source_time(tmp_path):
     result = analysis_service.scenes(Session([]), str(path), minimum_gap_s=.1)
     assert result["boundaries_s"] == pytest.approx([1])
     assert result["scenes"] == [[0, 1], [1, 2]]
+
+
+def test_highlights_of_a_file_need_no_resolve(tmp_path):
+    cv2 = pytest.importorskip("cv2")
+    import numpy as np
+    from resolve_forge.services import highlight_service
+    path = tmp_path / "clip.mp4"
+    out = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), 10, (64, 64))
+    for i in range(60):  # 6 s: still, then motion in the middle
+        frame = np.zeros((64, 64, 3), np.uint8)
+        if 20 <= i < 40:
+            frame[:, (i * 3) % 64:] = 255
+        out.write(frame)
+    out.release()
+    result = highlight_service.find(Session([]), str(path), top=2, window_s=2)
+    assert result["source"] == str(path.resolve()) and result["highlights"]
+    assert 1 <= result["highlights"][0]["start_s"] <= 4

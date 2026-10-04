@@ -75,3 +75,13 @@ def test_motion_per_second_on_a_real_file(tmp_path):
     per_s, fps = motion_per_second(str(path))
     assert fps == pytest.approx(10) and len(per_s) == 4
     assert per_s[3] > per_s[0] + 1
+
+
+def test_face_anchor_degrades_gracefully_without_the_haar_detector(monkeypatch):
+    """OpenCV 5 has no CascadeClassifier: locating a face returns None (default anchor), never crashes."""
+    import types
+    import sys
+    from resolve_forge.analysis import faces
+    monkeypatch.setitem(sys.modules, "cv2", types.SimpleNamespace(VideoCapture=lambda *_: None))
+    assert faces.available() is False
+    assert faces.locate("any.mp4") is None

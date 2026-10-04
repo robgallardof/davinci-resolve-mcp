@@ -83,3 +83,72 @@ def test_wire_roundtrip_preserves_json_values_and_capability_absence(tmp_path):
     finally:
         bridge.stop()
     assert bridge._thread.is_alive() is False
+
+
+def test_native_objects_with_an_empty_dir_still_expose_allowlisted_methods(tmp_path):
+    """Resolve 21 Free proxies can report dir() == []; the allowlist is then probed directly, nothing more."""
+    class Opaque:
+        def __dir__(self):
+            return []
+
+        def GetVersionString(self):
+            return "21.0.4.5"
+
+        def execute(self, code):  # outside the allowlist: must stay unreachable
+            raise AssertionError("arbitrary execution")
+
+    surface = ResolveOperations(Opaque(), [str(tmp_path)], [str(tmp_path)])
+    assert surface.dispatch("list_methods", {"target": "resolve"})["methods"] == ["GetVersionString"]
+    assert surface.dispatch("call", {"target": "resolve", "method": "GetVersionString", "args": []})["value"] == "21.0.4.5"
+    with pytest.raises(OperationError):
+        surface.dispatch("call", {"target": "resolve", "method": "execute", "args": ["x"]})
+
+
+def test_blocking_bridge_runs_every_native_call_on_the_script_thread(tmp_path):
+    """fuscript.exe only answers on the thread that launched the script; the listener must not call Resolve."""
+    import threading
+    seen = []
+    resolve = demo_resolve(studio=False)
+    surface = ResolveOperations(resolve, [str(tmp_path)], [str(tmp_path)])
+
+    def dispatch(operation, arguments):
+        seen.append(threading.current_thread().name)
+        return surface.dispatch(operation, arguments)
+
+    config = {"host": "127.0.0.1", "port": 0, "token": TOKEN}
+    bridge = Bridge(resolve, config, dispatch)
+    outcome = {}
+    script = threading.Thread(target=lambda: outcome.update(bridge.serve({"blocking_required": True})), name="script")
+    script.start()
+    try:
+        while bridge._server is None or not bridge._pumping:
+            pass
+        client = Client({**config, "port": bridge.port})
+        assert Proxy(client, "resolve").GetVersionString() == "21.0.4.5"
+        with pytest.raises(Exception, match="native-call boundary"):
+            client.request("call", {"target": "resolve", "method": "NotAllowed", "args": []})
+    finally:
+        bridge.request_stop("exit")
+        script.join(5)
+    assert seen and set(seen) == {"script"}
+    assert outcome == {"stop_reason": "exit"}
+
+
+def test_bridge_releases_its_port_when_resolve_goes_away(tmp_path):
+    """An orphaned fuscript from a closed Resolve session must not keep the port for the next one."""
+    from resolve_forge.bridge.resolve_bridge_ops import resolve_alive
+    resolve = demo_resolve(studio=False)
+    assert resolve_alive(resolve) and not resolve_alive(object())
+    state = {"alive": True}
+    surface = ResolveOperations(resolve, [str(tmp_path)], [str(tmp_path)])
+    bridge = Bridge(resolve, {"host": "127.0.0.1", "port": 0, "token": TOKEN}, make_dispatch(surface),
+                    alive=lambda: state["alive"], alive_every_s=0.05)
+    import threading
+    outcome = {}
+    script = threading.Thread(target=lambda: outcome.update(bridge.serve({"blocking_required": True})))
+    script.start()
+    while not bridge._pumping:
+        pass
+    state["alive"] = False
+    script.join(5)
+    assert outcome == {"stop_reason": "resolve_gone"} and bridge._server is None

@@ -31,7 +31,8 @@ def main(resolve_object):
             return {"requested": mode}
         surface = operations.ResolveOperations(resolve_object, config.get("allowed_media_roots", [os.path.expanduser("~")]),
             config.get("allowed_output_roots", [str(Path.home() / "Movies")]), lifecycle)
-        bridge = wire.Bridge(resolve_object, config, operations.make_dispatch(surface))
+        bridge = wire.Bridge(resolve_object, config, operations.make_dispatch(surface),
+                             alive=lambda: operations.resolve_alive(resolve_object))
         holder["bridge"] = bridge
         print("resolve-forge bridge: 127.0.0.1:" + str(config["port"]))
         outcome = bridge.serve()

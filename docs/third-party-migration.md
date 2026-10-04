@@ -19,7 +19,7 @@ media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP 
 | 8. Documentación, skills y roles al día | ✅ Hecho | README (tabla verificada por test), skill `editorial-direction` |
 | 9. Prueba live de las fases 6–7 | ⏳ Pendiente | `tests/live/test_live_production.py` (listo, falta ejecutarlo con el bridge) |
 
-En números: 52 tools, 483 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
+En números: 52 tools, 497 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
 la suite live con Resolve abierto y el bridge iniciado (Workspace → Scripts → resolve_bridge).
 
 ## Arquitectura
@@ -60,7 +60,7 @@ No se incorporan cientos de wrappers de getters, gestión de bases de datos/clou
 
 Los contratos se prueban en cuatro configuraciones (Free/Studio, bridge/directo y keyframes presentes/ausentes). Hay pruebas de aislamiento de master, rechazos nativos, marcadores relativos, deduplicación, ambigüedad, DAG, autenticación/replay, audio/escenas sintéticos y loudness del archivo final. La conexión y las lecturas se verifican en Resolve Free 21.0.4.5 con el bridge propio.
 
-Verificación de esta migración: 483 pruebas sin Resolve aprobadas; pruebas en Resolve real de render con comparación de píxeles, motion/clear, formato vertical, subtítulos, marcadores, CDL y grafos Fusion. El paquete wheel se construye sin módulos de los servidores externos; los proyectos de prueba se conservan y se restaura el proyecto anterior.
+Verificación de esta migración: 497 pruebas sin Resolve aprobadas; pruebas en Resolve real de render con comparación de píxeles, motion/clear, formato vertical, subtítulos, marcadores, CDL y grafos Fusion. El paquete wheel se construye sin módulos de los servidores externos; los proyectos de prueba se conservan y se restaura el proyecto anterior.
 
 La disponibilidad de un método no garantiza que la edición/licencia acepte su ejecución: se comprueba el retorno. CDL solo puede verificarse por aceptación nativa y revisión visual. Los onsets son candidatos de energía, no un modelo de tempo/downbeat. No se afirma cobertura universal de todas las APIs de Resolve.
 
@@ -73,7 +73,7 @@ Se retiraron el segundo servidor, patches, config/references.json y scripts/refe
 Lee esto antes de seguir. Última actualización: 2026-10-04.
 
 ### Hecho
-- Migración: Forge propio (52 tools), bridge propio, sin código ni servidores de terceros; 483 pruebas sin Resolve.
+- Migración: Forge propio (52 tools), bridge propio, sin código ni servidores de terceros; 497 pruebas sin Resolve.
 - Diseño de textos (pedido: subtítulos "bonitos", animados, no simples): estilos `creator`, `studio`, `editorial`,
   `impact` con palabra activa, acento de marca, entradas `fade/lift/pop`, `reduced_motion`, preview PNG/WebP
   (`list_text_styles`, `preview_text_style`). Legacy `box/outline/yellow/dark` solo a pedido.

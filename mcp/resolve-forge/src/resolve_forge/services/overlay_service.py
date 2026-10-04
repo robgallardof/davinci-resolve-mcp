@@ -25,6 +25,19 @@ OVERLAY_ROOT = DEFAULT_OUTPUT / "overlays"  # under ~/Movies: readable by the Fr
 POOL_FOLDER = "forge-overlays"
 
 
+def _conform_rate(clip, fps):
+    """Image sequences import at the PROJECT rate; a 30 fps timeline in a 24 fps project would stretch
+    every card 1.25x and slow its animation. Set the sequence to the timeline rate (readback-checked)."""
+    call(clip, "SetClipProperty", "FPS", f"{fps:g}")
+    return clip
+
+
+def _source_frames(clip, frames, fps):
+    """Frames of the sequence that fill `frames` timeline frames, if Resolve kept another clip rate."""
+    clip_fps = float(call(clip, "GetClipProperty", "FPS", default=0) or fps)
+    return max(1, round(frames * clip_fps / fps)) if abs(clip_fps - fps) > 1e-3 else frames
+
+
 def _letters(n: int) -> str:
     """0 -> 'aa', 1 -> 'ab' ... Folder names must not end in digits or Resolve merges sequences."""
     result = ""
@@ -121,13 +134,13 @@ def place_cards(session: Session, cards: list[Span | CaptionCue], *, style: str 
             if len(imported) != 1:
                 raise ForgeError(f"Resolve imported {len(imported)} clips for card {i + 1}.", code=E.RESOLVE_REFUSED,
                                  hint="On Free the bridge only reads inside your user profile.")
-            clips.append((imported[0], card, frames))
+            clips.append((_conform_rate(imported[0], ctx.fps), card, frames))
     finally:
         if previous is not None:
             call(pool, "SetCurrentFolder", previous)
     ctx = working_copy(session, "text")
     index = _target_track(ctx, track)
-    infos = [{"mediaPoolItem": clip, "startFrame": 0, "endFrame": frames,
+    infos = [{"mediaPoolItem": clip, "startFrame": 0, "endFrame": _source_frames(clip, frames, ctx.fps),
               "recordFrame": ctx.seconds_to_frame(card.start), "trackIndex": index, "mediaType": 1}
              for clip, card, frames in clips]
     placed = pool.AppendToTimeline(infos) or []

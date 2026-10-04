@@ -22,19 +22,19 @@ class FaceTrack:
 
 
 def available() -> bool:
+    """OpenCV with the Haar face detector (OpenCV 5 removed CascadeClassifier from the main module)."""
     try:
-        import cv2  # noqa: F401
-        return True
+        import cv2
     except ImportError:
         return False
+    return hasattr(cv2, "CascadeClassifier") and hasattr(cv2, "data")
 
 
 def locate(path: str, start_frame: int = 0, end_frame: int | None = None, samples: int = 12) -> FaceTrack | None:
     """Median face position over `samples` frames in [start_frame, end_frame)."""
-    try:
-        import cv2
-    except ImportError:
+    if not available():
         return None
+    import cv2
     cap = cv2.VideoCapture(path)
     if not cap.isOpened():
         return None

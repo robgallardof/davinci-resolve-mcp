@@ -117,7 +117,9 @@ class ResolveOperations:
         if not isinstance(args, dict) or operation not in self.OPERATIONS:
             raise OperationError("INVALID_OPERATION", "Unsupported bridge operation.")
         if operation == "health":
-            return {"implementation": "resolve-forge", "protocol": "1.0", "operations": self.OPERATIONS}
+            root = self.objects.get("resolve")
+            return {"implementation": "resolve-forge", "protocol": "1.0", "operations": self.OPERATIONS,
+                    "root_type": type(root).__name__}  # diagnoses a launcher that received no Resolve object
         if operation in {"reload", "shutdown"}:
             if self.lifecycle is None:
                 raise OperationError("LIFECYCLE_UNAVAILABLE", "Restart the Scripts entry.")
@@ -128,7 +130,9 @@ class ResolveOperations:
                     self.identities.pop(id(self.objects.pop(handle)), None)
             return {"remaining": len(self.objects)}
         target = self.object(args.get("target", "resolve"))
-        methods = {name for name in dir(target) if name in METHODS and callable(getattr(target, name, None))}
+        # Native proxies may report an empty dir() (seen on Resolve 21 Free); then probe the allowlist directly.
+        listed = METHODS.intersection(dir(target)) or METHODS
+        methods = {name for name in listed if callable(getattr(target, name, None))}
         if methods & {"AddTool", "ConnectInput", "FindTool"}:
             methods |= {name for name in ("GetAttrs", "SetAttrs") if callable(getattr(target, name, None))}
         if operation == "list_methods":
@@ -145,6 +149,15 @@ class ResolveOperations:
         arguments = self.decode(args.get("args", []))
         self.policy.validate(name, arguments)
         return {"value": self.encode(getattr(target, name)(*arguments))}
+
+
+def resolve_alive(resolve):
+    """True while the Resolve session that launched the script still answers."""
+    try:
+        version = getattr(resolve, "GetVersionString", None)
+        return callable(version) and bool(version())
+    except Exception:
+        return False
 
 
 def make_dispatch(operations):
