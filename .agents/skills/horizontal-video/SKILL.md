@@ -13,8 +13,9 @@ Un solo método para todos los destinos 16:9. Las specs por plataforma salen de
 1. **Estado**: `forge_status` y `list_clips`.
 2. **Formato**. Si la fuente es vertical: `make_platform_version(format="youtube_1080" | "facebook_1080" | ...)`.
    El clip se escala para llenar el 16:9 alrededor del sujeto. Si recortar demasiado arruina el plano, usa un
-   fondo desenfocado (Fusion o `davinci-resolve`) con el vertical encima.
-3. **Assembly** (con `davinci-resolve`): ordena tomas, quita retomas y silencios, y marca capítulos con markers.
+   fondo desenfocado (Fusion o `resolve-forge`) con el vertical encima.
+3. **Assembly** (con `resolve-forge`): ordena tomas, quita retomas y silencios, y marca capítulos con markers.
+   Según el género (podcast, comedia, videoclip, cine), aplica la skill `editorial-direction` (`plan_edit`).
 4. **Ritmo**: un cambio visual cada **3–7 s**. De mayor a menor valor: B-roll que *muestra* lo dicho,
    gráfico o texto, punch-in, cambio de cámara.
 5. **Movimiento** (skill `dynamic-zoom-talking-head`):
@@ -26,10 +27,11 @@ Un solo método para todos los destinos 16:9. Las specs por plataforma salen de
 6. **Hook por destino**:
    - YouTube / web: la promesa del título en 5–10 s, más un preview del mejor momento.
    - Facebook / LinkedIn / X: autoplay sin sonido, así que el mensaje tiene que entenderse con subtítulos
-     en los primeros 3 s: `add_captions(style="dark" | "outline", position="bottom", max_words=5)`.
+     en los primeros 3 s: `add_captions(style="studio", position="bottom")` (o `auto`; revisa antes con `preview_text_style`).
      Considera también una versión `square` o `feed_4x5`.
-   - Títulos, nombres o lower thirds: `add_text_overlay(..., style="dark", position="bottom")`.
-7. **Audio**: Voice Isolation, música −18 a −24 dB bajo la voz, −14 LUFS y −1 dBTP.
+   - Títulos, nombres o lower thirds: `add_text_overlay(..., style="studio" | "editorial", position="bottom")`.
+7. **Audio**: Voice Isolation; música bajo la voz con `add_music_bed(music_source)` (ducking desde la transcripción,
+   preview primero); −14 LUFS y −1 dBTP.
 8. **YouTube**: deja libres los últimos 20 s para el end screen; los capítulos salen de los markers.
 9. **Entrega** (skill `resolve-delivery`): `render_for(format=...)`.
 

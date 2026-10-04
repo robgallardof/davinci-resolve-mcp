@@ -1,16 +1,17 @@
 ---
 name: davinci-resolve-mcp
-description: "Operar DaVinci Resolve (Free o Studio) desde un agente vía MCP (resolve-forge + davinci-resolve). Úsala antes de cualquier tarea que toque Resolve — conectar, proyecto/timeline, media, edición, color, Fusion, render — para elegir el servidor y la tool correctos, arrancar el bridge en la versión Free y evitar las trampas conocidas de la API. Triggers: davinci, resolve, timeline, render, fusion, media pool, edit page."
+description: "Operar DaVinci Resolve (Free o Studio) desde un agente vía MCP (resolve-forge). Úsala antes de cualquier tarea que toque Resolve — conectar, proyecto/timeline, media, edición, color, Fusion, render — para elegir el servidor y la tool correctos, arrancar el bridge en la versión Free y evitar las trampas conocidas de la API. Triggers: davinci, resolve, timeline, render, fusion, media pool, edit page."
 ---
 
 # Operar DaVinci Resolve con MCP
 
-Hay dos servidores que se usan juntos:
+Hay un solo servidor con edición por intención y herramientas de API:
 
 | Servidor | Para qué |
 |---|---|
-| `resolve-forge` (16 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
-| `davinci-resolve` (upstream, 37 tools) | Todo lo demás: media pool, markers, color, Fairlight, Fusion granular, transcripción, análisis |
+| `resolve-forge` — intención (de 52 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` — producción | Dirección por género y música (skill `editorial-direction`): `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`, `create_music_visualizer`, `align_text` (letra/guion exactos), `place_sound_effects` (SFX motivados), `add_music_bed` (música bajo la voz con ducking); diseño de textos: `list_text_styles`, `preview_text_style` |
+| `resolve-forge` — authoring | Proyectos/backups, bins/media, markers/QC, tracks/versiones, CDL/LUT, Fusion DAG, audio/escenas/loudness, capacidades |
 
 ## Arranque (siempre)
 
@@ -63,7 +64,7 @@ Para leer estado sin tools: resources `resolve://status`, `resolve://timeline`, 
 - Fusion: los valores escritos dentro de `comp.Lock()` se ignoran al render.
 - Bridge (Free): todo viaja como JSON (las claves numéricas de los dicts llegan como string) y no hay indexación `tool["X"]`. Usa métodos.
 - Media e import en Free: solo desde rutas dentro de las raíces del bridge (perfil del usuario; `AppData\Temp` se rechaza).
-- Más quirks, con evidencia: `vendor/davinci-resolve-mcp/src/utils/api_truth.py`.
+- Más quirks, con evidencia: `docs/api-behavior.md`.
 
 ## Qué skill sigue
 

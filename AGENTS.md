@@ -8,8 +8,6 @@ compatible con `AGENTS.md`, Agent Skills (`SKILL.md`) y MCP: Claude Code, Codex,
 | Ruta | Qué es |
 |---|---|
 | `mcp/resolve-forge/` | MCP propio: motion para talking heads, versiones por plataforma y render. Python 3.12 + uv |
-| `vendor/davinci-resolve-mcp/` | MCP upstream (samuelgursky, MIT) con cobertura total de la API. Instalado con venv propio |
-| `vendor/ref-*` | Otros MCPs de Resolve clonados solo como referencia de diseño (no se ejecutan) |
 | `.agents/skills/` | Skills portables (fuente canónica) |
 | `.agents/agents/` | Roles/subagentes portables (fuente canónica) |
 | `config/mcp.servers.json` | Fuente única de servidores MCP → `python scripts/sync.py` genera los configs de cada cliente |
@@ -25,21 +23,24 @@ compatible con `AGENTS.md`, Agent Skills (`SKILL.md`) y MCP: Claude Code, Codex,
    - **16:9** (YouTube, Facebook, LinkedIn, X, web) → `.agents/agents/horizontal-editor.md`
    - Ambas o varias entregas → `.agents/agents/video-director.md`
    Si tu runtime no tiene subagentes, lee el archivo del rol y síguelo tú mismo.
-3. Skills: `vertical-video`, `horizontal-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp`.
+3. Skills: `vertical-video`, `horizontal-video`, `editorial-direction` (criterio por género: comedia, música, entrevista…),
+   `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp`.
 4. **Seguridad**: nunca modifiques el master sin copia; no borres media ni proyectos sin un pedido explícito;
    guarda el proyecto antes de renderizar. En Free, renderiza dentro de `~/Movies`.
 
 ## Desarrollo de resolve-forge
 
-- Capas: `domain/` (puro, sin Resolve) → `services/` (casos de uso + backends) → `tools.py` (MCP fino) → `server.py` (composición).
+- Capas: `domain/` (puro, sin Resolve) → `services/` (casos de uso + backends) → `tools.py`, `authoring_tools.py`,
+  `production_tools.py` (MCP fino) → `server.py` (composición).
   `gateway.py` es lo único que sabe cómo se conecta con Resolve.
 - Añadir un estilo de motion: registra una función con `@style(...)` en `domain/styles.py`. No hace falta tocar nada más.
 - Añadir un backend de animación: implementa `apply`/`clear` en `services/appliers.py` y regístralo en `APPLIERS`.
 - Tests: `cd mcp/resolve-forge && uv run pytest` (sin Resolve: fakes de Free/bridge, Studio y Resolve 19, stdio
   real, consistencia del workspace) y `uv run pytest -m live` (end-to-end con render y comparación de píxeles).
 - Las specs de plataformas viven en `domain/formats.py`; `references/platforms.md` se genera desde ahí.
-- Antes de "descubrir" un comportamiento raro de la API, búscalo en `vendor/davinci-resolve-mcp/src/utils/api_truth.py`.
+- Antes de "descubrir" un comportamiento raro de la API, búscalo en `docs/api-behavior.md`.
 - Tras editar `config/` o `.agents/`, ejecuta `python scripts/sync.py`.
-- MCPs de terceros: `config/references.json` (commit fijado) + `patches/<repo>/`. Para mejorar uno: commitea en
-  `vendor/<repo>`, `python scripts/references.py export <repo>` y `test <repo>`. Nunca modifiques un repo sin
-  licencia (Tooflex): solo revisión escrita en `docs/mcp-reviews.md`.
+- Al añadir una tool: inclúyela en la tabla del README y actualiza los conteos (`test_workspace` lo comprueba),
+  menciónala en la skill que corresponda y anota el avance en la sección de estado de `docs/third-party-migration.md`.
+- Implementaciones propias: no copies servidores ni módulos de competidores. Mantén domain → services → tools y transportes aislados.
+  Registro de procedencia y mejoras: `docs/third-party-migration.md`.

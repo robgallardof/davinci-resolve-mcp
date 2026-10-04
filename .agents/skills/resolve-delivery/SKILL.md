@@ -12,7 +12,7 @@ También está disponible en vivo con `list_formats`.
 
 1. `forge_status`: el timeline correcto, a la resolución del formato destino. Si no coincide, usa primero `make_platform_version`.
    Varias plataformas con la misma resolución (por ejemplo TikTok, Reels y Shorts) pueden salir del mismo timeline.
-2. Loudness en Fairlight (con `davinci-resolve` o a mano): el target está en la columna LUFS (−12 a −14) y el true peak en −1 dBTP.
+2. Loudness en Fairlight (con `resolve-forge` o a mano): el target está en la columna LUFS (−12 a −14) y el true peak en −1 dBTP.
    Studio: Deliver → Audio → Normalize Audio.
 3. Guarda el proyecto.
 4. `render_for(format, name=...)`. Sin `target_dir` escribe en `~/Movies/resolve-forge`.

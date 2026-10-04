@@ -15,7 +15,7 @@ project = resolve.GetProjectManager().GetCurrentProject()
 tl = project.GetCurrentTimeline()
 ```
 
-Usa Python 3.10–3.12 (el venv del upstream usa 3.12).
+Usa Python 3.10–3.12 (el venv de resolve-forge usa 3.12).
 
 ## Timeline e items
 

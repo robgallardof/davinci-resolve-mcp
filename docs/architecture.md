@@ -8,7 +8,7 @@ tools.py ──► services/ ──► domain/          (puro: sin Resolve, 100 
                │  appliers ─────► Strategy: EditKeyframeApplier | FusionTransformApplier
                │  subject  ─────► analysis/faces (opencv opcional)
                ▼
-            gateway.py ──► DirectTransport (DaVinciResolveScript) | BridgeTransport (upstream, Free)
+            gateway.py ──► DirectTransport (DaVinciResolveScript) | BridgeTransport (bridge/ propio, Free)
 server.py = raíz de composición (crea Session, registra tools)
 ```
 
@@ -31,6 +31,27 @@ services/highlight_service     clip → ventanas destacadas
 services/media_lookup          clip del media pool por nombre o ruta (importa si hace falta)
 ```
 
+### Authoring y transporte propios
+
+```
+authoring_tools.py / production_tools.py   schemas MCP de proyecto, media, timeline, color, audio, Fusion, QC y montaje
+domain/edit_decisions, editorial, fusion_graph, lut, text_design   reglas puras (cortes, DAG, tablas .cube, tipografía)
+services/native.py             capacidades, rechazos nativos, readback y copias del timeline
+bridge/                        protocolo HMAC + antireplay, lista explícita de métodos, cliente y ops dentro de Resolve
+bridge_install/                instala nuestro bridge en Workspace → Scripts (conserva token y raíces)
+native_paths.py                rutas del SDK por sistema operativo
+production_tools.py            align_text, place_sound_effects, add_music_bed, plan_edit, find_story_moments, analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer
+domain/sound_design            SFX con motivo obligatorio, densidad revisada, carriles sin solapes
+services/sfx_service           ganancia horneada en WAV nuevo (ffmpeg) y pistas de audio nuevas en una copia
+domain/ducking                 regiones de voz → curva de ganancia (ataque, release, fades)
+services/music_bed_service     música estéreo 48 kHz con ducking horneado, en pista nueva de una copia
+domain/alignment               texto conocido (letra/guion) alineado a los tiempos reconocidos
+domain/story_moments, beat_cuts   candidatos de remate/reacción/pregunta/acento; slots de corte por frases del beat
+services/story_service, music_service   transcripción + energía de la fuente; análisis rítmico, cortes al beat, visualizer
+```
+
+Detalle de la selección y procedencia: [third-party-migration.md](third-party-migration.md).
+
 ¿Por qué secuencias PNG para los textos? La API no puede recortar títulos ni stills (un still siempre dura 5 s e
 ignora `endFrame`), pero una secuencia de N imágenes entra como un clip de exactamente N frames con alfa.
 Los frames son hardlinks a un único PNG, así que casi no ocupan disco.
@@ -42,7 +63,8 @@ Los frames son hardlinks a un único PNG, así que casi no ocupan disco.
 - **LSP / ISP**: `Applier` es un `Protocol` mínimo (`apply`, `clear`). Cualquier backend que lo cumpla es intercambiable.
 - **DIP**: los servicios dependen de `Session`, no del módulo nativo. Los tests inyectan fakes.
 - **DRY**: una sola definición de cada curva de easing, de la que se derivan la interpolación de Resolve, los handles de Fusion y las muestras horneadas. Una sola fuente de configuración MCP (`config/mcp.servers.json`). Una sola copia de skills y agentes (`.agents/`, con links).
-- **KISS**: 11 tools de intención. Lo granular lo hace el upstream.
+- **KISS**: 52 tools orientadas a casos de uso (intención editorial + authoring de proyecto, media, color, audio,
+  Fusion y QC). Sin wrappers 1:1 de la API ni ejecución arbitraria de código.
 
 ## Modelo de motion
 

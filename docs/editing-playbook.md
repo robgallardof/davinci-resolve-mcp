@@ -23,6 +23,33 @@ Resumen accionable de las fuentes consultadas. Las skills en `.agents/skills/` a
   [Subscribr — workflow](https://subscribr.ai/youtube-strategy/talking-head-video-editing-workflow),
   [Jupitrr — edit talking head videos](https://jupitrr.com/how-to/edit-talking-head-videos).
 
+## Subtítulos y texto que se vean diseñados
+
+- Sincronía por palabra y jerarquía clara: una frase estable en pantalla y la palabra activa resaltada, en vez de
+  texto que salta en cada palabra. Entradas cortas (fade, lift, pop) y una sola familia tipográfica por pieza.
+- Modos según el tono: Creator (cercano, Reels/TikTok), Studio (limpio, entrevistas/educación), Editorial (cálido,
+  historias), Impact (solo remates y mensajes de 1–4 palabras). Color de marca como acento, no en todo el texto.
+- Texto, cámara y sonido no se animan a la vez: un acento por momento.
+- En Forge: `list_text_styles` → `preview_text_style` → `add_captions(style, accent, words)`; la letra o el guion
+  exactos con `align_text`.
+- Fuentes: [School of Motion — typography for motion](https://schoolofmotion.com/blog/fonts-typefaces-typography-for-motion-design),
+  [CapCut — types of captions](https://www.capcut.com/resource/types-of-captions),
+  [TikTok — creative codes](https://ads.tiktok.com/business/en-US/creative-codes).
+
+## Criterio por género
+
+- **Comedia**: setup → pausa → remate → reacción. La pausa es parte del chiste; se corta después de la risa, nunca
+  durante el remate, y el remate no se anticipa en un título. SFX solo si suman.
+- **Música / videoclip**: la canción manda y no se toca. Cortes por frases (4–8 beats), motivos visuales que vuelven en
+  el estribillo; la letra con tiempos reales, no transcripción de canto.
+- **Electrónica**: contraste build / drop / breakdown. Más cortes y movimiento solo en el drop confirmado al oído;
+  el breakdown respira. Sin flashes a pantalla completa.
+- **Entrevista / podcast**: respetar el sentido de cada respuesta y las reacciones reales; música de fondo bajo la voz
+  (−20 dB al hablar) y cortes cubiertos con B-roll relevante.
+- **Cine / narrativo**: cortes motivados por la historia y la dirección de pantalla, nunca por un temporizador.
+- Los detectores (pausas, energía, beats) dan **candidatos con evidencia**; el editor confirma viendo o escuchando.
+  Detalle operativo: skill `editorial-direction`.
+
 ## Zoom en DaVinci Resolve
 
 - **Dynamic Zoom** (Inspector): zoom lineal o con ease sin keyframes; rápido para un push por clip.

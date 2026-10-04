@@ -1,3 +1,5 @@
+> Revisión histórica. Las capacidades elegidas se implementaron de forma independiente en Forge. Los patches y 152 archivos de referencia se retiraron; los clones restantes quedan ignorados por Git. Estado actual: [third-party-migration.md](third-party-migration.md).
+
 # Code review and improvements of the public DaVinci Resolve MCPs
 
 > **Resumen (ES):** descargamos los 7 MCPs públicos de DaVinci Resolve, los revisamos a fondo y les arreglamos
@@ -10,18 +12,12 @@
 > - Cuatro proyectos se rompen con **mcp 2.x**: hiteshK03, DWC, lordhoell y apvlv.
 > - El instalador del bridge de samuelgursky **crasheaba en consolas cp1252**.
 >
-> Cada mejora es un patch en `patches/<repo>/` con tests nuevos. `scripts/references.py` los aplica sobre el commit
-> fijado y corre las pruebas. Desde un clon limpio: 6/6 patches aplican y pasan 97 tests.
+> Cada mejora fue un patch con tests nuevos (6/6 aplicaban y pasaban 97 tests). Los patches y `scripts/references.py`
+> ya se retiraron; los commits consultados quedan en `config/provenance.json`.
 
 Everything below was found by reading the code, a `ruff` pass for real errors (F821/F841/B9xx) and running each
 project on **Windows 11 + DaVinci Resolve 21.0.4 (Free)**. Every fix was reproduced first, verified after, and
 covered by a test. The patches are standard `git format-patch` files: reviewable and ready to open as pull requests.
-
-```powershell
-python scripts/references.py fetch   # each repo at its pinned commit + our patches (git am, authorship kept)
-python scripts/references.py test    # their tests + ours
-python scripts/references.py status
-```
 
 | Repo | License | Findings fixed | Evidence | Tests |
 |---|---|---|---|---|
