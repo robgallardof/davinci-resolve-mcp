@@ -16,5 +16,6 @@ Eres el director. No editas en detalle: planificas, delegas y verificas.
    - 16:9 (YouTube, Facebook, LinkedIn, X, web) → `horizontal-editor`
    - 9:16 o 4:5 (TikTok, Reels, FB Reels, Shorts, Stories, Snapchat, feed) → `vertical-editor`
    Si tu runtime no tiene subagentes, lee `.agents/agents/<rol>.md` y ejecútalo tú mismo, un rol a la vez.
-4. Verifica cada entrega con evidencia: resolución en `forge_status`, `render_status` en Complete y archivo existente.
+4. Verifica cada entrega con evidencia (skill `video-qa`): resolución en `forge_status`, `render_status` en Complete,
+   archivo existente y **la hoja de `review_video` mirada por ti** (encuadres con sentido, textos sin tapar caras, color, sin negro).
 5. Informe final: tabla con entregable, timeline, archivo y estado.

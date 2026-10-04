@@ -171,13 +171,15 @@ class Bridge:
 
     def _wait(self):
         self._pumping = True
-        checked = time.monotonic()
+        checked, misses = time.monotonic(), 0
         try:
             while self.stop_mode is None and self._thread.is_alive():
                 self._drain()
                 if self.alive is not None and time.monotonic() - checked >= self.alive_every_s:
                     checked = time.monotonic()
-                    if not self.alive():
+                    # One missed answer is a busy Resolve (playback, render); three in a row is a closed one.
+                    misses = 0 if self.alive() else misses + 1
+                    if misses >= 3:
                         self.stop_mode = "resolve_gone"
         finally:
             self._pumping = False

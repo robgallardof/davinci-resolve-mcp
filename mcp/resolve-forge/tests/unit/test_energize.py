@@ -79,3 +79,38 @@ def test_crash_zoom_and_focus_hold_styles():
     assert [k.frame for k in zoom.keyframes][:3] == [0, 20, 25]  # holds, then punches in 5 frames at the hit
     hold = styles.build("focus_hold", duration=60, fps=30, intensity=2.0)
     assert hold.track("zoom").keyframes[0].value == pytest.approx(1.5)
+
+
+def test_editor_hints_aim_at_the_real_subject_and_force_framings():
+    """The detector follows the biggest motion (the person); a hint after watching aims at the pet instead."""
+    samples = scene(12, at=(0.2, 0.4))  # person moving on the left
+    hinted = plan(samples, hints=[{"start_s": 0, "end_s": 6, "focus": [0.8, 0.72]},
+                                  {"start_s": 6, "end_s": 12, "framing": "wide"}])
+    first = [s for s in hinted["shots"] if s["end_s"] <= 6.2]
+    assert first and all(s["subject"] == [0.8, 0.72] and s["framing"] != "wide" for s in first)
+    assert all(s["framing"] == "wide" for s in hinted["shots"] if s["start_s"] >= 6)
+    for bad in ({"start_s": 3, "end_s": 1}, {"start_s": 0, "end_s": 1, "focus": [2, 0]},
+                {"start_s": 0, "end_s": 1, "framing": "dolly"}):
+        with pytest.raises(ValueError):
+            plan(samples, hints=[bad])
+
+
+def test_self_review_downgrades_bad_zooms_and_respects_source_sharpness():
+    from resolve_forge.domain import framing_review as review
+    # visible rect / on-screen maths
+    assert review.visible(2.0, (0.5, 0.5)) == (0.25, 0.25, 0.75, 0.75)
+    assert review.on_screen((0.75, 0.5), 2.0, (0.5, 0.5)) == (1.0, 0.5)
+    shot = {"zoom": 1.5, "anchor": [0.0, 0.0], "subject": [0.9, 0.9]}
+    assert any("edge" in i for i in review.issues(shot, [], []))
+    assert any("crops out" in i for i in review.issues({"zoom": 1.5, "anchor": [0.5, 0.5], "subject": [0.5, 0.5]},
+                                                        [(0.02, 0.02, 5.0)], []))
+    assert any("face" in i for i in review.issues({"zoom": 1.5, "anchor": [1, 1], "subject": [0.8, 0.8]}, [], [(0.1, 0.1)]))
+    assert any("soft" in i for i in review.issues({"zoom": 1.5, "anchor": [0.5, 0.5], "subject": [0.5, 0.5]}, [], [], upscale=1.875))
+    # a 576 px phone clip on a 1080 timeline: the planner never zooms beyond what stays sharp
+    sharp = plan(scene(20, peaks=[5.0, 12.0]), upscale=1.875)
+    assert all(s["zoom"] * 1.875 <= 2.6 + 1e-6 for s in sharp["shots"])
+    assert sharp["self_review"]["max_zoom_used"] == pytest.approx(2.6 / 1.875, abs=1e-3)
+    # action split across both corners: a close-up on one corner would hide the rest -> downgraded
+    split = [Sample(t / 4, 1.0, 0.05 if t % 2 else 0.95, 0.5, 0.1) for t in range(80)]
+    for s in plan(split, trim_dead=False)["shots"]:
+        assert s["framing"] in ("wide", "medium") or not s.get("self_review")

@@ -15,6 +15,8 @@ import math
 from dataclasses import dataclass
 from statistics import median
 
+from . import framing_review
+
 ZOOM = {"wide": 1.0, "medium": 1.25, "close": 1.5, "crash": 1.45}
 
 
@@ -95,10 +97,27 @@ def _split(a, b, samples, min_shot, max_shot):
     return [(round(x, 3), round(y, 3)) for x, y in zip(bounds, bounds[1:]) if y - x > 0.05]
 
 
+def _hints(hints):
+    """Editor overrides after watching: {start_s, end_s, focus: [x, y]?, framing: wide|medium|close|crash?}."""
+    out = []
+    for hint in hints or []:
+        if not isinstance(hint, dict) or float(hint.get("end_s", 0)) <= float(hint.get("start_s", 0)):
+            raise ValueError("Each hint needs start_s < end_s (source seconds)")
+        focus = hint.get("focus")
+        if focus is not None and not (isinstance(focus, (list, tuple)) and len(focus) == 2
+                                      and all(0 <= float(v) <= 1 for v in focus)):
+            raise ValueError("hint focus must be [x, y] in 0..1")
+        if hint.get("framing") not in (None, *ZOOM):
+            raise ValueError(f"hint framing must be one of {', '.join(ZOOM)}")
+        out.append((float(hint["start_s"]), float(hint["end_s"]), focus, hint.get("framing")))
+    return out
+
+
 def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, faces: list[tuple] | None = None,
+         hints: list[dict] | None = None,
          min_shot_s: float = 1.2,
          max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
-         focus_target: tuple[float, float] = (0.5, 0.45)) -> dict:
+         focus_target: tuple[float, float] = (0.5, 0.45), upscale: float = 1.0, max_upscale: float = 2.6) -> dict:
     if not samples:
         raise ValueError("No motion samples: the source has no decodable video")
     if not 0.5 <= min_shot_s < max_shot_s <= 10:
@@ -110,10 +129,13 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
     for a, b in story:
         if not (math.isfinite(a) and math.isfinite(b)) or a < 0 or b <= a or b > duration + 0.5:
             raise ValueError("ranges must be [start_s, end_s] inside the source")
+    overrides = _hints(hints)
     removed = dead_ranges(samples) if trim_dead else []
     kept = _subtract(story, removed, min_shot_s) if removed else story
     typical = median(s.energy for s in samples) or 0.01
-    shots, previous = [], None
+    # A small source (WhatsApp 576 px) is already upscaled to the timeline; zoom only as far as it stays sharp.
+    max_zoom = min(max_zoom, framing_review.max_zoom_for(upscale, max_upscale))
+    shots, previous, corrected = [], None, 0
     for range_index, (a, b) in enumerate(kept):
         for shot_index, (s0, s1) in enumerate(_split(a, b, _in(samples, a, b), min_shot_s, max_shot_s)):
             window = _in(samples, s0, s1) or [min(samples, key=lambda s: abs(s.time_s - s0))]
@@ -125,6 +147,7 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
             camera_move = median(s.spread for s in window) > 0.3 and median(s.energy for s in window) > 2 * typical
             concentrated = median(s.spread for s in focused) < 0.18
             seen = [(fx, fy) for ft, fx, fy in faces or [] if s0 <= ft < s1]
+            mean_focus = sum(s.energy for s in focused) / len(focused)
             calm = median(s.energy for s in window) < 1.5 * typical
             if camera_move:
                 framing, why = "wide", "camera moves: keep it wide"
@@ -137,21 +160,54 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
                 framing, why = "crash", f"action peak at {peak.time_s:.2f}s"
             elif shot_index == 0:
                 framing, why = "wide", "new scene: establish"
+            elif mean_focus < 0.5 * typical and not seen:
+                framing, why = "wide", "nothing to focus on: no zoom"
             else:
                 framing = "close" if concentrated else "medium"
                 why = "single subject in motion" if concentrated else "action area"
-            if framing == previous:  # never the same framing twice in a row
+            mid = (s0 + s1) / 2
+            hint = next((h for h in overrides if h[0] <= mid < h[1]), None)
+            if hint and hint[2] is not None:  # the editor saw the real subject (the pet, not the person)
+                sx, sy = float(hint[2][0]), float(hint[2][1])
+                if framing == "wide" and not camera_move:
+                    framing = "close"
+                why += "; focus from hint"
+            if hint and hint[3] is not None:
+                framing, why = hint[3], why + f"; {hint[3]} from hint"
+            elif framing == previous:  # never the same framing twice in a row
                 framing = {"wide": "medium", "medium": "close" if concentrated else "wide",
                            "close": "medium", "crash": "medium"}[framing]
                 why += "; alternated"
-            zoom = min(ZOOM[framing], max_zoom)
-            pivot = [round(focus_pivot(sx, zoom, focus_target[0]), 3), round(focus_pivot(sy, zoom, focus_target[1]), 3)]
-            shots.append({"start_s": s0, "end_s": s1, "framing": framing, "zoom": round(zoom, 3),
-                          "subject": [round(sx, 3), round(sy, 3)], "anchor": pivot,
-                          "hit_s": round(peak.time_s, 3) if framing == "crash" else None, "why": why})
+            if framing == previous and not (hint and hint[3]):
+                framing = "medium" if framing != "medium" else "close"
+            # What must stay visible depends on what the shot is about: the action, or the face/hinted subject.
+            reaction = why.startswith("reaction")
+            hinted = bool(hint and hint[2] is not None)
+            action = [] if reaction or hinted else [(s.x, s.y, s.energy) for s in focused]
+            must_see_faces = [] if hinted else seen
+            notes = []
+            while True:  # self-review: downgrade any zoom that would mis-frame, crop the action or go soft
+                zoom = min(ZOOM[framing], max_zoom)
+                if zoom <= 1.0001 and framing != "wide":
+                    framing = "wide"
+                    continue
+                pivot = [round(focus_pivot(sx, zoom, focus_target[0]), 3), round(focus_pivot(sy, zoom, focus_target[1]), 3)]
+                shot = {"start_s": s0, "end_s": s1, "framing": framing, "zoom": round(zoom, 3),
+                        "subject": [round(sx, 3), round(sy, 3)], "anchor": pivot,
+                        "hit_s": round(peak.time_s, 3) if framing == "crash" else None, "why": why}
+                problems = framing_review.issues(shot, action, must_see_faces, upscale, max_upscale)
+                if not problems or framing == "wide":
+                    break
+                notes.append(f"{framing}->{framing_review.DOWNGRADE[framing]}: {problems[0]}")
+                framing = framing_review.DOWNGRADE[framing]
+            if notes:
+                corrected += 1
+                shot["self_review"] = notes
+            shots.append(shot)
             previous = framing
     total = sum(s["end_s"] - s["start_s"] for s in shots)
     return {"shots": shots, "duration_s": round(total, 3), "removed_dead_s": [list(r) for r in removed],
             "average_shot_s": round(total / len(shots), 2) if shots else 0,
             "framings": {name: sum(1 for s in shots if s["framing"] == name) for name in ZOOM},
+            "self_review": {"corrected_shots": corrected, "max_zoom_used": round(max_zoom, 3), "upscale": round(upscale, 3)},
             "time_basis": "source seconds"}

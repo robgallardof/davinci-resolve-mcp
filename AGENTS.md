@@ -23,10 +23,12 @@ compatible con `AGENTS.md`, Agent Skills (`SKILL.md`) y MCP: Claude Code, Codex,
    - **16:9** (YouTube, Facebook, LinkedIn, X, web) → `.agents/agents/horizontal-editor.md`
    - Ambas o varias entregas → `.agents/agents/video-director.md`
    Si tu runtime no tiene subagentes, lee el archivo del rol y síguelo tú mismo.
-3. Skills: `vertical-video`, `horizontal-video`, `entertainment-pacing` (ritmo para entretener: nunca >3 s sin cambio),
+3. Skills: `vertical-video`, `horizontal-video`, `entertainment-pacing` (ritmo para entretener: nunca >3 s sin cambio,
+   zooms con motivo), `video-qa` (mirar las hojas de revisión antes de construir y después de renderizar),
    `editorial-direction` (criterio por género: comedia, música, entrevista…),
    `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp`.
-4. **Seguridad**: nunca modifiques el master sin copia; no borres media ni proyectos sin un pedido explícito;
+4. **Calidad**: ningún video se entrega sin revisión visual (`review_shots` antes, `review_video` después).
+5. **Seguridad**: nunca modifiques el master sin copia; no borres media ni proyectos sin un pedido explícito;
    guarda el proyecto antes de renderizar. En Free, renderiza dentro de `~/Movies`.
 
 ## Desarrollo de resolve-forge

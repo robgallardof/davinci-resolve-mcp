@@ -149,9 +149,12 @@ def test_bridge_releases_its_port_when_resolve_goes_away(tmp_path):
     script.start()
     while not bridge._pumping:
         pass
-    state["alive"] = False
+    answers = iter([False, True, False, False])  # one busy blip must not close the bridge
+    state["alive"] = None
+    bridge.alive = lambda: next(answers, False)
     script.join(5)
     assert outcome == {"stop_reason": "resolve_gone"} and bridge._server is None
+    assert next(answers, "drained") == "drained"  # it needed three consecutive misses after the blip
 
 
 def test_control_operations_answer_while_resolve_is_busy(tmp_path):

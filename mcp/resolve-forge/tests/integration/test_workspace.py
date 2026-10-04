@@ -32,7 +32,7 @@ def test_every_skill_follows_the_open_standard():
         assert 50 < len(fm["description"]) <= 1024
         names.append(skill.name)
     assert {"davinci-resolve-mcp", "vertical-video", "horizontal-video",
-            "dynamic-zoom-talking-head", "resolve-delivery", "editorial-direction"} <= set(names)
+            "dynamic-zoom-talking-head", "resolve-delivery", "editorial-direction", "entertainment-pacing", "video-qa"} <= set(names)
 
 
 def test_agents_exist_and_only_reference_real_skills():

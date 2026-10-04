@@ -1,7 +1,7 @@
 """Thin MCP surface for genre-aware direction, music assets and reviewed multi-source cuts."""
 
 from .domain.editorial import plan
-from .services import energize_service, montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
+from .services import energize_service, review_service, montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
 
 
 def register(mcp, session, safe):
@@ -119,21 +119,44 @@ def register(mcp, session, safe):
     @safe
     def plan_energized_edit(source: str, ranges: list[list[float]] | None = None, min_shot_s: float = 1.2,
                             max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
-                            use_faces: bool = True) -> dict:
+                            use_faces: bool = True, hints: list[dict] | None = None, format: str | None = None) -> dict:
         """Entertainment pacing plan: short shots (1.2-2.8 s) with alternating framings that follow the action.
 
         Detects where things move (the pet, the hands, the jump), action peaks, camera moves, faces and dead time.
         Framings: wide (establish/camera move), medium x1.25, close x1.5 (single subject or a face reaction),
         crash (fast punch at a peak). The zoom pivot pulls the subject toward the centre without showing edges.
         ranges: the story parts to keep, SOURCE seconds (default: whole source minus dead time). No Resolve needed.
+        hints: after WATCHING, correct the detector: [{start_s, end_s, focus: [x, y]}] to aim at the real subject
+        (it follows the biggest motion, often the person, not the pet) and/or framing: wide|medium|close|crash.
+        Each shot is self-reviewed: zooms that push the subject to an edge, crop the action, cut a face or exceed
+        the source's sharpness (format sets the target resolution) are downgraded and reported in self_review.
         """
-        return energize_service.plan(session, source, ranges, min_shot_s, max_shot_s, trim_dead, max_zoom, use_faces)
+        return energize_service.plan(session, source, ranges, min_shot_s, max_shot_s, trim_dead, max_zoom, use_faces,
+                                     hints, format)
+
+    @mcp.tool()
+    @safe
+    def review_shots(source: str, shots: list[dict], format: str = "tiktok", texts: list[dict] | None = None) -> dict:
+        """BEFORE building: a contact sheet of what every planned shot will really show (its crop), with faces,
+        subject and text boxes drawn, plus flagged problems, text positions that avoid faces and a colour/exposure
+        assessment with a suggested CDL. texts: [{text, start_s, duration_s, position}] in timeline seconds.
+        Open the returned sheet image and judge it; fix flagged shots before energize_timeline. No Resolve needed.
+        """
+        return review_service.review_shots(session, source, shots, format, texts)
+
+    @mcp.tool()
+    @safe
+    def review_video(path: str, every_s: float = 1.5) -> dict:
+        """AFTER rendering: contact sheet of the delivered file over time, black or frozen stretches and picture
+        quality (exposure, contrast, saturation, cast). Open the sheet and fix anything wrong before delivering.
+        """
+        return review_service.review_video(session, path, every_s)
 
     @mcp.tool()
     @safe
     def energize_timeline(source: str, name: str, format: str | None = None, shots: list[dict] | None = None,
                           ranges: list[list[float]] | None = None, max_shot_s: float = 2.8, max_zoom: float = 1.6,
-                          dry_run: bool = True) -> dict:
+                          hints: list[dict] | None = None, dry_run: bool = True) -> dict:
         """Build a NEW timeline from an energized plan: one clip per shot, each with its own zoom and focus.
 
         shots: from plan_energized_edit (edit them freely); omitted -> planned now from `ranges`.
@@ -141,4 +164,4 @@ def register(mcp, session, safe):
         Then add captions for real speech, text pops on beats and motivated sound effects.
         """
         return energize_service.apply(session, source, name, format, shots, dry_run,
-                                      ranges=ranges, max_shot_s=max_shot_s, max_zoom=max_zoom)
+                                      ranges=ranges, max_shot_s=max_shot_s, max_zoom=max_zoom, hints=hints)

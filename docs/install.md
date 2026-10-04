@@ -1,6 +1,6 @@
 # Instalación
 
-Un único servidor: resolve-forge, con 54 herramientas propias y el bridge Free integrado.
+Un único servidor: resolve-forge, con 56 herramientas propias y el bridge Free integrado.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1

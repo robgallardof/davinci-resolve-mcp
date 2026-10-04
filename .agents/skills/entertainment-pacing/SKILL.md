@@ -1,43 +1,59 @@
 ---
 name: entertainment-pacing
-description: "Edición para entretener en redes (TikTok, Reels, Shorts, vlogs, mascotas, comedia, retos): la pantalla nunca queda quieta — planos cortos, zooms y enfoques sobre la acción, crash zooms en los picos, textos animados y subtítulos. Úsala SIEMPRE que el video sea para entretener o cuando digan 'se ve simple', 'más dinámico', 'más zooms', 'más animado', 'que no aburra', 'enfoca a la mascota/la cara', o editen clips de celular sin cortes."
+description: "Edición para entretener en redes (TikTok, Reels, Shorts, vlogs, mascotas, comedia, retos): la pantalla nunca queda quieta, pero cada zoom tiene motivo — planos cortos, enfoques sobre el sujeto real, crash zooms solo en picos de acción, textos animados y subtítulos. Úsala SIEMPRE que el video sea para entretener o cuando digan 'se ve simple', 'más dinámico', 'más zooms', 'más animado', 'que no aburra', 'enfoca a la mascota/la cara', o editen clips de celular sin cortes."
 ---
 
-# Ritmo de entretenimiento
+# Ritmo de entretenimiento (con zooms que tienen sentido)
 
-Regla de oro: **la gente no puede pasar más de ~2–3 s sin un cambio en pantalla** (corte, zoom, reencuadre, texto,
-subtítulo o efecto). Pocos empujes lentos sobre planos largos se ven "muy simples". La duración la decide la historia
-y el usuario: si pide más de un minuto, se conserva la historia y se gana ritmo dentro, no recortando de más.
+Dos reglas que van juntas:
+1. **La pantalla no queda quieta**: ningún tramo de más de ~2–3 s sin un cambio (corte, reencuadre, texto, subtítulo).
+2. **Cada zoom tiene motivo y está bien puesto**: se acerca a algo que importa (la cara en una reacción, la mascota,
+   el objeto de la acción) y lo deja centrado y completo. Un zoom a una manga, una pared, al centro cuando la acción
+   está en una esquina, o durante un movimiento de cámara, es peor que no hacer zoom.
 
-## Flujo
+La duración la decide la historia y el usuario: si pide más de un minuto, se conserva la historia y se gana ritmo
+dentro, no recortando de más.
 
-1. **Historia** (qué pasa y en qué orden): mira la fuente. Para voz, `find_story_moments`; para música, `analyse_music`.
-   Elige los rangos de la historia (segundos de la FUENTE).
-2. **Plan de ritmo**: `plan_energized_edit(source, ranges=[...])`. Detecta sin Resolve:
-   - dónde está la acción en cada momento (mascota, manos, salto) y los picos de acción;
-   - caras en momentos calmos (reacciones, miradas a cámara);
-   - movimientos de cámara (se mantienen abiertos) y tiempo muerto (se recorta).
-   Devuelve planos de 1.2–2.8 s con encuadre `wide` / `medium` ×1.25 / `close` ×1.5 / `crash` (punch rápido en el pico),
-   sin repetir encuadre seguido, con el sujeto llevado hacia el centro.
-3. **Revisa el plan** con criterio: un corte no debe partir un gesto ni anticipar el remate; las revelaciones van
-   abiertas; un chiste visual puede pedir mantener el plano. Ajusta `shots` a mano si hace falta.
-4. **Construye**: `energize_timeline(source, name, format, shots=..., dry_run=false)` — un clip por plano con su zoom.
-5. **Capas que mantienen la atención** (sin taparse entre sí):
-   - Subtítulos de lo que se dice: palabras verificadas (`transcribe_timeline(include_words=true)` o `align_text`),
-     estilo `creator`. Si Whisper duda o detecta otro idioma, aísla el fragmento y verifica antes de quemar.
-   - Textos de narración (`add_text_overlay`, `creator`, `pop`) en los giros: gancho 0–3 s, "mientras tanto…",
-     el remate, el cierre. Uno a la vez; arriba si los subtítulos van abajo.
-   - Sonido: música bajo la voz (`add_music_bed`) y SFX motivados (`place_sound_effects`) si el usuario los aporta.
-6. **QC**: `audit_timeline`, revisa frames de cada encuadre y `render_for`.
+## Flujo (con autorrevisión obligatoria)
+
+1. **Mira la fuente** antes de decidir: contact sheet de frames (o `find_highlights`/`analyse_scenes`). Identifica
+   quién es el protagonista de cada parte (persona, mascota, objeto) y dónde está en el cuadro.
+2. **Historia**: rangos en segundos de la FUENTE (voz: `find_story_moments`; música: `analyse_music`).
+3. **Plan**: `plan_energized_edit(source, ranges, format=<plataforma>, hints=[...])`.
+   - El detector sigue el movimiento más grande — muchas veces la persona, no la mascota. Si lo que importa es otra
+     cosa, corrige con `hints`: `{start_s, end_s, focus: [x, y]}` (donde está el sujeto real) o
+     `{start_s, end_s, framing: "wide"}` (cámara en movimiento, revelación, plano que debe respirar).
+   - El plan se autorrevisa: baja a medium/wide cualquier zoom que deje al sujeto en el borde, recorte la acción,
+     corte una cara o pase lo que la resolución aguanta (`format` calcula el zoom máximo nítido). Lee `self_review`.
+4. **Revisión visual ANTES de construir**: `review_shots(source, shots, format, texts=[...])` y **abre la imagen
+   `sheet`** (léela como imagen). Revisa cada plano: ¿el encuadre muestra lo que importa? ¿el sujeto está completo
+   y centrado? ¿algún texto tapa una cara? Rojo = problema. Corrige con `hints`/encuadres y repite hasta que
+   todo esté verde **y** se vea bien a tus ojos. Usa `text_positions` para colocar textos.
+5. **Construye**: `energize_timeline(source, name, format, shots=..., dry_run=false)`.
+6. **Capas** (sin taparse entre sí ni tapar caras):
+   - Subtítulos de lo que se dice con palabras verificadas (`transcribe_timeline(include_words=true)` / `align_text`);
+     si Whisper duda, aísla el fragmento y verifica; si no se entiende, no lo subtitules.
+   - Textos de narración en los giros (`add_text_overlay`, `creator`, `pop`), uno a la vez, en la posición que
+     indicó `review_shots`.
+   - Color: si `look.cdl` trae correcciones, aplícalas con `grade_clips` (en copia) solo si mejoran los frames.
+   - Sonido: `add_music_bed` / `place_sound_effects` si el usuario aporta los archivos.
+7. **Render y revisión final**: `render_for` → `review_video(file)` y **abre la hoja**. Si hay negro, congelados,
+   textos sobre caras, encuadres raros o color feo, corrige y vuelve a renderizar. No entregues sin esto.
+
+## Criterio de encuadre
+
+| Momento | Encuadre |
+|---|---|
+| Apertura de escena, revelación, cámara moviéndose | wide (sin zoom) |
+| Acción de un solo sujeto (mascota saltando, mano que agarra) | medium/close centrado en el sujeto |
+| Reacción, mirada a cámara, cara en calma | close a la cara |
+| Pico de acción claro y concentrado | crash zoom (punch rápido) — no más de uno seguido |
+| Nada pasa / sujeto fuera de cuadro | wide o corta ese tramo |
 
 ## Detalles que el usuario nota
 
 - Género y número correctos en los textos (una ardilla hembra es "la supervisora", "la jefa").
-- Nada de texto sobre la cara ni sobre la acción; usa la safe zone del formato.
-- Fuentes de baja resolución (WhatsApp 576×1024): zoom máximo ~×1.5–1.6 (`max_zoom`), o se verá borroso.
+- Nada de texto sobre caras ni sobre la acción; dentro de la safe zone del formato.
+- Fuentes de baja resolución (WhatsApp 576×1024): el plan limita el zoom para que no se vea borroso; si hace falta
+  más zoom, pide el original del teléfono.
 - Un acento por momento: no apiles crash zoom + texto + SFX en el mismo segundo salvo en el clímax.
-
-## Qué no hacer
-
-- Planos de 5–20 s sin cambio, un solo `warm_push` por clip largo, o zoom al centro cuando la acción está en una esquina.
-- Inventar lo que se dice: si no se entiende, pregunta o usa texto de narración en vez de subtítulos.

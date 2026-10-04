@@ -44,6 +44,9 @@ production_tools.py            align_text, place_sound_effects, add_music_bed, p
 analysis/action.py             energía de movimiento y su centroide por ventana (dónde está la acción), sin Resolve
 domain/energize.py             planos cortos, encuadres alternos (wide/medium/close/crash), pivote que centra al sujeto
 services/energize_service      plan desde la fuente y timeline nuevo con motion por plano (focus_hold/crash_zoom)
+domain/framing_review.py       qué queda visible con cada zoom; sujeto al borde, acción recortada, cara cortada, zoom borroso
+domain/look.py, text_placement.py   exposición/contraste/saturación/dominante con CDL suave; textos que no tapan caras
+services/review_service        hojas de revisión antes (planos con recorte real) y después del render (negro/congelado)
 domain/sound_design            SFX con motivo obligatorio, densidad revisada, carriles sin solapes
 services/sfx_service           ganancia horneada en WAV nuevo (ffmpeg) y pistas de audio nuevas en una copia
 domain/ducking                 regiones de voz → curva de ganancia (ataque, release, fades)
@@ -66,7 +69,7 @@ Los frames son hardlinks a un único PNG, así que casi no ocupan disco.
 - **LSP / ISP**: `Applier` es un `Protocol` mínimo (`apply`, `clear`). Cualquier backend que lo cumpla es intercambiable.
 - **DIP**: los servicios dependen de `Session`, no del módulo nativo. Los tests inyectan fakes.
 - **DRY**: una sola definición de cada curva de easing, de la que se derivan la interpolación de Resolve, los handles de Fusion y las muestras horneadas. Una sola fuente de configuración MCP (`config/mcp.servers.json`). Una sola copia de skills y agentes (`.agents/`, con links).
-- **KISS**: 54 tools orientadas a casos de uso (intención editorial + authoring de proyecto, media, color, audio,
+- **KISS**: 56 tools orientadas a casos de uso (intención editorial + authoring de proyecto, media, color, audio,
   Fusion y QC). Sin wrappers 1:1 de la API ni ejecución arbitraria de código.
 
 ## Modelo de motion

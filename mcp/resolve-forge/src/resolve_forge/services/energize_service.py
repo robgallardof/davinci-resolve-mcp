@@ -12,8 +12,23 @@ _STYLE = {"wide": ("warm_push", lambda z: 0.5), "medium": ("focus_hold", lambda 
           "close": ("focus_hold", lambda z: (z - 1) / 0.25), "crash": ("crash_zoom", lambda z: (z - 1) / 0.45)}
 
 
+def _upscale(path, format):
+    """How much the source is already enlarged to fit the platform frame (WhatsApp 576 px -> 1080: x1.875)."""
+    if not format:
+        return 1.0
+    import cv2
+    from ..domain import formats
+    cap = cv2.VideoCapture(path)
+    try:
+        width, height = cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    finally:
+        cap.release()
+    fmt = formats.get(format)
+    return min(fmt.width / width, fmt.height / height) if width and height else 1.0
+
+
 def plan(session, source, ranges=None, min_shot_s=1.2, max_shot_s=2.8, trim_dead=True, max_zoom=1.6,
-         use_faces=True) -> dict:
+         use_faces=True, hints=None, format=None) -> dict:
     try:
         import cv2  # noqa: F401
     except ImportError as exc:
@@ -24,10 +39,10 @@ def plan(session, source, ranges=None, min_shot_s=1.2, max_shot_s=2.8, trim_dead
     raw, duration, aspect = action.samples(path)
     samples = [energize.Sample(s.time_s, s.energy, s.x, s.y, s.spread) for s in raw]
     face_points = faces.points(path) if use_faces else []
-    result = energize.plan(samples, ranges, faces=face_points, min_shot_s=min_shot_s, max_shot_s=max_shot_s,
-                           trim_dead=trim_dead, max_zoom=max_zoom)
+    result = energize.plan(samples, ranges, faces=face_points, hints=hints, min_shot_s=min_shot_s, max_shot_s=max_shot_s,
+                           trim_dead=trim_dead, max_zoom=max_zoom, upscale=_upscale(path, format))
     return {"source": source, "source_duration_s": round(duration, 3), "faces_found": len(face_points), **result,
-            "next": "energize_timeline(source, name, format, shots=shots) — then captions, text pops and sound",
+            "next": "review_shots(source, shots, format, texts) and LOOK at the sheet; fix; then energize_timeline",
             "review": "Watch it: move cuts that split a gesture, swap framings that hide the joke, keep reveals wide."}
 
 
@@ -45,7 +60,7 @@ def _validate(shots):
 
 
 def apply(session, source, name, format=None, shots=None, dry_run=True, **plan_args) -> dict:
-    planned = None if shots is not None else plan(session, source, **plan_args)
+    planned = None if shots is not None else plan(session, source, format=format, **plan_args)
     shots = shots if shots is not None else planned["shots"]
     _validate(shots)
     if dry_run:
