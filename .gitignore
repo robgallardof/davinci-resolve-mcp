@@ -1,0 +1,17 @@
+# third-party clones (re-create with scripts/bootstrap.ps1)
+vendor/
+# generated per machine by scripts/sync.py (absolute paths)
+.mcp.json
+.cursor/mcp.json
+.vscode/mcp.json
+.gemini/settings.json
+.codex/config.toml
+# links to .agents/
+.claude/skills
+.claude/agents
+# python
+.venv/
+__pycache__/
+.pytest_cache/
+# personal edit projects (media paths, renders)
+projects/

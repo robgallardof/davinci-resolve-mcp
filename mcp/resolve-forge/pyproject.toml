@@ -1,0 +1,29 @@
+[project]
+name = "resolve-forge"
+version = "0.1.0"
+description = "Intent-level DaVinci Resolve MCP: dynamic zooms for talking heads, platform versions, delivery."
+requires-python = ">=3.10,<3.14"
+dependencies = ["mcp[cli]>=1.30,<2"]
+
+[project.optional-dependencies]
+vision = ["opencv-python-headless>=4.9"]
+
+[project.scripts]
+resolve-forge = "resolve_forge.server:main"
+resolve-forge-doctor = "resolve_forge.doctor:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/resolve_forge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-m 'not live'"
+markers = ["live: needs a running DaVinci Resolve (Free or Studio); run with -m live"]

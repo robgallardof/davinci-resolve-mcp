@@ -1,0 +1,21 @@
+{
+  "$comment": "Single source of truth for MCP servers. Run `python scripts/sync.py` to regenerate every client config. {ROOT} = this repo, {UPSTREAM} = vendor/davinci-resolve-mcp.",
+  "servers": {
+    "resolve-forge": {
+      "description": "Intent-level editing: dynamic zooms, platform versions, delivery",
+      "command": "uv",
+      "args": ["run", "--quiet", "--directory", "{ROOT}/mcp/resolve-forge", "resolve-forge"],
+      "env": {}
+    },
+    "davinci-resolve": {
+      "description": "Full Resolve scripting API coverage (samuelgursky/davinci-resolve-mcp)",
+      "command": "{UPSTREAM}/venv/Scripts/python.exe",
+      "args": ["{UPSTREAM}/src/server.py"],
+      "env": {
+        "RESOLVE_SCRIPT_API": "C:/ProgramData/Blackmagic Design/DaVinci Resolve/Support/Developer/Scripting",
+        "RESOLVE_SCRIPT_LIB": "C:/Program Files/Blackmagic Design/DaVinci Resolve/fusionscript.dll",
+        "PYTHONPATH": "C:/ProgramData/Blackmagic Design/DaVinci Resolve/Support/Developer/Scripting/Modules"
+      }
+    }
+  }
+}
