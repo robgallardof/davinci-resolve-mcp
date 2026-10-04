@@ -28,20 +28,21 @@ def _upscale(path, format):
 
 
 def plan(session, source, ranges=None, min_shot_s=1.2, max_shot_s=2.8, trim_dead=True, max_zoom=1.6,
-         use_faces=True, hints=None, format=None) -> dict:
+         use_faces=True, hints=None, format=None, drop_dull=True) -> dict:
     try:
         import cv2  # noqa: F401
     except ImportError as exc:
         raise ForgeError("Action detection needs OpenCV.", code="MISSING_DEPENDENCY",
                          hint="cd mcp/resolve-forge && uv sync --extra vision") from exc
-    from ..analysis import action, faces
+    from ..analysis import action, presence as people
     path = source_path(session, source)
     raw, duration, aspect = action.samples(path)
-    samples = [energize.Sample(s.time_s, s.energy, s.x, s.y, s.spread) for s in raw]
-    face_points = faces.points(path) if use_faces else []
-    result = energize.plan(samples, ranges, faces=face_points, hints=hints, min_shot_s=min_shot_s, max_shot_s=max_shot_s,
+    samples = [energize.Sample(s.time_s, s.energy, s.x, s.y, s.spread, s.box) for s in raw]
+    # One pass for faces (frontal + profiles) and bodies: reactions, and people seen from behind (dead time).
+    scan = [(p.time_s, p.faces, p.people) for p in people.scan(path)] if use_faces else []
+    result = energize.plan(samples, ranges, presence=scan if use_faces else None, drop_dull=drop_dull, hints=hints, min_shot_s=min_shot_s, max_shot_s=max_shot_s,
                            trim_dead=trim_dead, max_zoom=max_zoom, upscale=_upscale(path, format))
-    return {"source": source, "source_duration_s": round(duration, 3), "faces_found": len(face_points), **result,
+    return {"source": source, "source_duration_s": round(duration, 3), "faces_found": sum(len(f) for _, f, _ in scan), **result,
             "next": "review_shots(source, shots, format, texts) and LOOK at the sheet; fix; then energize_timeline",
             "review": "Watch it: move cuts that split a gesture, swap framings that hide the joke, keep reveals wide."}
 

@@ -18,6 +18,7 @@ class ActionSample:
     x: float             # centroid of the strongest change, 0..1 from the left
     y: float             # 0..1 from the top
     spread: float        # how scattered the change is (0 = one spot, ~0.5 = whole frame / camera move)
+    box: tuple[float, float, float, float] = (0.5, 0.5, 0.5, 0.5)  # robust extent of the change (5-95%)
 
 
 def samples(path: str, window_s: float = 0.25) -> tuple[list[ActionSample], float, float]:
@@ -65,8 +66,11 @@ def _summarise(time_s, diff, xs, ys):
     mask = diff >= max(threshold, 4.0)
     if not mask.any():
         return ActionSample(round(time_s, 3), round(energy, 3), 0.5, 0.5, 0.0)
+    w, h = diff.shape[1] - 1, diff.shape[0] - 1
+    box = (round(float(np.percentile(xs[mask], 5)) / w, 3), round(float(np.percentile(ys[mask], 5)) / h, 3),
+           round(float(np.percentile(xs[mask], 95)) / w, 3), round(float(np.percentile(ys[mask], 95)) / h, 3))
     weights = diff[mask]
     cx = float((xs[mask] * weights).sum() / weights.sum()) / (diff.shape[1] - 1)
     cy = float((ys[mask] * weights).sum() / weights.sum()) / (diff.shape[0] - 1)
     spread = float(np.sqrt(((xs[mask] / (diff.shape[1] - 1) - cx) ** 2 + (ys[mask] / (diff.shape[0] - 1) - cy) ** 2).mean()))
-    return ActionSample(round(time_s, 3), round(energy, 3), round(cx, 3), round(cy, 3), round(spread, 3))
+    return ActionSample(round(time_s, 3), round(energy, 3), round(cx, 3), round(cy, 3), round(spread, 3), box)

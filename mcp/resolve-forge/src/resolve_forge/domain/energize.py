@@ -27,6 +27,7 @@ class Sample:
     x: float
     y: float
     spread: float
+    box: tuple[float, float, float, float] | None = None  # extent of the moving region, if known
 
 
 def focus_pivot(subject: float, zoom: float, target: float = 0.5) -> float:
@@ -109,11 +110,70 @@ def _hints(hints):
             raise ValueError("hint focus must be [x, y] in 0..1")
         if hint.get("framing") not in (None, *ZOOM):
             raise ValueError(f"hint framing must be one of {', '.join(ZOOM)}")
-        out.append((float(hint["start_s"]), float(hint["end_s"]), focus, hint.get("framing")))
+        out.append((float(hint["start_s"]), float(hint["end_s"]), focus, hint.get("framing"), bool(hint.get("keep"))))
     return out
 
 
+def _inside(point, box):
+    return box[0] <= point[0] <= box[2] and box[1] <= point[1] <= box[3]
+
+
+def _grow(box, margin=0.1):
+    w, h = box[2] - box[0], box[3] - box[1]
+    return (box[0] - w * margin, box[1] - h * margin, box[2] + w * margin, box[3] + h * margin)
+
+
+def interest(window, focused, presence, typical, hinted, peak):
+    """Why would anyone keep watching this shot? (score, reasons).
+
+    +2 a face is visible, +1 the subject acts away from any person (the pet, an object), +1 action peak,
+    +2 editor hint; -2 people are seen only from behind. Body boxes that sit identical in several samples are
+    furniture (a cat tree fools the detector) and are ignored.
+    """
+    score, reasons = 0, []
+    faces = sum(1 for _, f, _ in presence if f)
+
+    def static(box, index):
+        return any(i != index and any(max(abs(a - b) for a, b in zip(box, other)) < 0.015 for other in boxes)
+                   for i, (_, _, boxes) in enumerate(presence))
+
+    bodies = [[_grow(b) for b in boxes if not static(b, i)] for i, (_, _, boxes) in enumerate(presence)]
+    # The body detector misses people seen from behind or cut by the frame; a tall moving region is a person.
+    movers = [s for s in window if s.box and s.box[3] - s.box[1] >= 0.4 and s.energy >= 0.5 * typical]
+    for s in movers:
+        near = min(range(len(presence)), key=lambda i: abs(presence[i][0] - s.time_s)) if presence else None
+        if near is not None:
+            bodies[near] = [*bodies[near], s.box]
+    with_body = sum(1 for b in bodies if b)
+    if faces:
+        score += 2
+        reasons.append("face visible")
+    concentrated = bool(focused) and median(s.spread for s in focused) < 0.18
+    threshold = 0.1 if concentrated else max(0.2, 0.3 * typical)
+    for s in focused:
+        if s.spread >= 0.3 or s.energy < threshold:
+            continue
+        near = min(range(len(presence)), key=lambda i: abs(presence[i][0] - s.time_s)) if presence else None
+        if near is None or not any(_inside((s.x, s.y), box) for box in bodies[near]):
+            score += 1
+            reasons.append("subject acting (not the person's body)")
+            break
+    if peak.energy >= 3 * typical and peak.spread < 0.3:
+        score += 1
+        reasons.append("action peak")
+    if presence and not faces and with_body >= max(1, len(presence) // 2):
+        score -= 2
+        reasons.append("person seen from behind, no face")
+    if hinted:
+        score += 2
+        reasons.append("editor hint")
+    if not reasons:
+        reasons.append("no face, no subject action")
+    return score, reasons
+
+
 def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, faces: list[tuple] | None = None,
+         presence: list[tuple] | None = None, drop_dull: bool = True,
          hints: list[dict] | None = None,
          min_shot_s: float = 1.2,
          max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
@@ -135,7 +195,9 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
     typical = median(s.energy for s in samples) or 0.01
     # A small source (WhatsApp 576 px) is already upscaled to the timeline; zoom only as far as it stays sharp.
     max_zoom = min(max_zoom, framing_review.max_zoom_for(upscale, max_upscale))
-    shots, previous, corrected = [], None, 0
+    if presence is not None and faces is None:
+        faces = [(t, fx, fy) for t, found, _ in presence for fx, fy in found]
+    shots, previous, corrected, cut = [], None, 0, []
     for range_index, (a, b) in enumerate(kept):
         for shot_index, (s0, s1) in enumerate(_split(a, b, _in(samples, a, b), min_shot_s, max_shot_s)):
             window = _in(samples, s0, s1) or [min(samples, key=lambda s: abs(s.time_s - s0))]
@@ -147,6 +209,15 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
             camera_move = median(s.spread for s in window) > 0.3 and median(s.energy for s in window) > 2 * typical
             concentrated = median(s.spread for s in focused) < 0.18
             seen = [(fx, fy) for ft, fx, fy in faces or [] if s0 <= ft < s1]
+            mid_hint = next((h for h in overrides if h[0] <= (s0 + s1) / 2 < h[1]), None)
+            if presence is not None:
+                here = [p for p in presence if s0 <= p[0] < s1]
+                score, reasons = interest(window, focused, here, typical,
+                                          bool(mid_hint and (mid_hint[2] is not None or mid_hint[4])), peak)
+                protected = bool(mid_hint and (mid_hint[4] or mid_hint[2] is not None))  # keep / editor's focus
+                if drop_dull and score <= 0 and not protected:
+                    cut.append({"start_s": s0, "end_s": s1, "why": "; ".join(reasons) or "no interaction"})
+                    continue
             mean_focus = sum(s.energy for s in focused) / len(focused)
             calm = median(s.energy for s in window) < 1.5 * typical
             if camera_move:
@@ -209,5 +280,6 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
     return {"shots": shots, "duration_s": round(total, 3), "removed_dead_s": [list(r) for r in removed],
             "average_shot_s": round(total / len(shots), 2) if shots else 0,
             "framings": {name: sum(1 for s in shots if s["framing"] == name) for name in ZOOM},
+            "cut_dull": cut,
             "self_review": {"corrected_shots": corrected, "max_zoom_used": round(max_zoom, 3), "upscale": round(upscale, 3)},
             "time_basis": "source seconds"}

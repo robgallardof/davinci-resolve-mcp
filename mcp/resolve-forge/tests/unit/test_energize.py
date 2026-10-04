@@ -114,3 +114,26 @@ def test_self_review_downgrades_bad_zooms_and_respects_source_sharpness():
     split = [Sample(t / 4, 1.0, 0.05 if t % 2 else 0.95, 0.5, 0.1) for t in range(80)]
     for s in plan(split, trim_dead=False)["shots"]:
         assert s["framing"] in ("wide", "medium") or not s.get("self_review")
+
+
+def test_shots_without_interaction_are_cut_and_reported():
+    """People seen from behind with nothing else happening are dead time; a face or the pet acting is not."""
+    from resolve_forge.domain.energize import interest
+    tall = (0.3, 0.2, 0.7, 0.9)  # a person-sized moving region
+    back = [Sample(t / 4, 1.0, 0.5, 0.5, 0.2, tall) for t in range(40)]
+    presence = [(t / 2, (), ()) for t in range(20)]
+    result = plan(back, presence=presence, trim_dead=False)
+    assert not result["shots"] and result["cut_dull"]
+    assert all("from behind" in c["why"] for c in result["cut_dull"])
+    # same footage, the person turns to camera: kept
+    facing = [(t / 2, ((0.5, 0.3),), ()) for t in range(20)]
+    assert plan(back, presence=facing, trim_dead=False)["shots"]
+    # nobody there, a small pet moving gently in one spot: kept; a static 'person' box (furniture) is ignored
+    pet = [Sample(t / 4, 0.15, 0.2, 0.4, 0.05, (0.15, 0.35, 0.25, 0.45)) for t in range(40)]
+    furniture = [(t / 2, (), ((0.08, 0.2, 0.35, 0.52),)) for t in range(20)]
+    assert plan(pet, presence=furniture, trim_dead=False)["shots"]
+    # the editor can protect a shot: keep or focus hints
+    kept = plan(back, presence=presence, trim_dead=False, hints=[{"start_s": 0, "end_s": 10, "keep": True}])
+    assert kept["shots"] and not kept["cut_dull"]
+    score, reasons = interest(back[:8], back[:8], presence[:4], 1.0, False, back[0])
+    assert score <= 0 and "person seen from behind, no face" in reasons

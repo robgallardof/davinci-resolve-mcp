@@ -119,7 +119,8 @@ def register(mcp, session, safe):
     @safe
     def plan_energized_edit(source: str, ranges: list[list[float]] | None = None, min_shot_s: float = 1.2,
                             max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
-                            use_faces: bool = True, hints: list[dict] | None = None, format: str | None = None) -> dict:
+                            use_faces: bool = True, hints: list[dict] | None = None, format: str | None = None,
+                            drop_dull: bool = True) -> dict:
         """Entertainment pacing plan: short shots (1.2-2.8 s) with alternating framings that follow the action.
 
         Detects where things move (the pet, the hands, the jump), action peaks, camera moves, faces and dead time.
@@ -130,9 +131,11 @@ def register(mcp, session, safe):
         (it follows the biggest motion, often the person, not the pet) and/or framing: wide|medium|close|crash.
         Each shot is self-reviewed: zooms that push the subject to an edge, crop the action, cut a face or exceed
         the source's sharpness (format sets the target resolution) are downgraded and reported in self_review.
+        drop_dull: cut shots with no interaction (a person seen from behind, no face, nothing else happening);
+        each cut is listed in cut_dull with its reason. Protect a shot with a hint {start_s, end_s, keep: true}.
         """
         return energize_service.plan(session, source, ranges, min_shot_s, max_shot_s, trim_dead, max_zoom, use_faces,
-                                     hints, format)
+                                     hints, format, drop_dull)
 
     @mcp.tool()
     @safe
