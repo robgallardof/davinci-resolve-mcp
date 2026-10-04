@@ -19,14 +19,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-UPSTREAM = ROOT / "vendor" / "davinci-resolve-mcp"
 LINKS = {ROOT / ".claude" / "skills": ROOT / ".agents" / "skills",
          ROOT / ".claude" / "agents": ROOT / ".agents" / "agents"}
 
 
 def load_servers() -> dict[str, dict]:
     raw = (ROOT / "config" / "mcp.servers.json").read_text(encoding="utf-8")
-    raw = raw.replace("{ROOT}", ROOT.as_posix()).replace("{UPSTREAM}", UPSTREAM.as_posix())
+    raw = raw.replace("{ROOT}", ROOT.as_posix())
     servers = json.loads(raw)["servers"]
     return {name: {k: v for k, v in spec.items() if k != "description"} for name, spec in servers.items()}
 

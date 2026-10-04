@@ -1,5 +1,6 @@
-# third-party clones (re-create with scripts/bootstrap.ps1)
+# discarded local reference clones (not used by bootstrap)
 vendor/
+third_party/
 # generated per machine by scripts/sync.py (absolute paths)
 .mcp.json
 .cursor/mcp.json
@@ -15,3 +16,13 @@ __pycache__/
 .pytest_cache/
 # personal edit projects (media paths, renders)
 projects/
+
+# runtime state and build artifacts from the integrated API
+mcp/resolve-forge/src/resolve_forge/**/logs/
+mcp/resolve-forge/dist/
+
+# excluded local remnants after removal of the discarded API copy
+mcp/resolve-forge/src/resolve_forge/api/
+
+# coverage runs
+.coverage
