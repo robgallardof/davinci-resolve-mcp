@@ -165,6 +165,8 @@ def render(text: str, width: int, height: int, *, style: str = "box", position: 
     y = {"top": top + pad_y + inset, "middle": (top + bottom - block_h) / 2,
          "bottom": bottom - block_h - pad_y - inset}[position]
     stroke = int(size * st.stroke_ratio)
+    # One shared baseline per line: words without ascenders ("cara") must not float up to the line top.
+    cap_height = -draw.textbbox((0, 0), "H", font=ts.text_font, anchor="ls")[1]
     cx = (left + right) / 2
     highlights = {w.strip(".,!?¡¿…\"'").casefold() for w in emphasis_words or []}
     word_index = 0
@@ -191,9 +193,10 @@ def render(text: str, width: int, height: int, *, style: str = "box", position: 
                                        radius=max(1, round(size * 0.025)), fill=color)
             for chunk, font in ts.runs(word):
                 emoji = font is ts.emoji_font
-                draw.text((x, y + (size * 0.08 if emoji else 0)), chunk, font=font, fill=fill,
+                position_xy = (x, y + size * 0.08) if emoji else (x, y + cap_height)
+                draw.text(position_xy, chunk, font=font, fill=fill,
                           embedded_color=emoji, stroke_width=0 if emoji or active else stroke,
-                          stroke_fill=st.stroke if not emoji else None, anchor="lt")
+                          stroke_fill=st.stroke if not emoji else None, anchor="lt" if emoji else "ls")
                 x += draw.textlength(chunk, font=font)
             x += ts.width(draw, " ")
             word_index += 1

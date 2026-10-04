@@ -116,3 +116,17 @@ def test_preview_produces_real_animated_artifacts_without_resolve(tmp_path, monk
         assert Path(result[key]).is_file()
     with Image.open(result["animated_preview"]) as image:
         assert image.is_animated and image.n_frames > 3
+
+
+def test_words_share_one_baseline_regardless_of_ascenders():
+    """'cara' (no ascenders) must sit on the same baseline as 'La' and 'de', not float to the line top."""
+    pytest.importorskip("PIL")
+    import numpy as np
+    from resolve_forge.graphics import cards
+    image = np.asarray(cards.render("La cara de", 1080, 1920, style="creator", position="middle").getchannel("A"))
+    columns = np.where(image.max(axis=0) > 128)[0]
+    gaps = np.where(np.diff(columns) > 12)[0]  # split the ink into the three words
+    words = np.split(columns, gaps + 1)
+    assert len(words) == 3
+    bottoms = [np.where(image[:, w[0]:w[-1] + 1].max(axis=1) > 128)[0].max() for w in words]
+    assert max(bottoms) - min(bottoms) <= 3, bottoms
