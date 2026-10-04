@@ -12,6 +12,7 @@ from ..gateway import Session, call
 from .. import errors as E
 from .context import ForgeError, current, source_size
 from .subject import Anchor, resolve_anchor
+from .native import mark_working
 
 
 def make_version(session: Session, format_key: str, *, subject: Anchor = "face",
@@ -49,5 +50,6 @@ def make_version(session: Session, format_key: str, *, subject: Anchor = "face",
                 item.SetProperty(prop, value)
             framed.append({"track": track, "name": item.GetName(), "method": how,
                            "subject": point, **{k: round(v, 3) for k, v in sizing.as_props().items()}})
+    mark_working(session, current(session))
     return {"timeline": name, "format": fmt.as_dict(), "clips": framed,
             "next": "apply_motion on this timeline, then check text against safe_rect_px"}

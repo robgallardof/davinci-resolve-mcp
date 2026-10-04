@@ -1,6 +1,6 @@
-"""The upstream `davinci-resolve` server, launched exactly as config/mcp.servers.json says.
+"""The integrated `resolve-forge` server, launched exactly as config/mcp.servers.json says.
 
-Handshake runs always (skipped if vendor/ is not installed); the read-only calls
+Handshake runs always (requires generated config); the read-only calls
 are `live` (need Resolve open, Free via bridge or Studio direct).
 """
 
@@ -20,9 +20,8 @@ CONFIG = ROOT / ".mcp.json"
 def _spec():
     if not CONFIG.exists():
         pytest.skip("run `python scripts/sync.py` first")
-    spec = json.loads(CONFIG.read_text(encoding="utf-8"))["mcpServers"]["davinci-resolve"]
-    if not Path(spec["command"]).exists():
-        pytest.skip("upstream not installed (scripts/bootstrap.ps1)")
+    spec = json.loads(CONFIG.read_text(encoding="utf-8"))["mcpServers"]["resolve-forge"]
+
     return spec
 
 
@@ -40,19 +39,19 @@ async def _run(calls):
             return tools, out
 
 
-def test_upstream_handshake():
+def test_integrated_handshake():
     tools, _ = asyncio.run(_run([]))
-    assert {"resolve_control", "project_manager", "timeline", "media_pool", "render"} <= tools
+    assert {"forge_status", "project_workflow", "timeline_versions", "list_media", "render_for"} <= tools
 
 
 @pytest.mark.live
-def test_upstream_reads_live_resolve():
+def test_integrated_reads_live_resolve():
     from resolve_forge.gateway import ResolveUnavailable, Session
     try:
         Session().resolve()
     except ResolveUnavailable as exc:
         pytest.skip(str(exc))
-    _, out = asyncio.run(_run([("resolve_control", {"action": "get_version"}),
-                               ("project_manager", {"action": "get_current"})]))
-    assert "version_string" in out["resolve_control"]
-    assert '"name"' in out["project_manager"]
+    _, out = asyncio.run(_run([("forge_status", {}), ("project_workflow", {"action": "inspect"}), ("audit_timeline", {})]))
+    assert json.loads(out["forge_status"])["ok"]
+    assert json.loads(out["project_workflow"])["project"]
+    assert json.loads(out["audit_timeline"])["ok"]

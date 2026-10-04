@@ -10,20 +10,33 @@ from ..gateway import call
 from .context import ForgeError
 
 
-def _walk(folder: Any) -> Iterator[Any]:
+def walk_media(folder: Any) -> Iterator[Any]:
     yield from (folder.GetClipList() or [])
     for sub in call(folder, "GetSubFolderList", default=[]) or []:
-        yield from _walk(sub)
+        yield from walk_media(sub)
+
+
+def find_existing(pool: Any, source: str) -> Any | None:
+    """Exact path for path inputs, exact name otherwise; ambiguity is never guessed."""
+    target = Path(source).expanduser()
+    explicit_path = target.is_absolute() or "/" in source or "\\" in source
+    candidates = []
+    for clip in walk_media(pool.GetRootFolder()):
+        path = call(clip, "GetClipProperty", "File Path", default="")
+        matches = bool(path) and Path(path).resolve() == target.resolve() if explicit_path else clip.GetName() == source
+        if matches:
+            candidates.append(clip)
+    if len(candidates) > 1:
+        raise ForgeError(f"Media source '{source}' is ambiguous.", code="AMBIGUOUS_SOURCE",
+                         hint="Use a unique absolute source path.")
+    return candidates[0] if candidates else None
 
 
 def find_or_import(pool: Any, source: str) -> Any:
     target = Path(source)
-    for clip in _walk(pool.GetRootFolder()):
-        if clip.GetName() == source or clip.GetName() == target.name:
-            return clip
-        path = call(clip, "GetClipProperty", "File Path", default="")
-        if path and Path(path) == target:
-            return clip
+    existing = find_existing(pool, source)
+    if existing is not None:
+        return existing
     if target.is_file():
         imported = pool.ImportMedia([str(target)]) or []
         if imported:

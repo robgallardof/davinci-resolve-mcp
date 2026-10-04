@@ -41,6 +41,8 @@ def payload(exc: BaseException) -> dict:
         code, hint, message = exc.code, exc.hint, exc.message
     elif isinstance(exc, ResolveUnavailable):
         code, hint, message = RESOLVE_UNREACHABLE, "Run `uv run resolve-forge-doctor` for the exact next step.", str(exc)
+    elif isinstance(exc, OSError):
+        code, hint, message = "IO_FAILURE", "Check the path and access permissions.", str(exc)
     else:  # KeyError / ValueError from the pure domain layer = bad argument
         code, hint, message = INVALID_ARGUMENT, None, str(exc).strip("'\"")
     out = {"ok": False, "error": message, "code": code}

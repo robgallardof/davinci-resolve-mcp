@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import shutil
 import subprocess
 import sys
 import time
@@ -120,10 +119,7 @@ def live():
         pm.CloseProject(pm.GetCurrentProject())
         if previous_name:
             pm.LoadProject(previous_name)
-        pm.DeleteProject(name)
-        shutil.rmtree(work, ignore_errors=True)
-        if work.parent.exists() and not any(work.parent.iterdir()):
-            work.parent.rmdir()
+        # Preserve generated project/media for inspection; no deletion without a user request.
 
 
 def test_edit_pipeline_end_to_end(live):

@@ -2,7 +2,7 @@
 
 Transports are tried in order; the first that yields a handle wins:
   1. direct  — Blackmagic's DaVinciResolveScript (Studio; Free <= 21.0 with local scripting)
-  2. bridge  — the in-app loopback bridge from samuelgursky/davinci-resolve-mcp
+  2. bridge  — the packaged in-app loopback bridge
                (works on the Free edition; run Workspace > Scripts > resolve_bridge)
 Code above this layer only sees `Session.resolve()`.
 """
@@ -21,7 +21,7 @@ log = logging.getLogger("resolve_forge.gateway")
 
 WIN_API = r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting"
 WIN_LIB = r"C:\Program Files\Blackmagic Design\DaVinci Resolve\fusionscript.dll"
-DEFAULT_UPSTREAM = Path(__file__).resolve().parents[4] / "vendor" / "davinci-resolve-mcp" / "src"
+BRIDGE_RUNTIME = Path(__file__).resolve().parent / "bridge"
 
 
 class ResolveUnavailable(RuntimeError):
@@ -57,11 +57,14 @@ print("REACHABLE" if dvr.scriptapp("Resolve") is not None else "REFUSED")
 
 
 def _prepare_native_env() -> None:
-    os.environ.setdefault("RESOLVE_SCRIPT_API", WIN_API)
-    os.environ.setdefault("RESOLVE_SCRIPT_LIB", WIN_LIB)
+    from .native_paths import get_resolve_paths
+    paths = get_resolve_paths()
+    os.environ.setdefault("RESOLVE_SCRIPT_API", paths["api_path"])
+    os.environ.setdefault("RESOLVE_SCRIPT_LIB", paths["lib_path"])
     # fusionscript embeds Python and segfaults inside a venv unless PYTHONHOME
     # names the base interpreter (measured on Resolve 21.0.4, Windows).
-    os.environ.setdefault("PYTHONHOME", sys.base_prefix)
+    if sys.platform == "win32" and sys.prefix != sys.base_prefix:
+        os.environ.setdefault("PYTHONHOME", sys.base_prefix)
 
 
 def direct_scripting_available() -> bool:
@@ -108,19 +111,13 @@ class DirectTransport:
 class BridgeTransport:
     name = "bridge"
 
-    def __init__(self, upstream_src: Path | None = None) -> None:
-        self.upstream_src = Path(os.environ.get("FORGE_UPSTREAM_SRC", upstream_src or DEFAULT_UPSTREAM))
-
     def connect(self) -> Any | None:
-        if not self.upstream_src.is_dir() or not resolve_process_running():
+        if not resolve_process_running():
             return None
-        root = str(self.upstream_src.parent)  # upstream imports itself as `src.utils...`
-        if root not in sys.path:
-            sys.path.append(root)
         try:
-            client = importlib.import_module("src.utils.resolve_bridge_client")
-            return client.connect(require_enabled=False)
-        except Exception as exc:  # BridgeUnavailable or import problems
+            from .bridge.client import connect
+            return connect()
+        except Exception as exc:
             log.debug("bridge unavailable: %s", exc)
             return None
 

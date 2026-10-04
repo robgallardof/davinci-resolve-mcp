@@ -32,7 +32,7 @@ def test_every_skill_follows_the_open_standard():
         assert 50 < len(fm["description"]) <= 1024
         names.append(skill.name)
     assert {"davinci-resolve-mcp", "vertical-video", "horizontal-video",
-            "dynamic-zoom-talking-head", "resolve-delivery"} <= set(names)
+            "dynamic-zoom-talking-head", "resolve-delivery", "editorial-direction"} <= set(names)
 
 
 def test_agents_exist_and_only_reference_real_skills():
@@ -75,21 +75,32 @@ def test_entry_docs_exist():
         assert (ROOT / doc).is_file(), doc
 
 
-def test_third_party_patches_are_consistent():
-    """Every patch belongs to a pinned, licensed repo; none to an unlicensed one; no AI co-author trailers."""
+def test_native_tools_have_no_external_runtime():
     import json
+    repos = json.loads((ROOT / "config" / "mcp.servers.json").read_text(encoding="utf-8"))["servers"]
+    assert set(repos) == {"resolve-forge"}
+    package = ROOT / "mcp/resolve-forge/src/resolve_forge"
+    assert not list((package / "api").rglob("*.py"))
+    for source in package.rglob("*.py"):
+        assert "resolve_forge.api" not in source.read_text(encoding="utf-8")
+    assert not (ROOT / "scripts/references.py").exists()
+    assert not (ROOT / "config/references.json").exists()
+    assert "vendor/" not in (ROOT / "mcp/resolve-forge/src/resolve_forge/gateway.py").read_text(encoding="utf-8")
 
-    repos = {r["dir"]: r for r in json.loads((ROOT / "config" / "references.json").read_text(encoding="utf-8"))["repos"]}
-    assert len(repos) == 7
-    for name, repo in repos.items():
-        assert re.fullmatch(r"[0-9a-f]{40}", repo["base"]), f"{name}: base must be a full commit hash"
-    patch_dirs = {p.name for p in (ROOT / "patches").iterdir() if p.is_dir()}
-    assert patch_dirs <= set(repos), f"patches for unknown repos: {patch_dirs - set(repos)}"
-    for name in patch_dirs:
-        assert repos[name]["license"] == "MIT", f"{name}: only patch licensed code"
-        for patch in (ROOT / "patches" / name).glob("*.patch"):
-            text = patch.read_text(encoding="utf-8")
-            assert text.startswith("From 0000000000000000000000000000000000000000"), "export with --zero-commit"
-            assert "co-authored-by" not in text.lower()
-            assert re.search(r"^diff --git ", text, re.M), f"{patch.name} has no diff"
-    assert "ref-tooflex" not in patch_dirs  # no license: review only
+
+def test_docs_list_every_registered_tool_and_the_real_count():
+    """README and the Resolve skill stay in sync with the server: no missing tools, no stale counts."""
+    import asyncio
+
+    from mcp.server.fastmcp import FastMCP
+    from resolve_forge import tools
+    from resolve_forge.gateway import Session
+    mcp = FastMCP("docs")
+    tools.register(mcp, Session([]))
+    names = {tool.name for tool in asyncio.run(mcp.list_tools())}
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert not {name for name in names if name not in readme}, "README tool table is missing tools"
+    for doc in ("README.md", "docs/install.md", "docs/architecture.md", "docs/third-party-migration.md",
+                ".agents/skills/davinci-resolve-mcp/SKILL.md"):
+        counts = {int(n) for n in re.findall(r"(\d+) (?:tools|herramientas)\b", (ROOT / doc).read_text(encoding="utf-8"))}
+        assert counts <= {len(names)}, f"{doc} mentions {counts}, server has {len(names)}"

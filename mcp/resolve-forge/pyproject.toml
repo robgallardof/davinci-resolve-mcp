@@ -3,7 +3,7 @@ name = "resolve-forge"
 version = "0.1.0"
 description = "Intent-level DaVinci Resolve MCP: dynamic zooms for talking heads, platform versions, delivery."
 requires-python = ">=3.10,<3.14"
-dependencies = ["mcp[cli]>=1.30,<2", "pillow>=10.1"]
+dependencies = ["mcp[cli]>=1.30,<2", "pillow>=10.1", "imageio-ffmpeg>=0.6"]
 
 [project.optional-dependencies]
 # face anchors + highlight detection
@@ -14,6 +14,7 @@ speech = ["faster-whisper>=1.1", "av>=12", "nvidia-cublas-cu12; sys_platform == 
 
 [project.scripts]
 resolve-forge = "resolve_forge.server:main"
+resolve-forge-install-bridge = "resolve_forge.bridge_install.install_resolve_bridge:main"
 resolve-forge-doctor = "resolve_forge.doctor:main"
 
 [dependency-groups]
@@ -31,3 +32,6 @@ testpaths = ["tests"]
 pythonpath = ["src", "tests"]
 addopts = "-m 'not live'"
 markers = ["live: needs a running DaVinci Resolve (Free or Studio); run with -m live"]
+
+[tool.hatch.build]
+exclude = ["**/__pycache__/**", "**/logs/**", "**/.pytest_cache/**", "src/resolve_forge/api/**"]

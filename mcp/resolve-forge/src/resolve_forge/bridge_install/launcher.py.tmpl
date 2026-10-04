@@ -1,0 +1,50 @@
+"""Forge bridge supervisor, installed into Resolve's Scripts directory."""
+import importlib.util
+import os
+import sys
+from pathlib import Path
+
+RUNTIME = Path(@@RUNTIME_LITERAL@@)
+if str(RUNTIME) not in sys.path:
+    sys.path.insert(0, str(RUNTIME))
+
+
+def load(name):
+    spec = importlib.util.spec_from_file_location(name, RUNTIME / (name + ".py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def main(resolve_object):
+    if resolve_object is None:
+        raise RuntimeError("Open a project and launch this script inside Resolve.")
+    while True:
+        wire, operations = load("resolve_bridge"), load("resolve_bridge_ops")
+        config = wire.load_config(RUNTIME / "bridge.json")
+        holder = {}
+        def lifecycle(mode):
+            problems = wire.validate_runtime_sources(RUNTIME)
+            if mode == "reload" and problems:
+                raise ValueError("Runtime reload refused: " + str(problems))
+            holder["bridge"].request_stop(mode)
+            return {"requested": mode}
+        surface = operations.ResolveOperations(resolve_object, config.get("allowed_media_roots", [os.path.expanduser("~")]),
+            config.get("allowed_output_roots", [str(Path.home() / "Movies")]), lifecycle)
+        bridge = wire.Bridge(resolve_object, config, operations.make_dispatch(surface))
+        holder["bridge"] = bridge
+        print("resolve-forge bridge: 127.0.0.1:" + str(config["port"]))
+        outcome = bridge.serve()
+        if outcome.get("stop_reason") != "reload":
+            return
+
+
+candidate = globals().get("resolve")
+if candidate is None:
+    host = globals().get("bmd")
+    if host is not None:
+        candidate = host.scriptapp("Resolve")
+    else:
+        import DaVinciResolveScript
+        candidate = DaVinciResolveScript.scriptapp("Resolve")
+main(candidate)

@@ -7,6 +7,7 @@ from ..domain import formats
 from ..gateway import Session, call
 from .context import ForgeError, current
 from .media_lookup import find_or_import
+from .native import mark_working
 
 
 def assemble(session: Session, source: str, cuts: list[list[float]], *, name: str,
@@ -39,6 +40,7 @@ def assemble(session: Session, source: str, cuts: list[list[float]], *, name: st
         infos.append({"mediaPoolItem": clip, "startFrame": s, "endFrame": e, "recordFrame": record, "trackIndex": 1})
         record += round((e - s) * tl_fps / src_fps)
     placed = pool.AppendToTimeline(infos) or []
+    mark_working(session, current(session))
     return {"timeline": name, "clips": len(placed), "requested": len(cuts),
             "duration_s": round((record - int(timeline.GetStartFrame())) / tl_fps, 2),
             "resolution": f"{timeline.GetSetting('timelineResolutionWidth')}x{timeline.GetSetting('timelineResolutionHeight')}",

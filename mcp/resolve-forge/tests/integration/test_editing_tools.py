@@ -5,7 +5,6 @@ import json
 
 import pytest
 
-from conftest import Forge
 from fakes import TIMELINE_START
 from resolve_forge.analysis import transcribe
 from resolve_forge.domain.transcript import Word

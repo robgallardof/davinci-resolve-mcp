@@ -2,14 +2,14 @@
 
     uv run pytest -m live -v
 
-What it does, in a throwaway project it creates and deletes:
+What it does, in a throwaway project it creates and preserves for inspection:
   1. saves your current project, creates `forge_live_<time>` (30 fps, 1920x1080)
   2. generates two 3 s synthetic clips with opencv, imports them, builds a timeline
   3. apply_motion (auto backend on clip 1, Fusion on clip 2), checks the API state
   4. renders and checks PIXELS: first and last frame of each clip must differ,
      i.e. the animation really reaches the render (not just the Inspector)
   5. make_platform_version("tiktok") + render -> the file is 1080x1920
-  6. deletes the project and reopens the one you had
+  6. preserves the scratch project and reopens the one you had
 Skipped automatically when Resolve is not reachable.
 """
 
@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import shutil
 import time
 from pathlib import Path
 
@@ -105,10 +104,7 @@ def live():
         pm.CloseProject(pm.GetCurrentProject())
         if previous_name:
             pm.LoadProject(previous_name)
-        pm.DeleteProject(name)
-        shutil.rmtree(work, ignore_errors=True)
-        if work.parent.exists() and not any(work.parent.iterdir()):
-            work.parent.rmdir()
+        # Preserve generated project/media for inspection; no deletion without a user request.
 
 
 def _frames(path: Path, indices: list[int]):
@@ -179,3 +175,28 @@ def test_4_vertical_version_renders_9x16(live):
     assert str(forge.wait_render(job["job_id"]).get("JobStatus")).lower() == "complete"
     (w, h), _ = _frames(_rendered(renders, "vertical"), [0])
     assert (w, h) == (1080, 1920)
+
+
+def test_5_owned_markers_preserve_the_source_timeline(live):
+    forge, _ = live
+    project = forge.session.resolve().GetProjectManager().GetCurrentProject()
+    source = project.GetCurrentTimeline()
+    before = source.GetMarkers()
+    result = forge("timeline_markers", entries=[{"seconds": .5, "name": "Forge QA"}], dry_run=False)
+    assert result["timeline"] != result["source"]
+    assert source.GetMarkers() == before
+    markers = project.GetCurrentTimeline().GetMarkers()
+    assert 15 in {int(float(frame)) for frame in markers}
+
+
+def test_6_owned_grade_and_fusion_graph_reach_native_resolve(live):
+    forge, _ = live
+    result = forge("grade_clips", slope=[1.02, 1., .98], saturation=.95, indices=[1], dry_run=False)
+    assert result["applied"] and result["timeline"] != result["source"]
+    graph = forge("apply_fusion_graph", nodes=[{"id": "qa", "type": "Transform", "inputs": {"Size": 1.04}}],
+                  edges=[["MediaIn1", "qa", "Input"], ["qa", "MediaOut1", "Input"]], index=1, dry_run=False)
+    assert graph["applied"]
+    project = forge.session.resolve().GetProjectManager().GetCurrentProject()
+    item = project.GetCurrentTimeline().GetItemListInTrack("video", 1)[0]
+    node = item.GetFusionCompByIndex(1).FindTool("Forge_qa")
+    assert node and node.GetInput("Size") == pytest.approx(1.04)

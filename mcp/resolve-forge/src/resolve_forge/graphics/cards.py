@@ -11,11 +11,15 @@ from functools import lru_cache
 from pathlib import Path
 
 from ..domain.formats import SafeZone
+from ..domain.text_design import DESIGNS, accent_rgba, resolve_style
 
 _FONT_DIRS = [Path(r"C:\Windows\Fonts"), Path("/System/Library/Fonts"), Path("/Library/Fonts"),
               Path("/usr/share/fonts/truetype/dejavu"), Path("/usr/share/fonts/TTF")]
 _HEAVY = ["seguibl.ttf", "arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"]
 _EMOJI = ["seguiemj.ttf"]  # colour emoji on Windows; elsewhere emoji are dropped rather than drawn as boxes
+_FACES = {"studio": ("seguisb.ttf", "Arial.ttf", "DejaVuSans.ttf"),
+          "editorial": ("georgiab.ttf", "Georgia Bold.ttf", "DejaVuSerif-Bold.ttf"),
+          "impact": ("ariblk.ttf", "Arial Black.ttf", "DejaVuSans-Bold.ttf")}
 
 
 @dataclass(frozen=True)
@@ -33,6 +37,10 @@ STYLES: dict[str, CardStyle] = {s.name: s for s in (
     CardStyle("outline", text=(255, 255, 255, 255), stroke=(0, 0, 0, 255), stroke_ratio=0.1),  # classic captions
     CardStyle("yellow", text=(255, 221, 0, 255), stroke=(0, 0, 0, 255), stroke_ratio=0.1),    # emphasis captions
     CardStyle("dark", text=(255, 255, 255, 255), box=(0, 0, 0, 190)),                          # subtle lower third
+    CardStyle("creator", text=(255, 255, 255, 255), stroke=(12, 18, 22, 255), stroke_ratio=0.06, size_ratio=0.065),
+    CardStyle("studio", text=(255, 255, 255, 255), box=(19, 23, 35, 235), size_ratio=0.055),
+    CardStyle("editorial", text=(255, 247, 231, 255), box=(27, 26, 24, 220), size_ratio=0.052),
+    CardStyle("impact", text=(255, 255, 255, 255), stroke=(14, 15, 20, 255), stroke_ratio=0.07, size_ratio=0.078),
 )}
 POSITIONS = ("top", "middle", "bottom")
 
@@ -46,10 +54,10 @@ def _find(candidates: tuple[str, ...]) -> str | None:
     return None
 
 
-def _text_font(size: int):
+def _text_font(size: int, style: str = "box"):
     from PIL import ImageFont
 
-    path = _find(tuple(_HEAVY))
+    path = _find(_FACES.get(style, tuple(_HEAVY))) or _find(tuple(_HEAVY))
     return ImageFont.truetype(path, size) if path else ImageFont.load_default(size=size)
 
 
@@ -65,8 +73,8 @@ def _is_emoji(ch: str) -> bool:
 
 
 class _Typesetter:
-    def __init__(self, size: int):
-        self.text_font = _text_font(size)
+    def __init__(self, size: int, style: str = "box"):
+        self.text_font = _text_font(size, style)
         self.emoji_font = _emoji_font(int(size * 0.94))
 
     def runs(self, text: str):
@@ -117,39 +125,77 @@ class _Typesetter:
 
 
 def render(text: str, width: int, height: int, *, style: str = "box", position: str = "top",
-           safe: SafeZone = SafeZone(0.1, 0.2, 0.08, 0.08)):
+           safe: SafeZone = SafeZone(0.1, 0.2, 0.08, 0.08), active_word: int | None = None,
+           accent: str | None = None, emphasis_words: list[str] | None = None,
+           max_lines: int | None = None):
     """RGBA image of the whole frame with the card placed inside the safe area."""
     from PIL import Image, ImageDraw
 
-    if style not in STYLES:
-        raise ValueError(f"unknown style '{style}'. Available: {', '.join(STYLES)}")
+    style = resolve_style(style, width, height)
+    color = accent_rgba(accent, style)
+    if not text.strip():
+        raise ValueError("text must not be empty")
+    if width < 64 or height < 64:
+        raise ValueError("text frames must be at least 64 pixels wide and high")
     if position not in POSITIONS:
         raise ValueError(f"position must be one of {', '.join(POSITIONS)}")
     st = STYLES[style]
+    if style in DESIGNS and DESIGNS[style].uppercase:
+        text = text.upper()
     size = max(18, int(min(width, height) * st.size_ratio))
-    ts = _Typesetter(size)
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    pad_x, pad_y = int(size * 0.55), int(size * 0.32)
     left, right = width * safe.left, width * (1 - safe.right)
-    lines = ts.wrap(draw, text, right - left - 2 * pad_x)
+    top, bottom = height * safe.top, height * (1 - safe.bottom)
+    # Fit by measured glyphs; never silently crop a long word, hide a token, or overflow the safe area.
+    inset = max(4, round(min(width, height) * 0.014)) if style in DESIGNS else 2
+    while True:
+        ts = _Typesetter(size, style)
+        pad_x, pad_y = int(size * 0.55), int(size * 0.32)
+        lines = ts.wrap(draw, text, right - left - 2 * pad_x - 2 * inset)
+        fits_width = all(ts.width(draw, line) + 2 * pad_x + 2 * inset <= right - left for line in lines)
+        fits_height = len(lines) * (size * 1.32 + pad_y) + 2 * pad_y + 2 * inset <= bottom - top
+        if fits_width and fits_height and (max_lines is None or len(lines) <= max_lines):
+            break
+        size -= 1
+        if size < max(12, round(min(width, height) * 0.025)):
+            raise ValueError("Text cannot fit legibly in the safe zone; shorten it or split it into cards")
     line_h = int(size * 1.32)
     block_h = len(lines) * line_h + (len(lines) - 1) * pad_y
-    top, bottom = height * safe.top, height * (1 - safe.bottom)
-    y = {"top": top + pad_y, "middle": (top + bottom - block_h) / 2, "bottom": bottom - block_h - pad_y}[position]
+    y = {"top": top + pad_y + inset, "middle": (top + bottom - block_h) / 2,
+         "bottom": bottom - block_h - pad_y - inset}[position]
     stroke = int(size * st.stroke_ratio)
     cx = (left + right) / 2
+    highlights = {w.strip(".,!?¡¿…\"'").casefold() for w in emphasis_words or []}
+    word_index = 0
     for line in lines:
         lw = ts.width(draw, line)
         x = cx - lw / 2
         if st.box:
             draw.rounded_rectangle([x - pad_x, y - pad_y * 0.7, x + lw + pad_x, y + line_h + pad_y * 0.3],
                                    radius=int(size * 0.42), fill=st.box)
-        for chunk, font in ts.runs(line):
-            emoji = font is ts.emoji_font
-            draw.text((x, y + (size * 0.08 if emoji else 0)), chunk, font=font, fill=st.text,
-                      embedded_color=emoji, stroke_width=0 if emoji else stroke,
-                      stroke_fill=st.stroke if not emoji else None)
-            x += draw.textlength(chunk, font=font)
+        for word in line.split():
+            word_width = ts.width(draw, word)
+            active = word_index == active_word
+            emphasized = word.strip(".,!?¡¿…\"'").casefold() in highlights
+            fill = color if emphasized and style in DESIGNS else st.text
+            if active and style in ("creator", "studio"):
+                draw.rounded_rectangle([x - size * 0.10, y - size * 0.08,
+                                        x + word_width + size * 0.10, y + size * 1.10],
+                                       radius=round(size * 0.18), fill=color)
+                fill = (18, 22, 26, 255)
+            elif active and style == "impact":
+                fill = color
+            if emphasized and style == "editorial":
+                draw.rounded_rectangle([x, y + size * 1.14, x + word_width, y + size * 1.19],
+                                       radius=max(1, round(size * 0.025)), fill=color)
+            for chunk, font in ts.runs(word):
+                emoji = font is ts.emoji_font
+                draw.text((x, y + (size * 0.08 if emoji else 0)), chunk, font=font, fill=fill,
+                          embedded_color=emoji, stroke_width=0 if emoji or active else stroke,
+                          stroke_fill=st.stroke if not emoji else None, anchor="lt")
+                x += draw.textlength(chunk, font=font)
+            x += ts.width(draw, " ")
+            word_index += 1
         y += line_h + pad_y
     return img

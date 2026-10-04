@@ -22,8 +22,14 @@ class MediaPoolItem:
     def __init__(self, name: str, width: int = 1920, height: int = 1080, path: str = "", frames: int = 300,
                  fps: float = 30):
         self.name, self.width, self.height, self.path, self.frames, self.fps = name, width, height, path, frames, fps
+        self.metadata = {}
 
     def GetName(self): return self.name
+
+    def GetMetadata(self): return dict(self.metadata)
+    def SetMetadata(self, values):
+        self.metadata.update(values)
+        return True
 
     def GetClipProperty(self, key=None):
         props = {"Resolution": f"{self.width}x{self.height}", "File Path": self.path, "Frames": str(self.frames),
@@ -60,6 +66,10 @@ class MediaPool:
         parent.subfolders.append(sub)
         return sub
 
+    def AutoSyncAudio(self, clips, options):
+        self.synced = ([clip.GetName() for clip in clips], options)
+        return True
+
     def ImportMedia(self, paths):
         from pathlib import Path
         out = []
@@ -78,6 +88,14 @@ class MediaPool:
             out.append(item)
         return out
 
+    def MoveClips(self, clips, destination):
+        for clip in clips:
+            for folder in [self.root, *self.root.subfolders]:
+                if clip in folder.clips:
+                    folder.clips.remove(clip)
+            destination.clips.append(clip)
+        return True
+
     def CreateEmptyTimeline(self, name):
         tl = Timeline(self.project, name, [[]])
         self.project.timelines.append(tl)
@@ -87,12 +105,13 @@ class MediaPool:
         tl, placed = self.project.current, []
         for info in infos:
             track = int(info.get("trackIndex", 1))
-            while len(tl.tracks) < track:
-                tl.tracks.append([])
+            target_tracks = tl.audio_tracks if info.get("mediaType") == 2 else tl.tracks
+            while len(target_tracks) < track:
+                target_tracks.append([])
             item = TimelineItem(info["mediaPoolItem"], int(info["recordFrame"]),
                                 int(info["endFrame"]) - int(info["startFrame"]), edition=self.project.resolve,
                                 left=int(info["startFrame"]))
-            tl.tracks[track - 1].append(item)
+            target_tracks[track - 1].append(item)
             placed.append(item)
         return placed
 
@@ -132,6 +151,8 @@ class FusionTool:
             self.static[inp] = value  # no spline: a timed write is just a static write
         return True
 
+    def GetInput(self, inp): return self.static.get(inp)
+
     def Delete(self):
         self.comp.tools.pop(self.name)
 
@@ -168,6 +189,8 @@ class TimelineItem:
         self.interp: dict[tuple[str, int], str] = {}
         self.comps: list[FusionComp] = []
         self.smart_reframed = False
+        self.cdl: list[dict] = []
+        self.luts: dict[int, str] = {}
 
     def __getattr__(self, name):
         # Resolve 19 has no keyframe family; strict like the real proxy.
@@ -207,6 +230,16 @@ class TimelineItem:
     def _GetKeyframeAtIndex(self, prop, i): return {"frame": sorted(self.keys[prop])[i]}
     def _DeleteKeyframe(self, prop, frame): return self.keys.get(prop, {}).pop(int(frame), None) is not None
 
+    def SetCDL(self, cdl):
+        self.cdl.append(dict(cdl))
+        return True
+
+    def SetLUT(self, node, path):
+        self.luts[int(node)] = path
+        return True
+
+    def GetNodeGraph(self): return NodeGraph(self)
+
     def GetFusionCompCount(self): return len(self.comps)
     def GetFusionCompByIndex(self, i): return self.comps[i - 1]
 
@@ -215,20 +248,89 @@ class TimelineItem:
         return self.comps[-1]
 
 
+class NodeGraph:
+    def __init__(self, item: TimelineItem): self.item = item
+    def GetNumNodes(self): return max([1, *self.item.luts])
+    def GetNodeLabel(self, node): return f"Node {node}"
+    def GetLUT(self, node): return self.item.luts.get(int(node), "")
+
+
+class Still:
+    def __init__(self, n: int): self.n = n
+
+
+class Album:
+    def __init__(self, name: str):
+        self.name, self.stills, self.labels = name, [], {}
+
+    def GetStills(self): return list(self.stills)
+
+    def SetLabel(self, still, label):
+        self.labels[still.n] = label
+        return True
+
+    def ExportStills(self, stills, folder, prefix, fmt):
+        from pathlib import Path
+        for still in stills:
+            Path(folder, f"{prefix}_{still.n}.{fmt}").write_bytes(b"png")
+        return True
+
+
+class Gallery:
+    def __init__(self): self.album = Album("Stills 1")
+    def GetGalleryStillAlbums(self): return [self.album]
+    def GetAlbumName(self, album): return album.name
+    def GetCurrentStillAlbum(self): return self.album
+
+
 class Timeline:
+    def __getattr__(self, name):
+        project = self.__dict__.get("project")
+        if name == "CreateSubtitlesFromAudio" and project and project.resolve.native_ai:
+            return lambda *_: self.__dict__.setdefault("subtitled", True)
+        raise AttributeError(name)
+
+    def Export(self, path, kind):
+        from pathlib import Path
+        Path(path).write_text(f"{kind}:{self.name}", encoding="utf-8")
+        return True
+
+    def GrabStill(self):
+        gallery = self.project.gallery
+        still = Still(len(gallery.album.stills) + 1)
+        gallery.album.stills.append(still)
+        return still
+
     def __init__(self, project: "Project", name: str, tracks: list[list[TimelineItem]], width=1920, height=1080, fps=30):
         self.project, self.name, self.tracks = project, name, tracks
+        self.audio_tracks = []
+        self.markers = {}
+        self.track_names, self.track_enabled, self.track_locked = {}, {}, {}
         self.settings = {"timelineFrameRate": str(fps), "timelineResolutionWidth": str(width),
                          "timelineResolutionHeight": str(height), "useCustomSettings": "0"}
 
     def GetName(self): return self.name
     def GetStartFrame(self): return TIMELINE_START
+    def GetEndFrame(self): return max([TIMELINE_START] + [item.start + item.duration for track in self.tracks for item in track])
+    def GetMarkers(self): return copy.deepcopy(self.markers)
+    def AddMarker(self, frame, color, name, note, duration, custom):
+        self.markers[frame] = dict(color=color, name=name, note=note, duration=duration, customData=custom)
+        return True
+    def SetTrackName(self, kind, index, value): self.track_names[(kind,index)] = value; return True
+    def GetTrackName(self, kind, index): return self.track_names.get((kind,index), "")
+    def SetTrackEnable(self, kind, index, value): self.track_enabled[(kind,index)] = value; return True
+    def GetIsTrackEnabled(self, kind, index): return self.track_enabled.get((kind,index), True)
+    def SetTrackLock(self, kind, index, value): self.track_locked[(kind,index)] = value; return True
+    def GetIsTrackLocked(self, kind, index): return self.track_locked.get((kind,index), False)
+
     def GetSetting(self, key=None): return self.settings.get(key, "")
-    def GetTrackCount(self, kind): return len(self.tracks) if kind == "video" else 0
+    def GetTrackCount(self, kind): return len(self.tracks) if kind == "video" else len(self.audio_tracks)
 
     def AddTrack(self, kind, *_):
         if kind == "video":
             self.tracks.append([])
+        elif kind == "audio":
+            self.audio_tracks.append([])
         return True
 
     def SetSetting(self, key, value):
@@ -245,6 +347,8 @@ class Timeline:
             return None
         dup = copy.copy(self)
         dup.name, dup.settings = name, dict(self.settings)
+        dup.markers = copy.deepcopy(self.markers)
+        dup.track_names, dup.track_enabled, dup.track_locked = dict(self.track_names), dict(self.track_enabled), dict(self.track_locked)
         dup.tracks = [[_clone(i) for i in track] for track in self.tracks]
         self.project.timelines.append(dup)
         self.project.current = dup  # the documented surprise
@@ -265,14 +369,22 @@ class Project:
         self.render: dict[str, Any] = {}
         self.jobs: dict[str, dict] = {}
         self.pool = MediaPool(self)
+        self.gallery = Gallery()
+        self.settings = {"timelineFrameRate": "30", "timelineResolutionWidth": "1920", "timelineResolutionHeight": "1080"}
 
     def GetName(self): return self.name
+    def GetGallery(self): return self.gallery
     def GetCurrentTimeline(self): return self.current
     def GetMediaPool(self): return self.pool
     def GetTimelineCount(self): return len(self.timelines)
     def GetTimelineByIndex(self, i): return self.timelines[i - 1]
-    def GetSetting(self, key=None): return {"timelineFrameRate": "30", "timelineResolutionWidth": "1920",
-                                            "timelineResolutionHeight": "1080"}.get(key, "")
+    def GetSetting(self, key=None): return dict(self.settings) if key is None else self.settings.get(key, "")
+
+    def SetSetting(self, key, value):
+        if key == "readOnlySetting":
+            return False
+        self.settings[key] = str(value)
+        return True
 
     def SetCurrentTimeline(self, timeline):
         self.current = timeline
@@ -304,6 +416,10 @@ class Resolve:
     def __init__(self, *, studio: bool, keyframes: bool = True, version: str = "21.0.4.5"):
         self.studio, self.keyframes, self.version = studio, keyframes, version
         self.import_frames = 900  # frames of any imported movie file
+        self.native_ai = False
+        self.AUDIO_SYNC_WAVEFORM, self.AUDIO_SYNC_TIMECODE = 0, 1
+        self.EXPORT_OTIO, self.EXPORT_EDL = "otio", "edl"  # deliberately not every format
+        self.projects: dict[str, Project] = {}
         self.project: Project | None = Project(self)
 
     def GetVersionString(self): return self.version
@@ -314,6 +430,25 @@ class Resolve:
 class _PM:
     def __init__(self, resolve): self.resolve = resolve
     def GetCurrentProject(self): return self.resolve.project
+    def SaveProject(self): return True
+    def GetProjectListInCurrentFolder(self): return [self.resolve.project.name, *self.resolve.projects]
+
+    def CreateProject(self, name):
+        if name in self.resolve.projects or name == self.resolve.project.name:
+            return None
+        self.resolve.projects[name] = self.resolve.project = Project(self.resolve, name)
+        return self.resolve.project
+
+    def LoadProject(self, name):
+        project = self.resolve.projects.get(name)
+        if project:
+            self.resolve.project = project
+        return project
+
+    def ExportProject(self, name, path):
+        from pathlib import Path
+        Path(path).write_bytes(b"DRP" + name.encode())
+        return True
 
 
 def demo_resolve(*, studio: bool, keyframes: bool = True, clips: int = 2, source=(1920, 1080)) -> Resolve:
@@ -337,6 +472,8 @@ class BridgeLike:
     def __getattr__(self, name):
         attr = getattr(self._t, name)  # AttributeError propagates, like the real proxy
         if not callable(attr):
+            if isinstance(attr, (str, int, float, bool)) and name[:1].isupper():
+                return attr  # the real bridge serves plain constants through get_attribute
             raise AttributeError(name)
 
         def call(*args):

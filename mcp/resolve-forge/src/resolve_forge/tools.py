@@ -12,12 +12,13 @@ from mcp.server.fastmcp import FastMCP
 from . import doctor
 from .analysis import faces
 from .domain import formats, styles
+from .domain.text_design import catalog as text_catalog
 from .errors import payload
 from .gateway import ResolveUnavailable, Session
 from . import resources
 from .domain.transcript import Span
 from .services import (assembly_service, captions_service, format_service, highlight_service, motion_service,
-                       overlay_service, render_service, transcript_service)
+                       overlay_service, render_service, text_preview_service, transcript_service)
 from .services.appliers import APPLIERS
 from .services.context import ForgeError, current, describe, video_items
 from .services.subject import resolve_anchor
@@ -36,7 +37,7 @@ def _safe(fn: Callable[..., dict]) -> Callable[..., Any]:
             result = await asyncio.get_running_loop().run_in_executor(
                 _RESOLVE_THREAD, functools.partial(fn, *args, **kwargs))
             return {"ok": True, **result}
-        except (ForgeError, ResolveUnavailable, KeyError, ValueError) as exc:
+        except (ForgeError, ResolveUnavailable, KeyError, ValueError, OSError) as exc:
             return payload(exc)
     return wrapper
 
@@ -47,6 +48,9 @@ def run_in_resolve_thread(fn: Callable[..., Any], *args: Any) -> Any:
 
 
 def register(mcp: FastMCP, session: Session) -> None:
+    from . import authoring_tools, production_tools
+    authoring_tools.register(mcp, session, _safe)
+    production_tools.register(mcp, session, _safe)
     @mcp.tool()
     @_safe
     def forge_status() -> dict:
@@ -183,30 +187,64 @@ def register(mcp: FastMCP, session: Session) -> None:
 
     @mcp.tool()
     @_safe
-    def add_captions(style: str = "outline", position: str = "bottom", max_words: int = 4,
-                     language: str | None = None) -> dict:
+    def add_captions(style: str = "auto", position: str = "bottom", max_words: int | None = None,
+                     language: str | None = None, animation: str = "auto", accent: str | None = None,
+                     emphasis_words: list[str] | None = None, reduced_motion: bool = False,
+                     words: list[dict] | None = None) -> dict:
         """Burned-in captions from the timeline's speech, on a new top track. Works on Free (no Studio AI needed).
 
-        style: outline (white, black stroke) | yellow | box (TikTok-native) | dark.
+        style: auto selects Creator for vertical and Studio for horizontal; creator | studio | editorial | impact.
+        Legacy styles outline | yellow | box | dark stay available, with no motion by default.
+        Modern designs highlight the spoken word (Editorial uses chosen emphasis only), with measured two-line layout.
+        animation: auto | none | fade | lift | pop. accent: brand color #RRGGBB. reduced_motion disables movement.
+        emphasis_words: selected words to accent, preserving the complete transcript.
+        words: optional corrected {text,start,end} entries in timeline seconds, from transcribe_timeline(include_words=true).
+        Provided words bypass Whisper. Returns a separate UTF-8 SRT file as well as the designed caption track.
         position: bottom | middle | top, always inside the safe zone of the timeline's resolution.
-        max_words: words per caption block (2-5 is the short-form sweet spot).
+        max_words: 1-8; omit to use the design's phrase length. One word is suitable for brief impact moments.
         """
         return captions_service.add_captions(session, style=style, position=position, max_words=max_words,
-                                             language=language)
+                                             language=language, animation=animation, accent=accent,
+                                             emphasis_words=emphasis_words, reduced_motion=reduced_motion, words=words)
 
     @mcp.tool()
     @_safe
-    def add_text_overlay(text: str, start_s: float, duration_s: float, style: str = "box",
-                         position: str = "top") -> dict:
+    def list_text_styles() -> dict:
+        """Discover coherent caption/title art directions, word highlighting, brand colors and matching camera motion.
+
+        Works without Resolve. Pick according to tone; avoid animating every visual element simultaneously.
+        """
+        return text_catalog()
+
+    @mcp.tool()
+    @_safe
+    def preview_text_style(text: str, style: str = "auto", width: int = 1080, height: int = 1920,
+                           position: str = "bottom", animation: str = "auto", accent: str | None = None,
+                           emphasis_words: list[str] | None = None, reduced_motion: bool = False) -> dict:
+        """Create a PNG, animated WebP and contact sheet for design review, without changing any project.
+
+        Timing is illustrative. Final captions synchronize to speech. Dimensions follow the target timeline.
+        """
+        return text_preview_service.preview(text, style=style, width=width, height=height, position=position,
+                                            animation=animation, accent=accent, emphasis_words=emphasis_words,
+                                            reduced_motion=reduced_motion)
+
+    @mcp.tool()
+    @_safe
+    def add_text_overlay(text: str, start_s: float, duration_s: float, style: str = "auto",
+                         position: str = "top", animation: str = "auto", accent: str | None = None,
+                         emphasis_words: list[str] | None = None, reduced_motion: bool = False) -> dict:
         """On-screen text (hook, POV, labels; emoji supported) for an exact time range, inside the safe zone.
 
-        start_s is in timeline seconds. style: box | outline | yellow | dark. position: top | middle | bottom.
+        start_s is in timeline seconds. style: auto | creator | studio | editorial | impact, plus legacy box/outline/yellow/dark.
+        animation: auto | none | fade | lift | pop. accent: #RRGGBB. position: top | middle | bottom.
         Each call adds a new top video track so it never collides with existing clips.
         """
         if duration_s <= 0:
             raise ValueError("duration_s must be > 0")
         return overlay_service.place_cards(session, [Span(text, start_s, start_s + duration_s)],
-                                           style=style, position=position)
+                                           style=style, position=position, animation=animation, accent=accent,
+                                           emphasis_words=emphasis_words, reduced_motion=reduced_motion)
 
     @mcp.tool()
     @_safe

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .analysis import faces
-from .gateway import DEFAULT_UPSTREAM, WIN_API, ResolveUnavailable, Session, call, resolve_process_running
+from .gateway import WIN_API, ResolveUnavailable, Session, call, resolve_process_running
 
 APPDATA_SCRIPTS = Path(os.environ.get("APPDATA", "")) / "Blackmagic Design/DaVinci Resolve/Support/Fusion/Scripts/Utility"
 PROGRAMDATA_SCRIPTS = Path(os.environ.get("PROGRAMDATA", r"C:\ProgramData")) / "Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility"
@@ -36,12 +36,10 @@ def run() -> list[Check]:
               "Usa Python 3.10–3.13 (uv sync --python 3.12)."),
         Check("Resolve scripting API", Path(WIN_API).is_dir() or sys.platform != "win32", WIN_API,
               "Instala DaVinci Resolve 20+ (Free o Studio)."),
-        Check("Upstream MCP (davinci-resolve)", (DEFAULT_UPSTREAM.parent / "venv").is_dir(), str(DEFAULT_UPSTREAM.parent),
-              "Ejecuta scripts/bootstrap.ps1."),
         Check("Bridge instalado en Resolve (Free)",
               any((d / "resolve_bridge.py").exists() for d in (APPDATA_SCRIPTS, PROGRAMDATA_SCRIPTS)),
               "Workspace > Scripts > resolve_bridge",
-              "vendor/davinci-resolve-mcp: python scripts/install_resolve_bridge.py y reinicia Resolve."),
+              "uv run resolve-forge-install-bridge y reinicia Resolve."),
         Check("Detección de caras (opcional)", faces.available(), "opencv" if faces.available() else "sin opencv",
               "uv sync --extra vision"),
     ]
@@ -61,7 +59,7 @@ def run() -> list[Check]:
                                 "Abre o crea un timeline con clips."))
         except ResolveUnavailable:
             checks.append(Check("Conexión", False, "Resolve no responde",
-                                "Free: Workspace > Scripts > resolve_bridge (deja esa ventana abierta). "
+                                "Free: Workspace > Scripts > resolve_bridge (no abre ventana; queda escuchando hasta cerrar Resolve). "
                                 "Studio: Preferences > System > General > External scripting using = Local."))
     return checks
 

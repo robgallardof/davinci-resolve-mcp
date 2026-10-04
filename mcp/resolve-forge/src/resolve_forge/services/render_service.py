@@ -20,6 +20,8 @@ def queue(session: Session, format_key: str, target_dir: str | None = None, *, n
     target_dir = str(target_dir or DEFAULT_OUTPUT)
     Path(target_dir).mkdir(parents=True, exist_ok=True)
     p = ctx.project
+    from .native import accepted
+    accepted(ctx.resolve.GetProjectManager(), "SaveProject")
 
     codec = fmt.codec
     if not p.SetCurrentRenderFormatAndCodec(fmt.container, codec):

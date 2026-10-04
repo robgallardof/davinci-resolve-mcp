@@ -8,18 +8,18 @@ costs almost no disk.
 
 from __future__ import annotations
 
-import os
 import re
-import shutil
-import time
+import secrets
 from pathlib import Path
 
 from .. import errors as E
 from ..domain import formats
 from ..domain.transcript import Span
+from ..domain.text_design import DESIGNS, CaptionCue, accent_rgba, resolve_animation, resolve_style
 from ..gateway import Session, call
 from .context import Context, ForgeError, current
 from .render_service import DEFAULT_OUTPUT
+from .native import number, working_copy
 
 OVERLAY_ROOT = DEFAULT_OUTPUT / "overlays"  # under ~/Movies: readable by the Free bridge
 POOL_FOLDER = "forge-overlays"
@@ -27,8 +27,12 @@ POOL_FOLDER = "forge-overlays"
 
 def _letters(n: int) -> str:
     """0 -> 'aa', 1 -> 'ab' ... Folder names must not end in digits or Resolve merges sequences."""
-    a, b = divmod(n, 26)
-    return "abcdefghijklmnopqrstuvwxyz"[a % 26] + "abcdefghijklmnopqrstuvwxyz"[b]
+    result = ""
+    while True:
+        n, digit = divmod(n, 26)
+        result = chr(97 + digit) + result
+        if n == 0:
+            return result.rjust(2, "a") if len(result) == 1 else "a" + result
 
 
 def _slug(text: str) -> str:
@@ -36,17 +40,8 @@ def _slug(text: str) -> str:
 
 
 def write_sequence(image, folder: Path, frames: int) -> Path:
-    shutil.rmtree(folder, ignore_errors=True)
-    folder.mkdir(parents=True)
-    first = folder / f"{folder.name}_0000.png"
-    image.save(first)
-    for n in range(1, max(2, frames)):  # >= 2 frames, or Resolve imports a 5 s still
-        dst = folder / f"{folder.name}_{n:04d}.png"
-        try:
-            os.link(first, dst)
-        except OSError:
-            shutil.copyfile(first, dst)
-    return folder
+    from ..graphics.sequences import write_frames
+    return write_frames(folder, frames, lambda _: None, lambda _: image)
 
 
 def _target_track(ctx: Context, track: int | None) -> int:
@@ -66,16 +61,32 @@ def _pool_folder(pool):
     return call(pool, "AddSubFolder", root, POOL_FOLDER, default=None) or root
 
 
-def place_cards(session: Session, cards: list[Span], *, style: str = "box", position: str = "top",
-                track: int | None = None, label: str = "text") -> dict:
+def place_cards(session: Session, cards: list[Span | CaptionCue], *, style: str = "box", position: str = "top",
+                track: int | None = None, label: str = "text", animation: str = "auto",
+                accent: str | None = None, emphasis_words: list[str] | None = None,
+                reduced_motion: bool = False) -> dict:
     from ..graphics import cards as gfx  # Pillow only when needed
+    from ..graphics.sequences import write_frames
+    from ..graphics.text_animation import animate
 
     if not cards:
         return {"placed": 0, "track": None}
+    for card in cards:
+        number(card.start, "card start", 0)
+        number(card.end, "card end", card.start)
+        if card.end <= card.start:
+            raise ValueError("Cards need a positive duration.")
     ctx = current(session)
     width, height = ctx.width, ctx.height
+    style = resolve_style(style, width, height)
+    animation = resolve_animation(animation, style, reduced_motion)
+    accent_rgba(accent, style)
     safe = formats.safe_for(width, height)
-    run = OVERLAY_ROOT / f"{_slug(ctx.timeline.GetName())}_{label}_{int(time.time())}"
+    # Validate every card before importing media or creating tracks.
+    for card in cards:
+        gfx.render(card.text, width, height, style=style, position=position, safe=safe,
+                   accent=accent, emphasis_words=emphasis_words, max_lines=2 if style in DESIGNS else None)
+    run = OVERLAY_ROOT / f"{_slug(ctx.timeline.GetName())}_{label}_{secrets.token_hex(6)}"
     pool = ctx.media_pool
     previous = call(pool, "GetCurrentFolder", default=None)
     folder = _pool_folder(pool)
@@ -84,21 +95,45 @@ def place_cards(session: Session, cards: list[Span], *, style: str = "box", posi
         clips = []
         for i, card in enumerate(cards):
             # frame math on absolute positions: back-to-back cards never overlap by a rounding frame
-            frames = max(2, ctx.seconds_to_frame(card.end) - ctx.seconds_to_frame(card.start))
-            image = gfx.render(card.text, width, height, style=style, position=position, safe=safe)
-            seq = write_sequence(image, run / f"{label}{_letters(i)}", frames)
+            frames = max(1, ctx.seconds_to_frame(card.end) - ctx.seconds_to_frame(card.start))
+            highlight = style in DESIGNS and DESIGNS[style].highlight and isinstance(card, CaptionCue)
+            ramp = max(1, min(round(ctx.fps * 0.18), frames - 1))
+
+            def state_at(frame):
+                # Frame samples are aligned to the rounded recordFrame, not the unrounded word start.
+                seconds = (ctx.seconds_to_frame(card.start) - ctx.start_frame + frame) / ctx.fps
+                active = card.active_at(seconds) if highlight else None
+                return active, min(frame, ramp) if animation != "none" else 0
+
+            base_images = {}
+
+            def render_state(state):
+                active, frame = state
+                if active not in base_images:
+                    base_images[active] = gfx.render(card.text, width, height, style=style, position=position,
+                                                    safe=safe, active_word=active, accent=accent,
+                                                    emphasis_words=emphasis_words,
+                                                    max_lines=2 if style in DESIGNS else None)
+                return animate(base_images[active], animation, frame, frames, ctx.fps, safe)
+
+            seq = write_frames(run / f"{label}{_letters(i)}", frames, state_at, render_state)
             imported = pool.ImportMedia([str(seq)]) or []
             if len(imported) != 1:
                 raise ForgeError(f"Resolve imported {len(imported)} clips for card {i + 1}.", code=E.RESOLVE_REFUSED,
                                  hint="On Free the bridge only reads inside your user profile.")
-            clips.append((imported[0], card))
+            clips.append((imported[0], card, frames))
     finally:
         if previous is not None:
             call(pool, "SetCurrentFolder", previous)
+    ctx = working_copy(session, "text")
     index = _target_track(ctx, track)
-    infos = [{"mediaPoolItem": clip, "startFrame": 0, "endFrame": int(clip.GetClipProperty("Frames")),
+    infos = [{"mediaPoolItem": clip, "startFrame": 0, "endFrame": frames,
               "recordFrame": ctx.seconds_to_frame(card.start), "trackIndex": index, "mediaType": 1}
-             for clip, card in clips]
+             for clip, card, frames in clips]
     placed = pool.AppendToTimeline(infos) or []
+    if len(placed) != len(cards):
+        raise ForgeError(f"Resolve placed {len(placed)} of {len(cards)} cards.", code=E.RESOLVE_REFUSED,
+                         hint="Inspect the working timeline; a partial insertion may exist.")
     return {"placed": len(placed), "requested": len(cards), "track": index, "style": style,
+            "animation": animation, "reduced_motion": reduced_motion, "accent": accent or (DESIGNS[style].accent if style in DESIGNS else None),
             "position": position, "files": str(run), "safe_zone": safe.rect(width, height)}

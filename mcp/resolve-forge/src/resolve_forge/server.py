@@ -15,15 +15,20 @@ from .gateway import Session
 INSTRUCTIONS = """resolve-forge: intent-level editing for DaVinci Resolve (motion, platform versions, delivery).
 Flow: forge_status -> (find_highlights -> assemble_timeline) -> make_platform_version (if changing aspect)
 -> transcribe_timeline -> apply_motion(cuts_s, hits_s) -> add_captions / add_text_overlay -> render_for.
+Design: list_text_styles -> preview_text_style -> add_captions(style='auto', words=corrected_words).
+Default captions and overlays use coherent modern art direction, short entry animation and safe-zone layout.
+Respect tone and brand colors; do not stack camera punches, titles and caption pops on every word.
 Errors carry a stable `code` and a `hint`.
 Resources: resolve://status, resolve://timeline, forge://formats, forge://styles.
 For granular work (media pool, color nodes, Fairlight, markers, transcription, Fusion graphs)
-use the 'davinci-resolve' server, which runs alongside this one."""
+use Forge-owned authoring tools: project_workflow, ingest_media, edit_clips, grade_clips, apply_fusion_graph."""
 
 
 def build() -> FastMCP:
     mcp = FastMCP("resolve-forge", instructions=INSTRUCTIONS)
-    tools.register(mcp, Session())
+    session = Session()
+    tools.register(mcp, session)
+
     return mcp
 
 

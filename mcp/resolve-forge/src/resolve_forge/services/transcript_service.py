@@ -64,3 +64,44 @@ def analyse(session: Session, *, track: int = 1, language: str | None = None, in
     if not speech.words:
         out["note"] = "No speech detected (music, ambience or silent clip). Use on-screen text instead of captions."
     return out
+
+
+def vocal_focus(source_file: str) -> str:
+    """Centre channel band-passed to the voice range: helps recognition over a full mix (not true separation)."""
+    import hashlib
+    import tempfile
+    from pathlib import Path
+
+    from .audio_service import ffmpeg_executable, run
+    stat = Path(source_file).stat()
+    key = hashlib.sha1(f"{Path(source_file).resolve()}|{stat.st_size}|{stat.st_mtime}".encode()).hexdigest()[:16]
+    output = Path(tempfile.gettempdir()) / "resolve-forge-vocal-focus" / f"{key}.wav"
+    if not output.exists():
+        output.parent.mkdir(parents=True, exist_ok=True)
+        run([ffmpeg_executable(), "-hide_banner", "-nostdin", "-y", "-i", source_file, "-vn",
+             "-af", "pan=mono|c0=0.5*c0+0.5*c1,highpass=f=150,lowpass=f=5000,dynaudnorm", "-ar", "16000", str(output)])
+    return str(output)
+
+
+def align_text(session: Session, source: str, text: str, *, language: str | None = None, timeline_offset_s: float = 0.0,
+               focus_vocals: bool = False, transcriber: transcribe.Transcriber | None = None) -> dict:
+    """Known lyrics/script timed against one source; the supplied text wins over recognition."""
+    from ..domain.alignment import align
+    from .analysis_service import source_path as resolve_source
+    from .native import number
+    number(timeline_offset_s, "timeline offset", -86400, 86400)
+    if transcriber is None:
+        require_speech_stack()
+    path = resolve_source(session, source)
+    recognised, detected = (transcriber or _DEFAULT).transcribe(vocal_focus(path) if focus_vocals else path, language)
+    words, coverage = align(text, recognised)
+    shifted = [w for w in words if w.end + timeline_offset_s > 0]
+    out = {"source": source, "language": language or detected, "coverage": coverage, "focus_vocals": focus_vocals, "word_count": len(shifted),
+           "words": [{"text": w.text, "start": round(max(0.0, w.start + timeline_offset_s), 3),
+                      "end": round(w.end + timeline_offset_s, 3)} for w in shifted],
+           "time_basis": "timeline seconds = source seconds + timeline_offset_s",
+           "next": "add_captions(words=words, style=...) burns exactly this text"}
+    if coverage < .6:
+        out["warning"] = ("Under 60% of the text matched what was heard: check the language, the source range or "
+                          "use isolated vocals or focus_vocals=true; unmatched words are evenly spaced between matches.")
+    return out
