@@ -1,6 +1,6 @@
 # Migración: herramientas propias a partir del análisis de la competencia
 
-Forge implementa 52 herramientas propias: edición editorial, producción por género, sonido y authoring de proyectos,
+Forge implementa 54 herramientas propias: edición editorial, producción por género, sonido y authoring de proyectos,
 media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP estudiados.
 
 ## ¿Cuánto lleva? (2026-10-04)
@@ -19,7 +19,7 @@ media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP 
 | 8. Documentación, skills y roles al día | ✅ Hecho | README (tabla verificada por test), skill `editorial-direction` |
 | 9. Prueba live de las fases 6–7 | ⏳ Pendiente | `tests/live/test_live_production.py` (listo, falta ejecutarlo con el bridge) |
 
-En números: 52 tools, 497 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
+En números: 54 tools, 497 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
 la suite live con Resolve abierto y el bridge iniciado (Workspace → Scripts → resolve_bridge).
 
 ## Arquitectura
@@ -73,7 +73,7 @@ Se retiraron el segundo servidor, patches, config/references.json y scripts/refe
 Lee esto antes de seguir. Última actualización: 2026-10-04.
 
 ### Hecho
-- Migración: Forge propio (52 tools), bridge propio, sin código ni servidores de terceros; 497 pruebas sin Resolve.
+- Migración: Forge propio (54 tools), bridge propio, sin código ni servidores de terceros; 497 pruebas sin Resolve.
 - Diseño de textos (pedido: subtítulos "bonitos", animados, no simples): estilos `creator`, `studio`, `editorial`,
   `impact` con palabra activa, acento de marca, entradas `fade/lift/pop`, `reduced_motion`, preview PNG/WebP
   (`list_text_styles`, `preview_text_style`). Legacy `box/outline/yellow/dark` solo a pedido.
@@ -86,6 +86,8 @@ Lee esto antes de seguir. Última actualización: 2026-10-04.
   - `align_text`: letra o guion exactos con los tiempos de la voz, listos para `add_captions(words=...)`.
   - `place_sound_effects`: SFX del usuario en momentos confirmados, con motivo, ganancia horneada y pistas nuevas.
   - `add_music_bed`: música de fondo con ducking bajo la voz (−20 dB al hablar, −10 dB entre frases), WAV nuevo.
+  - Ritmo de entretenimiento: `plan_energized_edit` / `energize_timeline` (detección de acción, caras y tiempo muerto;
+    planos de 1.2–2.8 s con encuadres alternos y crash zooms) y skill `entertainment-pacing`.
   - Skill `editorial-direction` y roles actualizados para usar todo lo anterior.
 
 ### Pendiente (por prioridad)

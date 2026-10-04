@@ -117,9 +117,7 @@ class ResolveOperations:
         if not isinstance(args, dict) or operation not in self.OPERATIONS:
             raise OperationError("INVALID_OPERATION", "Unsupported bridge operation.")
         if operation == "health":
-            root = self.objects.get("resolve")
-            return {"implementation": "resolve-forge", "protocol": "1.0", "operations": self.OPERATIONS,
-                    "root_type": type(root).__name__}  # diagnoses a launcher that received no Resolve object
+            return {"implementation": "resolve-forge", "protocol": "1.0", "operations": self.OPERATIONS}
         if operation in {"reload", "shutdown"}:
             if self.lifecycle is None:
                 raise OperationError("LIFECYCLE_UNAVAILABLE", "Restart the Scripts entry.")

@@ -9,7 +9,8 @@ Hay un solo servidor con edición por intención y herramientas de API:
 
 | Servidor | Para qué |
 |---|---|
-| `resolve-forge` — intención (de 52 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` — intención (de 54 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` — ritmo y enfoque | `plan_energized_edit` (detecta acción, caras y tiempo muerto; plan de planos cortos con encuadres alternos) → `energize_timeline` (un clip por plano con su zoom/enfoque). Skill `entertainment-pacing` |
 | `resolve-forge` — producción | Dirección por género y música (skill `editorial-direction`): `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`, `create_music_visualizer`, `align_text` (letra/guion exactos), `place_sound_effects` (SFX motivados), `add_music_bed` (música bajo la voz con ducking); diseño de textos: `list_text_styles`, `preview_text_style` |
 | `resolve-forge` — authoring | Proyectos/backups, bins/media, markers/QC, tracks/versiones, CDL/LUT, Fusion DAG, audio/escenas/loudness, capacidades |
 

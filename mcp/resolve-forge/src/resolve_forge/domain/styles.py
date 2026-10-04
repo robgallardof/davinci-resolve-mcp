@@ -99,5 +99,22 @@ def _vlog_mix(*, duration, fps, cuts, hits, k, seed):
     return MotionPlan((zoom, handheld(duration, fps, 0.3 * k, seed=seed)))
 
 
+@style("focus_hold", "Holds a punched-in framing (x1.25 at intensity 1) on the subject with a 3% drift. For energize shots.")
+def _focus_hold(*, duration, fps, cuts, hits, k, seed):
+    level = _scale(1.25, k)
+    return MotionPlan((slow_push(duration, level, level * 1.03),))
+
+
+@style("crash_zoom", "Fast punch from x1.0 to x1.45 in ~5 frames at the hit (or the start), then a slow drift. Action peaks.")
+def _crash_zoom(*, duration, fps, cuts, hits, k, seed):
+    level = _scale(1.45, k)
+    at = min(max(0, (hits or [0])[0]), max(0, duration - 8))
+    ramp = max(3, round(fps / 6))
+    keys = [Keyframe(0, 1.0, Ease.HOLD)] if at > 0 else []
+    keys += [Keyframe(at, 1.0, Ease.OUT), Keyframe(at + ramp, level, Ease.LINEAR),
+             Keyframe(max(at + ramp + 1, duration - 1), level * 1.03)]
+    return MotionPlan((Track("zoom", tuple(keys)),))
+
+
 def catalogue() -> dict[str, str]:
     return {name: summary for name, (_, summary) in sorted(STYLES.items())}

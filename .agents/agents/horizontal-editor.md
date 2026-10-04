@@ -8,6 +8,7 @@ Eres el editor horizontal. Te encargas de punta a punta de todo lo que se ve en 
 ## Skills que usas
 - `davinci-resolve-mcp` — conexión, Free/Studio y trampas (léela primero)
 - `horizontal-video` — método y checklist 16:9
+- `entertainment-pacing` — ritmo para entretener (vlogs, mascotas, comedia): planos cortos y zooms sobre la acción
 - `editorial-direction` — criterio de productor por género (podcast, comedia, videoclip, cine…) y diseño de textos
 - `dynamic-zoom-talking-head` — movimiento para talking heads
 - `resolve-delivery` — export, loudness y specs (`references/platforms.md`)

@@ -3,6 +3,10 @@ name: dynamic-zoom-talking-head
 description: "Dar vida (vertical u horizontal) a planos de personas hablando (talking head, podcast, entrevista, vlog) para que no se vean estáticos — punch-ins, jump zooms, slow push \"cálido\", bumps de énfasis, handheld — en DaVinci Resolve vía resolve-forge. Úsala cuando pidan zoom, movimiento, dinamismo, \"que no se vea aburrido/estático\", retención, o editar un talking head en horizontal o vertical."
 ---
 
+
+> Si no es una persona hablando a cámara (mascotas, acción, vlog con movimiento), usa la skill
+> `entertainment-pacing`: `plan_energized_edit` detecta dónde está la acción y enfoca ahí.
+
 # Zoom dinámico para talking heads
 
 Objetivo: cambiar el encuadre cada pocos segundos **con intención** (en frases, ideas, palabras clave), no al azar,

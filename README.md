@@ -5,7 +5,7 @@
 ## English
 
 Edit DaVinci Resolve by talking to an AI agent that works like a producer and a professional editor. One MCP of our own
-(**resolve-forge**, 52 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
+(**resolve-forge**, 54 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
 Cursor, Gemini CLI and VS Code.
 
 We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way (pure domain rules →
@@ -26,6 +26,9 @@ Resolve starts). Studio: Preferences → System → General → External scripti
 
 - **Editorial**: motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
   local transcription, designed animated captions (Creator / Studio / Editorial / Impact) and text overlays, delivery.
+- **Entertainment pacing**: detects where the action is (pets, hands, jumps), faces and dead time, and rebuilds
+  long shots as 1.2–2.8 s shots with alternating wide / x1.25 / x1.5 / crash-zoom framings that pull the subject
+  to the centre — the screen never sits still.
 - **Production by genre**: an editorial brief per genre (comedy, music, electronic, interview, cinematic, education,
   product, gaming, vlog); candidate punchlines, reactions and questions; beat grid and phrase-aligned music cuts;
   music videos and visualizers; exact lyrics/script timing; motivated sound effects; music beds ducked under the voice.
@@ -46,7 +49,7 @@ uv run resolve-forge-doctor
 ## Español
 
 Edita video en DaVinci Resolve hablando con un agente que trabaja como productor y editor profesional. Un solo MCP
-propio (**resolve-forge**, **52 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
+propio (**resolve-forge**, **54 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
 y `video-director`, y skills portables.
 
 Las mejores capacidades de los MCP públicos se reimplementaron a nuestra manera: reglas puras, servicios por
@@ -60,6 +63,7 @@ responsabilidad, transporte aislado y tools MCP finas. No se importa ni empaquet
 | Estado y planificación | forge_status, list_clips, list_styles, list_formats, preview_motion, list_capabilities, audit_timeline, open_resolve_page |
 | Edición editorial | apply_motion, clear_motion, make_platform_version, locate_subject, find_highlights, assemble_timeline |
 | Voz, texto y entrega | transcribe_timeline, align_text, list_text_styles, preview_text_style, add_captions, add_text_overlay, render_for, render_status |
+| Ritmo y enfoque (entretenimiento) | plan_energized_edit, energize_timeline |
 | Producción por género | plan_edit, find_story_moments, analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer |
 | Sonido | add_music_bed, place_sound_effects, analyse_audio, normalise_audio, sync_audio |
 | Proyectos y media | project_workflow, configure_project, list_media, ingest_media, organise_media, media_metadata |

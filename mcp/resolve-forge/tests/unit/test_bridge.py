@@ -152,3 +152,33 @@ def test_bridge_releases_its_port_when_resolve_goes_away(tmp_path):
     state["alive"] = False
     script.join(5)
     assert outcome == {"stop_reason": "resolve_gone"} and bridge._server is None
+
+
+def test_control_operations_answer_while_resolve_is_busy(tmp_path):
+    """health/reload must not queue behind a Resolve call that is blocked (e.g. playback)."""
+    import threading
+    gate = threading.Event()
+    resolve = demo_resolve(studio=False)
+    surface = ResolveOperations(resolve, [str(tmp_path)], [str(tmp_path)])
+
+    def dispatch(operation, arguments):
+        if operation == "call":
+            gate.wait(5)  # Resolve stuck
+        return surface.dispatch(operation, arguments)
+
+    config = {"host": "127.0.0.1", "port": 0, "token": TOKEN}
+    bridge = Bridge(resolve, config, dispatch)
+    script = threading.Thread(target=lambda: bridge.serve({"blocking_required": True}))
+    script.start()
+    try:
+        while not bridge._pumping:
+            pass
+        busy = threading.Thread(target=lambda: Client({**config, "port": bridge.port}).request(
+            "call", {"target": "resolve", "method": "GetVersionString", "args": []}))
+        busy.start()
+        assert Client({**config, "port": bridge.port}, timeout=2).request("health", {})["implementation"] == "resolve-forge"
+    finally:
+        gate.set()
+        bridge.request_stop("exit")
+        script.join(5)
+        busy.join(5)

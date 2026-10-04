@@ -20,7 +20,7 @@ Ningún pico de audio es un chiste ni un drop hasta que lo ves o lo escuchas.
 3. **Revisa cada candidato** (mira/escucha). Quédate solo con los reales y pásalos con tu motivo:
    `plan_edit(brief, content_type, platform, duration_s, moments=[{time_s, kind, reason}])`.
    Te devuelve dirección, qué evitar, estilo de subtítulos y de motion, y las tools del flujo.
-4. **Corte**:
+4. **Corte** (para entretener, aplica además la skill `entertainment-pacing`: `plan_energized_edit` → `energize_timeline`):
    - Voz: `assemble_timeline(source, cuts=[[ini, fin], ...], name, format)` protegiendo cada bloque completo.
    - Música: `plan_beat_cuts(music_source, shots, duration_s, beats_per_cut, intense=[[ini, fin]])` y luego
      `assemble_montage(shots, name, format, music_source, music_start_s, dry_run=false)`.

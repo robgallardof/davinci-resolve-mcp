@@ -1,7 +1,7 @@
 """Thin MCP surface for genre-aware direction, music assets and reviewed multi-source cuts."""
 
 from .domain.editorial import plan
-from .services import montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
+from .services import energize_service, montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
 
 
 def register(mcp, session, safe):
@@ -114,3 +114,31 @@ def register(mcp, session, safe):
         music is untouched. music_start_s is in MUSIC seconds; no looping. Preview by default (regions + gain curve).
         """
         return music_bed_service.add(session, music_source, music_start_s, speech_db, open_db, words, dry_run)
+
+    @mcp.tool()
+    @safe
+    def plan_energized_edit(source: str, ranges: list[list[float]] | None = None, min_shot_s: float = 1.2,
+                            max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
+                            use_faces: bool = True) -> dict:
+        """Entertainment pacing plan: short shots (1.2-2.8 s) with alternating framings that follow the action.
+
+        Detects where things move (the pet, the hands, the jump), action peaks, camera moves, faces and dead time.
+        Framings: wide (establish/camera move), medium x1.25, close x1.5 (single subject or a face reaction),
+        crash (fast punch at a peak). The zoom pivot pulls the subject toward the centre without showing edges.
+        ranges: the story parts to keep, SOURCE seconds (default: whole source minus dead time). No Resolve needed.
+        """
+        return energize_service.plan(session, source, ranges, min_shot_s, max_shot_s, trim_dead, max_zoom, use_faces)
+
+    @mcp.tool()
+    @safe
+    def energize_timeline(source: str, name: str, format: str | None = None, shots: list[dict] | None = None,
+                          ranges: list[list[float]] | None = None, max_shot_s: float = 2.8, max_zoom: float = 1.6,
+                          dry_run: bool = True) -> dict:
+        """Build a NEW timeline from an energized plan: one clip per shot, each with its own zoom and focus.
+
+        shots: from plan_energized_edit (edit them freely); omitted -> planned now from `ranges`.
+        Applies focus_hold / crash_zoom / warm_push per shot on the source frame rate. Preview by default.
+        Then add captions for real speech, text pops on beats and motivated sound effects.
+        """
+        return energize_service.apply(session, source, name, format, shots, dry_run,
+                                      ranges=ranges, max_shot_s=max_shot_s, max_zoom=max_zoom)

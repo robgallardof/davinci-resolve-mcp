@@ -69,8 +69,11 @@ class Authenticator:
             self.nonces[nonce] = timestamp + self.skew
 
 
-class _Server(socketserver.TCPServer):
+class _Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """One thread per connection so control operations answer while a native call is in progress;
+    native calls themselves stay serialized (script-thread queue, or a lock in embedded mode)."""
     allow_reuse_address = os.name != "nt"
+    daemon_threads = True
     def get_request(self):
         connection, address = super().get_request()
         connection.settimeout(5)
@@ -91,10 +94,16 @@ class Bridge:
         # the listener hands each call to that thread through this queue instead of calling Resolve itself.
         self._jobs = queue.Queue()
         self._pumping = False
+        self._direct = threading.Lock()
+
+    CONTROL = frozenset({"health", "reload", "shutdown"})  # never touch Resolve: answer even while it is busy
 
     def execute(self, operation, arguments, timeout=300):
-        if not self._pumping:
+        if operation in self.CONTROL:
             return self.dispatch(operation, arguments)
+        if not self._pumping:
+            with self._direct:
+                return self.dispatch(operation, arguments)
         box, done = {}, threading.Event()
         self._jobs.put((operation, arguments, box, done))
         if not done.wait(timeout):
