@@ -26,3 +26,6 @@ mcp/resolve-forge/src/resolve_forge/api/
 
 # coverage runs
 .coverage
+
+# local agent tooling state
+.serena/
