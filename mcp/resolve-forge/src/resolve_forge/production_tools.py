@@ -132,7 +132,7 @@ def register(mcp, session, safe):
         Each shot is self-reviewed: zooms that push the subject to an edge, crop the action, cut a face or exceed
         the source's sharpness (format sets the target resolution) are downgraded and reported in self_review.
         drop_dull: cut shots with no interaction (a person seen from behind, no face, nothing else happening);
-        each cut is listed in cut_dull with its reason. Protect a shot with a hint {start_s, end_s, keep: true}.
+        each cut is listed in cut_dull with its reason. Confirm subject=person|animal in hints to preserve still subjects; subject=none removes empty ranges even during camera movement. Animal presence requires visual confirmation, not motion alone. Protect a shot with a hint {start_s, end_s, keep: true}.
         """
         return energize_service.plan(session, source, ranges, min_shot_s, max_shot_s, trim_dead, max_zoom, use_faces,
                                      hints, format, drop_dull)
@@ -163,7 +163,7 @@ def register(mcp, session, safe):
         """Build a NEW timeline from an energized plan: one clip per shot, each with its own zoom and focus.
 
         shots: from plan_energized_edit (edit them freely); omitted -> planned now from `ranges`.
-        Applies focus_hold / crash_zoom / warm_push per shot on the source frame rate. Preview by default.
+        Applies focus_hold / crash_zoom / static_hold per shot on the source frame rate. Preview by default.
         Then add captions for real speech, text pops on beats and motivated sound effects.
         """
         return energize_service.apply(session, source, name, format, shots, dry_run,
@@ -174,14 +174,14 @@ def register(mcp, session, safe):
     def plan_speaker_layout(source: str, format: str = "tiktok", mode: str = "auto", people: list[list[float]] | None = None,
                             active: list[list] | None = None, min_segment_s: float = 1.5) -> dict:
         """Multi-person layouts (podcast, interview, couch): frame whoever is speaking; when 2+ talk at once,
-        split the screen (vertical: stacked; horizontal: side by side; 3 = two on top + one below; 4 = 2x2).
+        split the screen (vertical: stacked; horizontal: side by side; 3 = two on top + one below; 4 = 2x2; 5+ use a balanced grid).
 
         Detects people (faces) and the active speaker (mouth motion while there is voice). mode: auto | single |
         split (always split). people: [[x0, y0, x1, y1]] face boxes to override detection; active:
         [[time_s, [person indices]]]. A stylistic choice: only when the user asks for it or approves it.
         """
         return speaker_layout_service.plan(session, source, format, mode, people,
-                                           [(row[0], row[1]) for row in active] if active else None, min_segment_s)
+                                           [(row[0], row[1]) for row in active] if active is not None else None, min_segment_s)
 
     @mcp.tool()
     @safe

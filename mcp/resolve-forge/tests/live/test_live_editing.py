@@ -5,7 +5,8 @@
 Generates a 6 s talking clip (Windows TTS voice muxed with PyAV), then in a throwaway
 project: find_highlights -> assemble_timeline(reels) -> transcribe_timeline (real Whisper)
 -> add_captions + add_text_overlay -> render, and checks the PIXELS of the render: the caption
-band is lit while someone talks and the title band during the overlay. Cleans everything up.
+band is lit while someone talks, the brand accent survives encoding, and the title band lights
+during the overlay. Preserves generated projects/media and restores the previous project.
 """
 
 from __future__ import annotations
@@ -116,9 +117,11 @@ def live():
         resolve.OpenPage("edit")
         yield Live(session), work, name
     finally:
+        saved = pm.SaveProject()
         pm.CloseProject(pm.GetCurrentProject())
         if previous_name:
             pm.LoadProject(previous_name)
+        assert saved, "Could not preserve the editing test project"
         # Preserve generated project/media for inspection; no deletion without a user request.
 
 
@@ -136,7 +139,8 @@ def test_edit_pipeline_end_to_end(live):
     text = " ".join(s["text"] for s in speech["sentences"]).lower()
     assert "squirrel" in text and speech["cuts_s"], speech
 
-    caps = forge("add_captions", style="outline", position="bottom", max_words=3)
+    caps = forge("add_captions", style="creator", animation="karaoke", accent="#FF3366",
+                 position="bottom", max_words=3)
     assert caps["placed"] == caps["requested"] > 2
     title = forge("add_text_overlay", text="POV: limpiando 🐿️", start_s=0.0, duration_s=2.0, style="box")
     assert title["placed"] == 1
@@ -157,5 +161,14 @@ def test_edit_pipeline_end_to_end(live):
     first_word = speech["words"][0]
     talking_at = first_word["start"] + 0.1
     assert band(talking_at, top=False) > 0.01, "caption not visible in the render while speaking"
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(talking_at * 30))
+    ok, frame = cap.read()
+    assert ok
+    y0 = safe["y"] + safe["height"] - 300
+    region = frame[y0:y0 + 300, safe["x"]:safe["x"] + safe["width"]].astype(np.int16)
+    blue, green, red = region[:, :, 0], region[:, :, 1], region[:, :, 2]
+    branded = (red > 180) & (red - green > 80) & (red - blue > 50)
+    assert branded.mean() > .001, "brand accent missing from designed captions in the render"
     assert band(1.0, top=True) > 0.05, "title card not visible in the render"
     assert band(6.8, top=True) < 0.01, "title card should be gone after its 2 s"
+    cap.release()

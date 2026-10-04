@@ -75,10 +75,12 @@ def test_crash_zoom_and_focus_hold_styles():
     from resolve_forge.domain import styles
     crash = styles.build("crash_zoom", duration=60, fps=30, hits=[20], intensity=1.0)
     zoom = crash.track("zoom")
-    assert zoom.keyframes[0].value == 1.0 and crash.peak_zoom() == pytest.approx(1.45 * 1.03, rel=1e-3)
+    assert zoom.keyframes[0].value == 1.0 and crash.peak_zoom() == pytest.approx(1.45, rel=1e-3)
     assert [k.frame for k in zoom.keyframes][:3] == [0, 20, 25]  # holds, then punches in 5 frames at the hit
     hold = styles.build("focus_hold", duration=60, fps=30, intensity=2.0)
     assert hold.track("zoom").keyframes[0].value == pytest.approx(1.5)
+    assert hold.peak_zoom() == pytest.approx(1.5)
+    assert styles.build("static_hold", duration=60, fps=30).peak_zoom() == 1
 
 
 def test_editor_hints_aim_at_the_real_subject_and_force_framings():
@@ -137,3 +139,31 @@ def test_shots_without_interaction_are_cut_and_reported():
     assert kept["shots"] and not kept["cut_dull"]
     score, reasons = interest(back[:8], back[:8], presence[:4], 1.0, False, back[0])
     assert score <= 0 and "person seen from behind, no face" in reasons
+
+
+def test_still_visible_faces_and_confirmed_animals_survive_motion_trimming():
+    samples = scene(8, quiet=[(0, 8)])
+    facing = [(t / 2, ((.5, .3),), ()) for t in range(16)]
+    assert plan(samples, presence=facing)["duration_s"] == 8
+    animal = plan(samples, presence=[], hints=[{"start_s": 0, "end_s": 8, "subject": "animal", "focus": [.5, .4]}])
+    assert animal["duration_s"] == 8
+
+
+def test_confirmed_empty_ranges_are_removed_even_when_camera_moves():
+    samples = scene(8, camera=[(0, 8)])
+    result = plan(samples, trim_dead=False, hints=[{"start_s": 2, "end_s": 6, "subject": "none"}])
+    assert result["duration_s"] == 4
+    assert all(s["end_s"] <= 2 or s["start_s"] >= 6 for s in result["shots"])
+    assert "no person or animal" in result["cut_dull"][0]["why"]
+
+
+def test_portrait_cover_geometry_checks_subject_before_additional_zoom():
+    from resolve_forge.domain import framing_review as review
+    rect = review.viewport(16 / 9, 9 / 16, (.8, .4), 1, (.5, .5))
+    assert rect[2] - rect[0] == pytest.approx((9 / 16) / (16 / 9))
+    assert review.in_view((.8, .4), rect)[0] == pytest.approx(.5)
+    shot = {"zoom": 1, "anchor": [.5, .5], "subject": [.8, .4], "viewport": rect}
+    assert "cuts a face out of frame" in review.issues(shot, [], [(.1, .4)])
+    portrait = plan(scene(6, at=(.72, .4)), trim_dead=False, source_aspect=16 / 9, target_aspect=9 / 16)
+    assert all(s["anchor"][0] == .72 for s in portrait["shots"])
+    assert all(review.in_view(tuple(s["subject"]), s["viewport"])[0] == pytest.approx(.5) for s in portrait["shots"])

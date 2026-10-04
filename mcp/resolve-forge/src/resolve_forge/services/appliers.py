@@ -51,17 +51,21 @@ class EditKeyframeApplier:
             float(call(item, "GetProperty", "Tilt") or 0.0),
         )
         written = 0
+        expected = 0
         if zoom := plan.track("zoom"):
             for k in zoom.expand_holds().keyframes:
                 sizing = rezoom_keeping(src, dst, base, base.zoom * k.value, plan.anchor)
                 for prop, value in sizing.as_props().items():
+                    expected += 1
                     written += self._key(item, prop, k.frame, value, k.ease_out)
         if angle := plan.track("angle"):
             base_angle = float(call(item, "GetProperty", "RotationAngle") or 0.0)
             for k in angle.keyframes:
+                expected += 1
                 written += self._key(item, "RotationAngle", k.frame, base_angle + k.value, k.ease_out)
-        if written == 0:
-            raise Unsupported("AddKeyframe accepted no keys on this item")
+        if written == 0 or written != expected:
+            self.clear(item)
+            raise Unsupported(f"AddKeyframe accepted {written}/{expected} keys; partial animation was cleared")
         return {"backend": self.name, "keys_written": written}
 
     @staticmethod
@@ -90,6 +94,7 @@ class FusionTransformApplier:
 
     def apply(self, item, plan, src, dst):
         comp = self._comp(item)
+        self._require_owned_graph(comp)
         media_in, media_out = comp.FindTool("MediaIn1"), comp.FindTool("MediaOut1")
         if media_in is None or media_out is None:
             raise Unsupported("clip comp has no MediaIn1/MediaOut1")
@@ -98,11 +103,15 @@ class FusionTransformApplier:
         # Structural edits under Lock; value writes must stay OUTSIDE it, or
         # Resolve reads them back but ignores them at render (upstream issue #196).
         comp.Lock()
-        tf = comp.AddTool("Transform", -32768, -32768)
-        tf.SetAttrs({"TOOLS_Name": FUSION_TOOL})
-        tf.ConnectInput("Input", media_in)
-        media_out.ConnectInput("Input", tf)
-        comp.Unlock()
+        try:
+            tf = comp.AddTool("Transform", -32768, -32768)
+            if tf is None:
+                raise Unsupported("Fusion refused Transform creation")
+            tf.SetAttrs({"TOOLS_Name": FUSION_TOOL})
+            if tf.ConnectInput("Input", media_in) is False or media_out.ConnectInput("Input", tf) is False:
+                raise Unsupported("Fusion refused motion connections")
+        finally:
+            comp.Unlock()
 
         attrs = comp.GetAttrs() or {}
         offset = float(attrs.get("COMPN_RenderStart", attrs.get("COMPN_RenderStartTime", 0)) or 0)
@@ -114,6 +123,19 @@ class FusionTransformApplier:
         finally:
             comp.EndUndo(True)
         return {"backend": self.name, "tool": FUSION_TOOL, "comp_offset": offset, "keys_written": written}
+
+    @staticmethod
+    def _require_owned_graph(comp):
+        tools = call(comp, "GetToolList", False, default=None)
+        if not isinstance(tools, dict) or not tools:
+            raise Unsupported("cannot verify existing Fusion graph; motion must not replace unknown effects")
+        for name, tool in tools.items():
+            # Some transports serialize nested handles; reacquire by tool name.
+            if not callable(getattr(tool, "GetAttrs", None)):
+                tool = comp.FindTool(str(name))
+            attrs = call(tool, "GetAttrs", default={}) or {}
+            if attrs.get("TOOLS_Name") not in {"MediaIn1", "MediaOut1", FUSION_TOOL} and attrs.get("TOOLS_RegID") != "BezierSpline":
+                raise Unsupported("Fusion motion requires a plain source graph; existing effects must be preserved")
 
     @staticmethod
     def _comp(item):
@@ -130,9 +152,11 @@ class FusionTransformApplier:
         if old is None:
             return False
         comp.Lock()
-        old.Delete()
-        media_out.ConnectInput("Input", media_in)
-        comp.Unlock()
+        try:
+            old.Delete()
+            media_out.ConnectInput("Input", media_in)
+        finally:
+            comp.Unlock()
         return True
 
     @staticmethod
@@ -145,10 +169,12 @@ class FusionTransformApplier:
         inp = FUSION_INPUTS.get(track.param)
         if inp is None:
             return 0
-        tf.AddModifier(inp, "BezierSpline")  # without a spline, timed SetInput only sets a static value
+        if tf.AddModifier(inp, "BezierSpline") is False:
+            raise Unsupported(f"Fusion refused animation modifier for {inp}")
         samples = track.dense(step=2)
         for frame, value in samples:
-            tf.SetInput(inp, float(value), offset + frame)
+            if tf.SetInput(inp, float(value), offset + frame) is False:
+                raise Unsupported(f"Fusion refused {inp} at frame {offset + frame}")
         return len(samples)
 
     def clear(self, item) -> int:
@@ -156,6 +182,9 @@ class FusionTransformApplier:
             return 0
         comp = item.GetFusionCompByIndex(1)
         mi, mo = comp.FindTool("MediaIn1"), comp.FindTool("MediaOut1")
+        if comp.FindTool(FUSION_TOOL) is None:
+            return 0
+        self._require_owned_graph(comp)
         return int(bool(mi and mo and self._remove(comp, mi, mo)))
 
 
@@ -163,7 +192,15 @@ def _set_point(tool, name: str, x: float, y: float) -> None:
     """Fusion Point inputs accept different encodings per transport; first that sticks wins."""
     for candidate in ([x, y], {1: x, 2: y}, {"1": x, "2": y}):
         try:
-            tool.SetInput(name, candidate)
+            if tool.SetInput(name, candidate) is False:
+                continue
+            observed = tool.GetInput(name)
+            if isinstance(observed, dict):
+                observed = [observed.get(1, observed.get("1")), observed.get(2, observed.get("2"))]
+            if not isinstance(observed, (tuple, list)) or len(observed) < 2:
+                continue
+            if any(abs(float(a) - b) > 1e-6 for a, b in zip(observed, (x, y))):
+                continue
             return
         except Exception:
             continue

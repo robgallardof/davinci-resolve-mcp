@@ -42,6 +42,12 @@ dentro, no recortando de más.
 
 ## Sin interacción, se corta
 
+En este proyecto, un rango confirmado sin personas ni animales se corta aunque la cámara o el fondo se muevan:
+`hints: [{start_s, end_s, subject: "none"}]`. Para una mascota confirmada usa `subject: "animal"` y `focus`;
+para una persona usa `subject: "person"`. Movimiento no demuestra que haya un animal: mira la fuente.
+Una cara o mascota quieta puede importar; estos rangos se protegen del recorte por baja energía.
+Los planos wide quedan fijos; no fuerces zooms para alternar si empeoran el encuadre.
+
 Una persona **de espaldas**, sin cara visible, y sin que pase nada más (la mascota quieta, nadie mira, nada se
 mueve con intención) es tiempo muerto aunque haya movimiento. `plan_energized_edit` (drop_dull=true) los corta y
 los lista en `cut_dull` con el motivo. Si un plano así importa para la historia, protégelo con

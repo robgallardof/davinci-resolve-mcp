@@ -130,3 +130,24 @@ def test_words_share_one_baseline_regardless_of_ascenders():
     assert len(words) == 3
     bottoms = [np.where(image[:, w[0]:w[-1] + 1].max(axis=1) > 128)[0].max() for w in words]
     assert max(bottoms) - min(bottoms) <= 3, bottoms
+
+
+def test_karaoke_tracks_word_duration_and_stops_during_silence():
+    cue = cues([Word("Muy", 0, 1), Word("bien", 1.5, 2)], 3)[0]
+    assert cue.progress_at(0.25) == 0.25
+    assert cue.progress_at(1.25) is None
+    assert cue.active_at(1.75) == 1 and cue.progress_at(1.75) == 0.5
+    assert resolve_animation("karaoke", "creator", True) == "none"
+    assert motion_state("karaoke", 0, 60, 30) == (1, 1, 0)
+
+
+def test_karaoke_changes_only_word_underline_without_reflow():
+    import numpy as np
+    first = cards.render("Ideas que importan", 1080, 1920, style="creator", active_word=0, active_progress=0.1)
+    last = cards.render("Ideas que importan", 1080, 1920, style="creator", active_word=0, active_progress=0.9)
+    difference = np.any(np.asarray(first) != np.asarray(last), axis=2)
+    rows, columns = np.where(difference)
+    assert len(rows) > 0
+    assert rows.max() - rows.min() < 10  # only the thin underline moves
+    assert columns.max() < first.getchannel("A").getbbox()[0] + 220
+    assert first.getchannel("A").getbbox() == last.getchannel("A").getbbox()

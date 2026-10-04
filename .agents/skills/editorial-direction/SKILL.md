@@ -47,14 +47,26 @@ Ningún pico de audio es un chiste ni un drop hasta que lo ves o lo escuchas.
 
 ## Varias personas (podcast, entrevista, dos en un sillón)
 
-Opción de estilo, no regla: a muchos no les gusta. Recomiéndala como productor y úsala solo si el usuario la quiere.
+Opción editorial, no regla ni efecto automático por cantidad de personas. El productor decide según referencia,
+historia, formato y legibilidad dentro del alcance autorizado; no pide permiso de nuevo para cambios reversibles
+de estilo ya incluidos en la edición. Para coordinar especialistas o interpretar collages de referencia, lee
+[references/producer-coordination.md](references/producer-coordination.md).
 - `plan_speaker_layout(source, format, mode)`: detecta a cada persona y quién habla (boca + voz).
-  - `auto`: encuadra a quien habla; si hablan 2+ a la vez, divide la pantalla.
+  - `auto`: propone encuadre según candidatos de hablante; inspecciona su resultado antes de aceptar divisiones.
   - `split`: siempre dividido. `single`: siempre una persona.
-  - Vertical: 2 apiladas, 3 = dos arriba + una abajo, 4 = 2×2. Horizontal: lado a lado.
+  - Apilado, cuadrícula o lado a lado son opciones del planner, no obligación del productor. Comprueba el schema
+    actual y legibilidad; puede convenir alternar primer plano, conservar grupo o usar apoyo visual.
 - Revisa los segmentos (sin parpadeos: mínimo 1.5 s por layout), luego `build_speaker_layout` (clip nuevo con el audio
   original + timeline nuevo) y `review_video` antes de añadir subtítulos y textos.
+- Fuentes distintas en pantalla (varias tomas de la misma persona, entrevista + foto, reacción + B-roll):
+  `plan_composition(segments, audio_master)` → mira la hoja y el preview → `build_composition(..., reviewed=true)`.
+  Cada panel declara fuente, inicio y `subject` o `crop`; el audio maestro es uno y explícito. No inventes
+  simultaneidad ni reacciones: un collage es una decisión editorial, no una regla por número de fuentes.
 - Si la detección se equivoca, pasa `people` (cajas de cara) y `active` (quién habla y cuándo) a mano.
+- Dos personas en horizontal → Reel: `mode="single"` o `auto` para alternar al hablante; protege reacciones
+  relevantes. Tres, cuatro o cinco: `split` si el productor decide mostrar al grupo; no descartes la quinta cara.
+  Mantén caras completas y revisa el tamaño de cada panel. La detección por boca/energía no es diarización:
+  comprueba los cambios con la escucha, especialmente con risas/música o participantes móviles.
 
 ## Subtítulos y textos que se vean bien
 
@@ -65,6 +77,8 @@ Opción de estilo, no regla: a muchos no les gusta. Recomiéndala como productor
 - Texto exacto: si hay guion o letra, `align_text(source, text)`; si no, corrige `transcribe_timeline(include_words=true)`.
   En ambos casos pasa `words=` a `add_captions` antes de quemar.
 - `reduced_motion=true` para contenido sereno o accesible. Los estilos legacy (`box`, `outline`, `yellow`, `dark`) solo si el usuario los pide.
+- `animation="karaoke"` anima un subrayado de progreso por palabra usando sus tiempos reales, sin saltar glifos.
+  Revisa preview; conserva pausas. Para acabado de mezcla y LUT encarga `color-audio-finishing`.
 
 ## Qué no hacer
 

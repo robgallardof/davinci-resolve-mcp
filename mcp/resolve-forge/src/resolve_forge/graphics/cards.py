@@ -127,7 +127,7 @@ class _Typesetter:
 def render(text: str, width: int, height: int, *, style: str = "box", position: str = "top",
            safe: SafeZone = SafeZone(0.1, 0.2, 0.08, 0.08), active_word: int | None = None,
            accent: str | None = None, emphasis_words: list[str] | None = None,
-           max_lines: int | None = None):
+           max_lines: int | None = None, active_progress: float | None = None):
     """RGBA image of the whole frame with the card placed inside the safe area."""
     from PIL import Image, ImageDraw
 
@@ -135,6 +135,8 @@ def render(text: str, width: int, height: int, *, style: str = "box", position: 
     color = accent_rgba(accent, style)
     if not text.strip():
         raise ValueError("text must not be empty")
+    if active_progress is not None and not 0 <= active_progress <= 1:
+        raise ValueError("active_progress must be between 0 and 1")
     if width < 64 or height < 64:
         raise ValueError("text frames must be at least 64 pixels wide and high")
     if position not in POSITIONS:
@@ -188,6 +190,12 @@ def render(text: str, width: int, height: int, *, style: str = "box", position: 
                 fill = (18, 22, 26, 255)
             elif active and style == "impact":
                 fill = color
+            if active and active_progress is not None and active_progress > 0:
+                # A measured underline grows inside this word's slot. Glyph baselines,
+                # line wrapping and neighboring words never move with syllable timing.
+                underline = (18, 22, 26, 255) if style in ("creator", "studio") else color
+                draw.rectangle([x, y + size * 1.02, x + word_width * active_progress,
+                                y + size * 1.07], fill=underline)
             if emphasized and style == "editorial":
                 draw.rounded_rectangle([x, y + size * 1.14, x + word_width, y + size * 1.19],
                                        radius=max(1, round(size * 0.025)), fill=color)

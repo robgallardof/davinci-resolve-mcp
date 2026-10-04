@@ -109,25 +109,30 @@ def place_cards(session: Session, cards: list[Span | CaptionCue], *, style: str 
         for i, card in enumerate(cards):
             # frame math on absolute positions: back-to-back cards never overlap by a rounding frame
             frames = max(1, ctx.seconds_to_frame(card.end) - ctx.seconds_to_frame(card.start))
-            highlight = style in DESIGNS and DESIGNS[style].highlight and isinstance(card, CaptionCue)
+            highlight = (animation == "karaoke" or style in DESIGNS and DESIGNS[style].highlight) and isinstance(card, CaptionCue)
             ramp = max(1, min(round(ctx.fps * 0.18), frames - 1))
 
             def state_at(frame):
                 # Frame samples are aligned to the rounded recordFrame, not the unrounded word start.
                 seconds = (ctx.seconds_to_frame(card.start) - ctx.start_frame + frame) / ctx.fps
                 active = card.active_at(seconds) if highlight else None
-                return active, min(frame, ramp) if animation != "none" else 0
+                progress = card.progress_at(seconds) if animation == "karaoke" and highlight else None
+                # Bounded palette of states keeps long caption sequences inexpensive.
+                progress = round(progress * 24) / 24 if progress is not None else None
+                return active, min(frame, ramp) if animation not in ("none", "karaoke") else 0, progress
 
             base_images = {}
 
             def render_state(state):
-                active, frame = state
-                if active not in base_images:
-                    base_images[active] = gfx.render(card.text, width, height, style=style, position=position,
+                active, frame, progress = state
+                key = active, progress
+                if key not in base_images:
+                    base_images[key] = gfx.render(card.text, width, height, style=style, position=position,
                                                     safe=safe, active_word=active, accent=accent,
+                                                    active_progress=progress,
                                                     emphasis_words=emphasis_words,
                                                     max_lines=2 if style in DESIGNS else None)
-                return animate(base_images[active], animation, frame, frames, ctx.fps, safe)
+                return animate(base_images[key], animation, frame, frames, ctx.fps, safe)
 
             seq = write_frames(run / f"{label}{_letters(i)}", frames, state_at, render_state)
             imported = pool.ImportMedia([str(seq)]) or []

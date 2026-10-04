@@ -89,9 +89,11 @@ def live():
         resolve.OpenPage("edit")
         yield Live(session), work, project
     finally:
+        saved = pm.SaveProject()
         pm.CloseProject(pm.GetCurrentProject())
         if previous_name:
             pm.LoadProject(previous_name)
+        assert saved, "Could not preserve the production test project"
         # Preserve generated project/media for inspection; no deletion without a user request.
 
 
@@ -131,17 +133,26 @@ def test_align_text_times_the_known_script_with_real_speech(live, tmp_path):
     assert [w["text"] for w in result["words"]] == script.split()
     assert result["coverage"] >= .7
     assert all(a["end"] <= b["start"] + 1e-6 for a, b in zip(result["words"], result["words"][1:]))
+    processed = forge("enhance_audio", source=str(voice), preset="dialogue",
+                      output_path=str(work / "enhanced_script.wav"), dry_run=False)
+    assert processed["applied"] and Path(processed["file"]).is_file()
+    assert processed["peak_target_met"]
 
 
 def test_music_bed_and_sound_effects_land_on_new_audio_tracks(live):
     forge, work, project = live
-    timeline = project.GetCurrentTimeline()  # the beat montage from the first test
+    forge("assemble_montage", shots=[dict(source=str(work / "wide.mp4"), start_s=0, end_s=6)],
+          name="Audio production", music_source=str(work / "song.wav"), dry_run=False)
+    timeline = project.GetCurrentTimeline()
     before = int(timeline.GetTrackCount("audio"))
+    picture_before = [(c.GetStart(), c.GetDuration()) for c in timeline.GetItemListInTrack("video", 1)]
     words = [{"text": "uno", "start": 1.0, "end": 1.6}, {"text": "dos.", "start": 1.7, "end": 2.4}]
     bed = forge("add_music_bed", music_source=str(work / "song.wav"), words=words, dry_run=False)
-    sfx = forge("place_sound_effects", cues=[dict(time_s=2.0, source=str(work / "song.wav"), reason="live check")],
+    _click_track(work / "effect.wav", seconds=1)
+    sfx = forge("place_sound_effects", cues=[dict(time_s=2.0, source=str(work / "effect.wav"), reason="live check")],
                 dry_run=False)
     current = project.GetCurrentTimeline()
+    assert [(c.GetStart(), c.GetDuration()) for c in current.GetItemListInTrack("video", 1)] == picture_before
     assert int(current.GetTrackCount("audio")) >= before + 2
     assert len(current.GetItemListInTrack("audio", bed["track"])) == 1
     assert len(current.GetItemListInTrack("audio", sfx["tracks"][0])) == 1

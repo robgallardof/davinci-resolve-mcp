@@ -33,14 +33,14 @@ pytestmark = pytest.mark.live
 FPS, W, H, SECONDS = 30, 1920, 1080, 3
 
 
-def _make_clip(path: Path, hue: int) -> None:
+def _make_clip(path: Path, hue: int, subject_x: float = .5) -> None:
     """A static, detailed frame: any zoom/rotation changes many pixels."""
     img = np.zeros((H, W, 3), np.uint8)
     for y in range(0, H, 60):
         for x in range(0, W, 60):
             if (x // 60 + y // 60) % 2:
                 img[y:y + 60, x:x + 60] = (hue, 180, 255 - hue)
-    cv2.circle(img, (W // 2, int(H * 0.38)), 160, (240, 240, 240), -1)
+    cv2.circle(img, (int(W * subject_x), int(H * 0.38)), 160, (240, 240, 240), -1)
     out = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), FPS, (W, H))
     for _ in range(FPS * SECONDS):
         out.write(img)
@@ -101,9 +101,11 @@ def live():
         resolve.OpenPage("edit")
         yield Live(session), work
     finally:
+        saved = pm.SaveProject()
         pm.CloseProject(pm.GetCurrentProject())
         if previous_name:
             pm.LoadProject(previous_name)
+        assert saved, "Could not preserve the motion test project"
         # Preserve generated project/media for inspection; no deletion without a user request.
 
 
@@ -200,3 +202,38 @@ def test_6_owned_grade_and_fusion_graph_reach_native_resolve(live):
     item = project.GetCurrentTimeline().GetItemListInTrack("video", 1)[0]
     node = item.GetFusionCompByIndex(1).FindTool("Forge_qa")
     assert node and node.GetInput("Size") == pytest.approx(1.04)
+    preset = forge("apply_grade_preset", preset="warm", intensity=.25, indices=[1], dry_run=False)
+    assert preset["applied"] and preset["timeline"] != preset["source"]
+
+
+@pytest.mark.parametrize("subject_x", [.5, .72])
+def test_7_reviewed_energize_zoom_and_portrait_crop_reach_pixels(live, subject_x):
+    forge, work = live
+    source = work / f"offcenter_{subject_x}.mp4"
+    _make_clip(source, 60, subject_x)
+    shots = [dict(start_s=0, end_s=1.5, framing="wide", zoom=1., subject=[subject_x, .38], anchor=[subject_x, .5]),
+             dict(start_s=1.5, end_s=3., framing="close", zoom=1.2, subject=[subject_x, .38], anchor=[subject_x, .5])]
+    review = forge("review_shots", source=str(source), shots=shots, format="tiktok")
+    assert not review["flagged"], review
+    forge("energize_timeline", source=str(source), name=f"Reviewed portrait zoom {subject_x}",
+          shots=shots, format="tiktok", dry_run=False)
+    assert forge("preflight_render", format="tiktok")["technical_passed"]
+    stem = f"reviewed_zoom_{subject_x}"
+    job = forge("render_for", format="tiktok", target_dir=str(work), name=stem)
+    assert str(forge.wait_render(job["job_id"]).get("JobStatus")).lower() == "complete"
+    output = _rendered(work, stem)
+    size, frames = _frames(output, [5, 35, 50, 80])
+    assert size == (1080, 1920)
+    assert abs(frames[5] - frames[35]).mean() < 2, "Reviewed wide must not drift"
+    assert abs(frames[50] - frames[80]).mean() < 2, "Reviewed close must not exceed its approved zoom"
+
+    def diameter(frame):
+        white = (frame.min(axis=2) > 225).astype("uint8")
+        contours, _ = cv2.findContours(white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        x, y, width, height = cv2.boundingRect(max(contours, key=cv2.contourArea))
+        assert width / height == pytest.approx(1, abs=.03), "Portrait crop stretched the source"
+        assert abs(x + width / 2 - 540) < 15, "Subject must remain centered"
+        return width
+
+    assert diameter(frames[50]) / diameter(frames[5]) == pytest.approx(1.2, abs=.04)
+    forge("review_video", path=str(output))

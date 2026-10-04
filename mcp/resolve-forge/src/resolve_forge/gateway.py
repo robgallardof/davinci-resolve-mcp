@@ -1,9 +1,9 @@
 """How we reach a running DaVinci Resolve. Nothing else in the package knows.
 
 Transports are tried in order; the first that yields a handle wins:
-  1. direct  — Blackmagic's DaVinciResolveScript (Studio; Free <= 21.0 with local scripting)
-  2. bridge  — the packaged in-app loopback bridge
+  1. bridge  — the packaged in-app loopback bridge, when already running
                (works on the Free edition; run Workspace > Scripts > resolve_bridge)
+  2. direct  — Blackmagic's DaVinciResolveScript (Studio; Free <= 21.0 with local scripting)
 Code above this layer only sees `Session.resolve()`.
 """
 
@@ -25,6 +25,10 @@ BRIDGE_RUNTIME = Path(__file__).resolve().parent / "bridge"
 
 
 class ResolveUnavailable(RuntimeError):
+    pass
+
+
+class ResolveBusy(ResolveUnavailable):
     pass
 
 
@@ -110,13 +114,19 @@ class DirectTransport:
 
 class BridgeTransport:
     name = "bridge"
+    busy = False  # the bridge is listening but Resolve does not answer (playback, render, a dialog)
 
     def connect(self) -> Any | None:
+        self.busy = False
         if not resolve_process_running():
             return None
         try:
             from .bridge.client import connect
             return connect()
+        except TimeoutError as exc:
+            self.busy = True
+            log.debug("bridge busy: %s", exc)
+            return None
         except Exception as exc:
             log.debug("bridge unavailable: %s", exc)
             return None
@@ -126,7 +136,7 @@ class Session:
     """Lazily connects and re-connects when Resolve was restarted."""
 
     def __init__(self, transports: list[Transport] | None = None) -> None:
-        self.transports = transports if transports is not None else [DirectTransport(), BridgeTransport()]
+        self.transports = transports if transports is not None else [BridgeTransport(), DirectTransport()]
         self._handle: Any | None = None
         self.transport_name: str | None = None
 
@@ -138,7 +148,14 @@ class Session:
             if handle is not None and _alive(handle):
                 self._handle, self.transport_name = handle, transport.name
                 return handle
+            if getattr(transport, "busy", False):
+                break  # A listening but stalled bridge must not trigger another native scripting probe.
         self._handle = None
+        if any(getattr(transport, "busy", False) for transport in self.transports):
+            raise ResolveBusy(
+                "DaVinci Resolve is busy and does not accept script calls right now: stop playback "
+                "(space bar), wait for a render to finish or close any open dialog, then retry."
+            )
         raise ResolveUnavailable(
             "Cannot reach DaVinci Resolve. Open Resolve and either enable "
             "Preferences > System > General > External scripting using: Local (Studio), "

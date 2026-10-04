@@ -25,6 +25,12 @@ Ningún video se entrega sin que lo hayas **mirado**. Las herramientas miden y m
 
 ## Después de renderizar
 
+Antes de renderizar ejecuta `preflight_render(format)`: corrige errores de cobertura de video, fuentes ausentes,
+transformaciones inválidas y resolución/duración. Revisa avisos de audio y zoom; un zoom de cobertura vertical
+puede ser grande sin ser un error. `technical_passed` no verifica rostros, subtítulos, LUT ni audio real.
+El recorte de `review_shots` contempla la proporción de destino; una horizontal convertida a vertical no se estira.
+Para audio/color/LUT usa `color-audio-finishing`, con comparación antes/después.
+
 1. `review_video(archivo)` → abre la hoja.
 2. Revisa: negro, congelados, saltos raros, textos encima de caras, subtítulos correctos y legibles, color,
    duración y resolución (`render_status` + `review_video`).

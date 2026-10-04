@@ -77,6 +77,27 @@ def test_clear_motion(forge: Forge):
     assert all(not any(i.keys.values()) for i in forge.items())
 
 
+def test_clear_motion_complex_fusion_returns_typed_error_preserving_graph(forge: Forge):
+    master = forge.project.current
+    item = forge.items()[0]
+    comp = item.AddFusionComp()
+    effect = comp.AddTool("ColorCorrector")
+    effect.ConnectInput("Input", comp.FindTool("MediaIn1"))
+    motion = comp.AddTool("Transform")
+    motion.SetAttrs({"TOOLS_Name": FUSION_TOOL})
+    motion.ConnectInput("Input", effect)
+    comp.FindTool("MediaOut1").ConnectInput("Input", motion)
+    result = forge("clear_motion", clips=[1])
+    assert result["code"] == "BACKEND_UNSUPPORTED" and result["ok"] is False
+    assert "Preserve existing Fusion effects" in result["hint"]
+    assert master.tracks[0][0].comps[0] is comp
+    assert comp.FindTool("MediaOut1").connected["Input"] is motion
+    assert motion.connected["Input"] is effect
+    copied = forge.items()[0].comps[0]
+    assert copied.FindTool("MediaOut1").connected["Input"] is copied.FindTool(FUSION_TOOL)
+    assert copied.FindTool(FUSION_TOOL).connected["Input"] is copied.FindTool(effect.name)
+
+
 def test_make_platform_version_vertical(forge: Forge):
     master = forge.project.current
     r = forge("make_platform_version", format="tiktok", subject=[0.7, 0.4])

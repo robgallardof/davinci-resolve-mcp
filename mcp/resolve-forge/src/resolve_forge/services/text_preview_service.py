@@ -25,7 +25,7 @@ def preview(text: str, *, style: str = "auto", width: int = 1080, height: int = 
     accent_rgba(accent, style)
     safe = safe_for(width, height)
     tokens = text.split()
-    highlight = style in DESIGNS and DESIGNS[style].highlight
+    highlight = animation == "karaoke" or style in DESIGNS and DESIGNS[style].highlight
     base = cards.render(text, width, height, style=style, position=position, safe=safe,
                         active_word=0 if highlight else None, accent=accent,
                         emphasis_words=emphasis_words, max_lines=2 if style in DESIGNS else None)
@@ -41,11 +41,14 @@ def preview(text: str, *, style: str = "auto", width: int = 1080, height: int = 
     cache = {}
     for frame in range(count):
         active = min(len(tokens) - 1, frame * len(tokens) // count) if highlight else None
-        if active not in cache:
-            cache[active] = cards.render(text, width, height, style=style, position=position, safe=safe,
+        progress = (frame * len(tokens) % count) / count if animation == "karaoke" else None
+        key = active, progress
+        if key not in cache:
+            cache[key] = cards.render(text, width, height, style=style, position=position, safe=safe,
                                         active_word=active, accent=accent, emphasis_words=emphasis_words,
+                                        active_progress=progress,
                                         max_lines=2 if style in DESIGNS else None)
-        rgba = animate(cache[active], animation, frame, count, fps, safe)
+        rgba = animate(cache[key], animation, frame, count, fps, safe)
         rgba = rgba.resize(preview_size, Image.Resampling.LANCZOS)
         background = Image.new("RGB", preview_size, (34, 39, 50))
         background.paste(rgba, mask=rgba.getchannel("A"))

@@ -22,16 +22,32 @@ def on_screen(point: tuple[float, float], zoom: float, pivot: tuple[float, float
     return (pivot[0] + zoom * (point[0] - pivot[0]), pivot[1] + zoom * (point[1] - pivot[1]))
 
 
+def viewport(source_aspect, target_aspect, subject, zoom, pivot):
+    """Source crop after cover sizing around subject and source-space motion pivot."""
+    width = min(1.0, target_aspect / source_aspect)
+    height = min(1.0, source_aspect / target_aspect)
+    left = max(0.0, min(1.0 - width, subject[0] - width / 2))
+    top = max(0.0, min(1.0 - height, subject[1] - height / 2))
+    px, py = pivot
+    return (px + (left - px) / zoom, py + (top - py) / zoom,
+            px + (left + width - px) / zoom, py + (top + height - py) / zoom)
+
+
+def in_view(point, rect):
+    x0, y0, x1, y1 = rect
+    return ((point[0] - x0) / (x1 - x0), (point[1] - y0) / (y1 - y0))
+
+
 def issues(shot: dict, action: list[tuple[float, float, float]], faces: list[tuple[float, float]],
            upscale: float = 1.0, max_upscale: float = 2.6, min_coverage: float = 0.6) -> list[str]:
     """Problems of one framed shot. action: (x, y, energy) samples inside the shot; faces: (x, y)."""
     zoom = float(shot["zoom"])
     found = []
-    if zoom <= 1.0001:
+    if zoom <= 1.0001 and "viewport" not in shot:
         return found
     pivot = tuple(shot["anchor"])
-    x0, y0, x1, y1 = visible(zoom, pivot)
-    sx, sy = on_screen(tuple(shot["subject"]), zoom, pivot)
+    x0, y0, x1, y1 = shot.get("viewport", visible(zoom, pivot))
+    sx, sy = in_view(tuple(shot["subject"]), (x0, y0, x1, y1))
     sx0, sx1, sy0, sy1 = SCREEN_SAFE
     if not (sx0 <= sx <= sx1 and sy0 <= sy <= sy1):
         found.append(f"subject ends up at the edge ({sx:.2f}, {sy:.2f})")

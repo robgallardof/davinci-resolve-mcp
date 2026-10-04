@@ -8,6 +8,7 @@ rendered file: frames over time, black or frozen stretches and picture quality. 
 from __future__ import annotations
 
 import secrets
+import math
 from pathlib import Path
 
 from ..domain import formats, framing_review, look, text_placement
@@ -75,61 +76,81 @@ def _sheet(tiles, columns=6):
 
 
 def review_shots(session, source, shots, format="tiktok", texts=None) -> dict:
+    if not shots:
+        raise ForgeError("Review needs at least one planned shot.", code="INVALID_ARGUMENT")
     cv2, np = _cv()
     fmt = formats.get(format)
     path = source_path(session, source)
     cap = cv2.VideoCapture(path)
     if not cap.isOpened():
-        raise ValueError("Video could not be opened.")
+        cap.release()
+        raise ForgeError("Source video could not be opened for review.", code="MEDIA_NOT_FOUND")
     thumb_h = round(THUMB_W * fmt.height / fmt.width)
     texts = texts or []
     boxes = {t["text"]: _text_boxes(t["text"], fmt.width, fmt.height, fmt) for t in texts}
     tiles, report, stats, at = [], [], [], 0.0
+    warnings = set()
     windows = []  # (timeline start, end, avoid boxes on screen)
     try:
         for index, shot in enumerate(shots, 1):
             length = float(shot["end_s"]) - float(shot["start_s"])
-            moment = float(shot.get("hit_s") or 0) + 0.25 if shot.get("hit_s") else float(shot["start_s"]) + length / 2
-            cap.set(cv2.CAP_PROP_POS_MSEC, moment * 1000)
-            ok, frame = cap.read()
-            if not ok:
-                report.append({"shot": index, "issues": ["frame unreadable"]})
-                at += length
-                continue
-            stats.append(frame_stats(frame))
-            zoom, pivot = float(shot["zoom"]), tuple(shot["anchor"])
-            h, w = frame.shape[:2]
-            x0, y0, x1, y1 = framing_review.visible(zoom, pivot)
-            crop = frame[int(y0 * h):max(int(y0 * h) + 2, int(y1 * h)), int(x0 * w):max(int(x0 * w) + 2, int(x1 * w))]
-            tile = cv2.resize(crop, (THUMB_W, thumb_h), interpolation=cv2.INTER_AREA)
-            face_boxes = [_to_screen(b, zoom, pivot) for b in _faces(frame)]
-            subject = framing_review.on_screen(tuple(shot["subject"]), zoom, pivot)
-            avoid = [*face_boxes, (subject[0] - .08, subject[1] - .06, subject[0] + .08, subject[1] + .06)]
-            windows.append((at, at + length, avoid))
-            problems = framing_review.issues(shot, [], [])
-            for fx0, fy0, fx1, fy1 in face_boxes:
-                cv2.rectangle(tile, (int(fx0 * THUMB_W), int(fy0 * thumb_h)), (int(fx1 * THUMB_W), int(fy1 * thumb_h)), (255, 200, 0), 2)
-            cv2.circle(tile, (int(subject[0] * THUMB_W), int(subject[1] * thumb_h)), 6, (0, 255, 255), 2)
-            for t in texts:
-                if t["start_s"] < at + length and at < t["start_s"] + t["duration_s"]:
-                    box = boxes[t["text"]].get(t.get("position", "top"))
-                    if box:
-                        bad = any(text_placement.overlaps(box, a) for a in face_boxes)
-                        cv2.rectangle(tile, (int(box[0] * THUMB_W), int(box[1] * thumb_h)), (int(box[2] * THUMB_W), int(box[3] * thumb_h)),
-                                      (0, 0, 255) if bad else (255, 255, 255), 2)
-                        if bad:
-                            problems.append(f"text '{t['text'][:18]}' covers a face")
-            color = (0, 0, 255) if problems else (0, 200, 0)
-            cv2.rectangle(tile, (0, 0), (THUMB_W - 1, thumb_h - 1), color, 4)
-            cv2.putText(tile, f"{index} {at:.1f}s {shot['framing']} x{zoom:.2f}", (6, 20), cv2.FONT_HERSHEY_SIMPLEX, .45, (0, 255, 255), 1)
-            tiles.append(tile)
-            report.append({"shot": index, "timeline_s": round(at, 2), "framing": shot["framing"], "issues": problems})
+            start = float(shot["start_s"])
+            if not math.isfinite(start) or not math.isfinite(length) or start < 0 or length <= 0:
+                raise ForgeError("Each reviewed shot needs finite 0 <= start_s < end_s.", code="INVALID_ARGUMENT")
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            moments = sorted(set((start, start + length / 2, start + max(0, length - 1 / fps))))
+            samples = []
+            for moment in moments:
+                cap.set(cv2.CAP_PROP_POS_MSEC, moment * 1000)
+                ok, frame = cap.read()
+                if not ok:
+                    samples.append({"source_s": round(moment, 3), "timeline_s": round(at + moment - start, 3), "issues": ["frame unreadable"]})
+                    continue
+                stats.append(frame_stats(frame))
+                zoom, pivot = float(shot["zoom"]), tuple(shot["anchor"])
+                h, w = frame.shape[:2]
+                rect = framing_review.viewport(w / h, fmt.width / fmt.height, tuple(shot["subject"]), zoom, pivot)
+                x0, y0, x1, y1 = rect
+                crop = frame[int(y0 * h):max(int(y0 * h) + 2, int(y1 * h)), int(x0 * w):max(int(x0 * w) + 2, int(x1 * w))]
+                tile = cv2.resize(crop, (THUMB_W, thumb_h), interpolation=cv2.INTER_AREA)
+                face_boxes = [(*framing_review.in_view(b[:2], rect), *framing_review.in_view(b[2:], rect)) for b in _faces(frame)]
+                subject = framing_review.in_view(tuple(shot["subject"]), rect)
+                avoid = [*face_boxes, (subject[0] - .08, subject[1] - .06, subject[0] + .08, subject[1] + .06)]
+                windows.append((at, at + length, avoid))
+                upscale = max(fmt.width / w, fmt.height / h)
+                problems = framing_review.issues({**shot, "viewport": rect}, [], [], upscale=upscale if zoom > 1.0001 else 1.0)
+                if zoom <= 1.0001 and upscale > 2.6:
+                    warnings.add(f"Source already enlarged x{upscale:.2f} at zoom 1; avoid additional zoom.")
+                for fx0, fy0, fx1, fy1 in face_boxes:
+                    if fx0 < 0 or fy0 < 0 or fx1 > 1 or fy1 > 1:
+                        problems.append("cuts a face out of frame")
+                    cv2.rectangle(tile, (int(fx0 * THUMB_W), int(fy0 * thumb_h)), (int(fx1 * THUMB_W), int(fy1 * thumb_h)), (255, 200, 0), 2)
+                cv2.circle(tile, (int(subject[0] * THUMB_W), int(subject[1] * thumb_h)), 6, (0, 255, 255), 2)
+                for t in texts:
+                    if t["start_s"] < at + length - 0.05 and at < t["start_s"] + t["duration_s"] - 0.05:  # frame-rounding slack
+                        box = boxes[t["text"]].get(t.get("position", "top"))
+                        if box:
+                            bad = any(text_placement.overlaps(box, a) for a in face_boxes)
+                            cv2.rectangle(tile, (int(box[0] * THUMB_W), int(box[1] * thumb_h)), (int(box[2] * THUMB_W), int(box[3] * thumb_h)),
+                                          (0, 0, 255) if bad else (255, 255, 255), 2)
+                            if bad:
+                                problems.append(f"text '{t['text'][:18]}' covers a face")
+                color = (0, 0, 255) if problems else (0, 200, 0)
+                cv2.rectangle(tile, (0, 0), (THUMB_W - 1, thumb_h - 1), color, 4)
+                cv2.putText(tile, f"{index} src {moment:.1f}s {shot['framing']} x{zoom:.2f}", (6, 20), cv2.FONT_HERSHEY_SIMPLEX, .45, (0, 255, 255), 1)
+                tiles.append(tile)
+                samples.append({"source_s": round(moment, 3), "timeline_s": round(at + moment - start, 3), "issues": list(dict.fromkeys(problems))})
+            problems = list(dict.fromkeys(issue for sample in samples for issue in sample["issues"]))
+            report.append({"shot": index, "timeline_s": round(at, 2), "framing": shot["framing"], "issues": problems, "samples": samples})
             at += length
     finally:
         cap.release()
+    if not tiles:
+        raise ForgeError("No planned shot frames could be decoded for review.", code="MEDIA_NOT_FOUND",
+                         hint="Check source duration and shot times; repair or transcode the source if necessary.")
     placements = []
     for t in texts:
-        avoid = [box for start, end, boxes_on in windows if start < t["start_s"] + t["duration_s"] and t["start_s"] < end
+        avoid = [box for start, end, boxes_on in windows if start < t["start_s"] + t["duration_s"] - 0.05 and t["start_s"] < end - 0.05
                  for box in boxes_on]
         position, conflicts = text_placement.choose(boxes[t["text"]], avoid, t.get("position", "top"))
         placements.append({"text": t["text"], "start_s": t["start_s"], "position": position, "conflicts": conflicts})
@@ -138,7 +159,8 @@ def review_shots(session, source, shots, format="tiktok", texts=None) -> dict:
     sheet = out / "shots.jpg"
     cv2.imwrite(str(sheet), _sheet(tiles))
     flagged = [r for r in report if r["issues"]]
-    return {"sheet": str(sheet), "shots": len(shots), "flagged": flagged, "text_positions": placements,
+    return {"sheet": str(sheet), "shots": len(shots), "flagged": flagged, "text_positions": placements, "warnings": sorted(warnings),
+            "sampling": "start, midpoint and last frame of each shot; inspect motion between samples visually",
             "look": look.assess(stats),
             "legend": "green = ok, red = problem; cyan circle = subject, yellow = faces, white/red = text box",
             "next": "LOOK at the sheet. Fix flagged shots (hints/framing), use text_positions, apply look.cdl with "
@@ -146,6 +168,8 @@ def review_shots(session, source, shots, format="tiktok", texts=None) -> dict:
 
 
 def review_video(session, path, every_s=1.5) -> dict:
+    if not math.isfinite(float(every_s)) or every_s <= 0:
+        raise ValueError("every_s must be positive and finite")
     cv2, np = _cv()
     file = Path(path).expanduser()
     if not file.is_file():
@@ -157,31 +181,43 @@ def review_video(session, path, every_s=1.5) -> dict:
     duration = frames / fps
     thumb_h = round(THUMB_W * height / max(width, 1))
     tiles, stats, black, frozen, previous, still_since = [], [], [], [], None, None
+    unreadable = []
+    # Always inspect the last frame: interval sampling alone misses short black
+    # tails and faults immediately before the render ends.
+    moments = [i * every_s for i in range(math.ceil(duration / every_s))]
+    if frames > 0:
+        moments.append((frames - 1) / fps)
+    moments = sorted(set(moments))
+    previous_t = None
     try:
-        t = 0.0
-        while t < duration:
+        for t in moments:
             cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
             ok, frame = cap.read()
             if not ok:
-                break
+                unreadable.append(round(t, 3))
+                previous = None
+                still_since = None
+                continue
             s = frame_stats(frame)
             stats.append(s)
             if s["p98"] < 0.06:
                 black.append(round(t, 2))
             grey = cv2.cvtColor(cv2.resize(frame, (64, 112)), cv2.COLOR_BGR2GRAY).astype(np.int16)
             if previous is not None and np.abs(grey - previous).mean() < 0.4:
-                still_since = still_since if still_since is not None else t - every_s
+                still_since = still_since if still_since is not None else previous_t
             else:
                 if still_since is not None and t - still_since >= 3 * every_s:
                     frozen.append([round(still_since, 2), round(t, 2)])
                 still_since = None
             previous = grey
+            previous_t = t
             tile = cv2.resize(frame, (THUMB_W, thumb_h), interpolation=cv2.INTER_AREA)
             cv2.putText(tile, f"{t:.1f}s", (6, 20), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 255, 255), 1)
             tiles.append(tile)
-            t += every_s
     finally:
         cap.release()
+    if still_since is not None and duration - still_since >= 3 * every_s:
+        frozen.append([round(still_since, 2), round(duration, 2)])
     if not tiles:
         raise ValueError("No decodable frames in the rendered file.")
     out = DEFAULT_OUTPUT / "reviews" / secrets.token_hex(4)
@@ -189,6 +225,10 @@ def review_video(session, path, every_s=1.5) -> dict:
     sheet = out / "render.jpg"
     cv2.imwrite(str(sheet), _sheet(tiles, columns=8))
     issues = ([f"black frames at {black[:6]}"] if black else []) + ([f"frozen picture {frozen[:4]}"] if frozen else [])
+    if unreadable:
+        issues.append(f"unreadable sampled frames at {unreadable[:6]}")
     return {"sheet": str(sheet), "duration_s": round(duration, 2), "resolution": f"{width}x{height}", "fps": round(fps, 3),
             "issues": issues, "look": look.assess(stats),
+            "sampled_frames": len(moments), "decoded_frames": len(stats), "unreadable_samples_s": unreadable,
+            "sampling": "interval samples plus final frame; inspect motion and audio separately",
             "next": "LOOK at the sheet: framing, text over faces, colour. Fix and re-render before delivering."}

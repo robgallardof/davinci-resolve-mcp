@@ -23,7 +23,17 @@ def panels(count: int, out_w: int, out_h: int) -> list[tuple[float, float, float
         return [(0, 0, 1, .5), (0, .5, 1, 1)] if vertical else [(0, 0, .5, 1), (.5, 0, 1, 1)]
     if count == 3:
         return [(0, 0, .5, .5), (.5, 0, 1, .5), (0, .5, 1, 1)] if vertical else [(0, 0, 1 / 3, 1), (1 / 3, 0, 2 / 3, 1), (2 / 3, 0, 1, 1)]
-    return [(0, 0, .5, .5), (.5, 0, 1, .5), (0, .5, .5, 1), (.5, .5, 1, 1)]
+    if count == 4:
+        return [(0, 0, .5, .5), (.5, 0, 1, .5), (0, .5, .5, 1), (.5, .5, 1, 1)]
+    # Balanced rows, including every participant rather than silently dropping the fifth.
+    columns = 2 if vertical else math.ceil(math.sqrt(count))
+    rows = math.ceil(count / columns)
+    result = []
+    for row in range(rows):
+        in_row = min(columns, count - row * columns)
+        result.extend((col / in_row, row / rows, (col + 1) / in_row, (row + 1) / rows)
+                      for col in range(in_row))
+    return result
 
 
 def crop_for(face: tuple[float, float, float, float], panel_aspect: float, source_aspect: float,
@@ -31,11 +41,23 @@ def crop_for(face: tuple[float, float, float, float], panel_aspect: float, sourc
     """Source crop (normalized) with panel aspect (w/h) where the face fills `face_share` of the height and
     sits in the upper third. Shifted (never shrunk below the face) to stay inside the source."""
     fx0, fy0, fx1, fy1 = face
+    if not (0 <= fx0 < fx1 <= 1 and 0 <= fy0 < fy1 <= 1):
+        raise ValueError("Face boxes must be ordered and normalized 0..1")
+    if panel_aspect <= 0 or source_aspect <= 0 or not 0 < face_share <= 1:
+        raise ValueError("Aspects and face_share must be positive")
     face_h = max(fy1 - fy0, 0.02)
     h = min(1.0, face_h / face_share)
-    w = h * panel_aspect / source_aspect  # normalized width for the same pixel aspect as the panel
+    ratio = panel_aspect / source_aspect
+    # Keep the whole face, including a little room above/beside it, on narrow portrait panels.
+    h = max(h, (fx1 - fx0) * 1.15 / ratio)
+    w = h * ratio
     if w > 1.0:  # source too narrow for this panel: use full width, recompute height
         w, h = 1.0, min(1.0, source_aspect / panel_aspect)
+    if h > 1.0:
+        h, w = 1.0, min(1.0, ratio)
+    if w < fx1 - fx0 or h < fy1 - fy0:
+        # No matching-aspect crop can contain this face. Composer fits/pads this full-source crop.
+        return (0.0, 0.0, 1.0, 1.0)
     cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
     x0 = min(max(cx - w / 2, 0.0), 1.0 - w)
     y0 = min(max(cy - h / 3, 0.0), 1.0 - h)  # eyes ~ upper third
@@ -51,22 +73,35 @@ def segments(active: list[tuple[float, tuple[int, ...]]], duration_s: float, *, 
         raise ValueError("mode must be auto, single or split")
     if people < 1:
         raise ValueError("No people detected to lay out")
+    if not math.isfinite(duration_s) or duration_s <= 0 or not math.isfinite(min_segment_s) or min_segment_s <= 0:
+        raise ValueError("Duration and minimum segment duration must be positive and finite")
+    previous = -1.0
+    for time_s, who in active:
+        if not math.isfinite(time_s) or not 0 <= time_s < duration_s or time_s <= previous:
+            raise ValueError("Speaker sample times must increase and lie inside the source duration")
+        if any(i < 0 or i >= people for i in who):
+            raise ValueError("Speaker index does not identify a detected person")
+        previous = time_s
     if not active:
         return [{"start_s": 0.0, "end_s": round(duration_s, 3), "layout": "wide", "people": list(range(people))}]
 
     def decide(speakers):
         if mode == "split" and people > 1:
-            return ("split", tuple(range(min(people, 4))))
+            return ("split", tuple(range(people)))
         if len(speakers) >= 2 and mode == "auto":
-            return ("split", tuple(sorted(speakers))[:4])
+            return ("split", tuple(sorted(set(speakers))))
         if speakers:
             return ("single", (sorted(speakers)[0],))
         return ("wide", tuple(range(people)))
 
-    raw = []
+    raw = [[0.0, active[0][0], decide(())]] if active[0][0] > 0 else []
+    last_speakers = ()
     for index, (time_s, speakers) in enumerate(active):
         end = active[index + 1][0] if index + 1 < len(active) else duration_s
-        state = decide(tuple(speakers))
+        # During a short listening pause keep the last speaker, avoiding wide/single flicker.
+        if speakers:
+            last_speakers = tuple(speakers)
+        state = decide(tuple(speakers) if speakers or mode == "split" else last_speakers)
         if raw and raw[-1][2] == state:
             raw[-1][1] = end
         else:
@@ -108,7 +143,10 @@ def _group_crop(faces, out_aspect, source_aspect):
     """Crop with the output aspect that contains every face (centred on the group)."""
     x0, x1 = min(f[0] for f in faces), max(f[2] for f in faces)
     y0, y1 = min(f[1] for f in faces), max(f[3] for f in faces)
-    w = min(1.0, max(x1 - x0 + 0.2, out_aspect / source_aspect * 0.5))
+    ratio = out_aspect / source_aspect
+    if x1 - x0 > ratio or y1 - y0 > 1 / ratio:
+        return (0.0, 0.0, 1.0, 1.0)  # fit/pad rather than cut participants out of a group shot
+    w = min(1.0, max(x1 - x0 + 0.2, ratio * (y1 - y0 + .1), ratio * 0.5))
     h = min(1.0, w * source_aspect / out_aspect)
     if h >= 1.0:
         h, w = 1.0, min(1.0, out_aspect / source_aspect)

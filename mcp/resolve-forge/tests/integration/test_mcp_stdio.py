@@ -34,11 +34,12 @@ def test_stdio_handshake_tools_and_calls():
     ]))
     assert init.serverInfo.name == "resolve-forge" and "apply_motion" in (init.instructions or "")
     assert EXPECTED_TOOLS <= tools
-    assert len(tools) == 58
+    assert len(tools) == 65
+    assert {"preflight_render", "apply_grade_preset", "enhance_audio", "repair_bridge_connection"} <= tools
     assert {"plan_edit", "analyse_music", "assemble_montage", "create_music_visualizer", "find_story_moments", "plan_beat_cuts", "align_text", "place_sound_effects", "add_music_bed", "plan_energized_edit", "energize_timeline", "review_shots", "review_video", "plan_speaker_layout", "build_speaker_layout"} <= tools
     assert {"list_text_styles", "preview_text_style"} <= tools
     assert {"project_workflow", "ingest_media", "timeline_versions", "apply_fusion_graph", "audit_timeline"} <= tools
     assert results["list_styles"]["ok"] and results["preview_motion"]["ok"]
     status = results["forge_status"]
     # Resolve may or may not be open on the machine running the suite; both answers must be well-formed.
-    assert status["ok"] or "Cannot reach DaVinci Resolve" in status["error"]
+    assert status["ok"] or status.get("code") in {"RESOLVE_UNREACHABLE", "RESOLVE_BUSY"}

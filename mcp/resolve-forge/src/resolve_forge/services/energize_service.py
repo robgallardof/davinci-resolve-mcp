@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import math
+
 from ..domain import energize
+from ..domain import formats
+from ..domain.framing import frame_subject
 from ..errors import ForgeError
 from . import assembly_service, motion_service
 from .analysis_service import source_path
+from .context import current, source_size, video_items
+from .native import accepted, verify
 
 # framing -> (motion style, intensity for the plan's zoom, hits?)
-_STYLE = {"wide": ("warm_push", lambda z: 0.5), "medium": ("focus_hold", lambda z: (z - 1) / 0.25),
+_STYLE = {"wide": ("static_hold", lambda z: 1.0), "medium": ("focus_hold", lambda z: (z - 1) / 0.25),
           "close": ("focus_hold", lambda z: (z - 1) / 0.25), "crash": ("crash_zoom", lambda z: (z - 1) / 0.45)}
 
 
@@ -24,7 +30,7 @@ def _upscale(path, format):
     finally:
         cap.release()
     fmt = formats.get(format)
-    return min(fmt.width / width, fmt.height / height) if width and height else 1.0
+    return max(fmt.width / width, fmt.height / height) if width and height else 1.0
 
 
 def plan(session, source, ranges=None, min_shot_s=1.2, max_shot_s=2.8, trim_dead=True, max_zoom=1.6,
@@ -41,8 +47,10 @@ def plan(session, source, ranges=None, min_shot_s=1.2, max_shot_s=2.8, trim_dead
     # One pass for faces (frontal + profiles) and bodies: reactions, and people seen from behind (dead time).
     scan = [(p.time_s, p.faces, p.people) for p in people.scan(path)] if use_faces else []
     result = energize.plan(samples, ranges, presence=scan if use_faces else None, drop_dull=drop_dull, hints=hints, min_shot_s=min_shot_s, max_shot_s=max_shot_s,
-                           trim_dead=trim_dead, max_zoom=max_zoom, upscale=_upscale(path, format))
+                           trim_dead=trim_dead, max_zoom=max_zoom, upscale=_upscale(path, format),
+                           source_aspect=aspect, target_aspect=(formats.get(format).width / formats.get(format).height) if format else aspect)
     return {"source": source, "source_duration_s": round(duration, 3), "faces_found": sum(len(f) for _, f, _ in scan), **result,
+            "detection_limits": "Motion is not animal recognition. Confirm animals visually with hints subject='animal'; mark empty ranges subject='none'.",
             "next": "review_shots(source, shots, format, texts) and LOOK at the sheet; fix; then energize_timeline",
             "review": "Watch it: move cuts that split a gesture, swap framings that hide the joke, keep reveals wide."}
 
@@ -58,6 +66,12 @@ def _validate(shots):
             raise ValueError("Each shot anchor must be [x, y] in 0..1")
         if float(shot["end_s"]) <= float(shot["start_s"]):
             raise ValueError("Each shot needs end_s > start_s")
+        start, end = float(shot["start_s"]), float(shot["end_s"])
+        zoom = float(shot.get("zoom", energize.ZOOM[shot["framing"]]))
+        if not all(math.isfinite(v) for v in (start, end, zoom)) or start < 0 or not 1 <= zoom <= 2.5:
+            raise ValueError("Shot times must be finite and nonnegative; zoom must be in 1..2.5")
+        if shot["framing"] == "wide" and zoom != 1:
+            raise ValueError("Wide shots must use zoom=1")
 
 
 def apply(session, source, name, format=None, shots=None, dry_run=True, **plan_args) -> dict:
@@ -71,6 +85,13 @@ def apply(session, source, name, format=None, shots=None, dry_run=True, **plan_a
     if built["clips"] != len(shots):
         raise ForgeError(f"Resolve placed {built['clips']} of {len(shots)} shots.", code="RESOLVE_REFUSED")
     applied, at = [], 0.0
+    ctx = current(session)
+    dst = (ctx.width, ctx.height)
+    for item, shot in zip(video_items(ctx, 1), shots):
+        sizing = frame_subject(source_size(item, dst), dst, tuple(shot.get("subject", [.5, .5])))
+        for prop, value in sizing.as_props().items():
+            accepted(item, "SetProperty", prop, value)
+            verify(value, item.GetProperty(prop), prop)
     for index, shot in enumerate(shots, 1):
         style, strength = _STYLE[shot["framing"]]
         zoom = float(shot.get("zoom", energize.ZOOM[shot["framing"]]))
@@ -78,7 +99,7 @@ def apply(session, source, name, format=None, shots=None, dry_run=True, **plan_a
         if shot["framing"] == "crash" and shot.get("hit_s") is not None:
             hits = [at + max(0.0, float(shot["hit_s"]) - float(shot["start_s"]) - 0.1)]
         motion_service.animate(session, style, clips=[index], hits_s=hits, intensity=max(0.1, strength(zoom)),
-                               anchor=[float(v) for v in shot["anchor"]])
+                               anchor=[float(v) for v in shot["anchor"]], zoom_limit=zoom)
         applied.append(shot["framing"])
         at += float(shot["end_s"]) - float(shot["start_s"])
     return {"dry_run": False, "timeline": built["timeline"], "shots": len(shots), "duration_s": built["duration_s"],

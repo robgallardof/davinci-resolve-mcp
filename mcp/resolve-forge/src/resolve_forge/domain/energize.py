@@ -110,7 +110,10 @@ def _hints(hints):
             raise ValueError("hint focus must be [x, y] in 0..1")
         if hint.get("framing") not in (None, *ZOOM):
             raise ValueError(f"hint framing must be one of {', '.join(ZOOM)}")
-        out.append((float(hint["start_s"]), float(hint["end_s"]), focus, hint.get("framing"), bool(hint.get("keep"))))
+        if hint.get("subject") not in (None, "person", "animal", "none"):
+            raise ValueError("hint subject must be person, animal or none (visually confirmed)")
+        out.append((float(hint["start_s"]), float(hint["end_s"]), focus, hint.get("framing"),
+                    bool(hint.get("keep") or hint.get("subject") in ("person", "animal")), hint.get("subject")))
     return out
 
 
@@ -177,7 +180,8 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
          hints: list[dict] | None = None,
          min_shot_s: float = 1.2,
          max_shot_s: float = 2.8, trim_dead: bool = True, max_zoom: float = 1.6,
-         focus_target: tuple[float, float] = (0.5, 0.45), upscale: float = 1.0, max_upscale: float = 2.6) -> dict:
+         focus_target: tuple[float, float] = (0.5, 0.45), upscale: float = 1.0, max_upscale: float = 2.6,
+         source_aspect: float | None = None, target_aspect: float | None = None) -> dict:
     if not samples:
         raise ValueError("No motion samples: the source has no decodable video")
     if not 0.5 <= min_shot_s < max_shot_s <= 10:
@@ -190,14 +194,23 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
         if not (math.isfinite(a) and math.isfinite(b)) or a < 0 or b <= a or b > duration + 0.5:
             raise ValueError("ranges must be [start_s, end_s] inside the source")
     overrides = _hints(hints)
+    explicit_empty = [(h[0], h[1]) for h in overrides if h[5] == "none"]
     removed = dead_ranges(samples) if trim_dead else []
+    # A still face or editor-confirmed animal is not dead time merely because it does not move.
+    protected = [(h[0], h[1]) for h in overrides if h[4] or h[2] is not None]
+    protected += [(t, t + .5) for t, found, _ in presence or [] if found]
+    protected += [(t, t + .5) for t, _, _ in faces or []]
+    removed = _subtract(removed, protected, 0.001)
+    removed += explicit_empty
     kept = _subtract(story, removed, min_shot_s) if removed else story
     typical = median(s.energy for s in samples) or 0.01
     # A small source (WhatsApp 576 px) is already upscaled to the timeline; zoom only as far as it stays sharp.
     max_zoom = min(max_zoom, framing_review.max_zoom_for(upscale, max_upscale))
     if presence is not None and faces is None:
         faces = [(t, fx, fy) for t, found, _ in presence for fx, fy in found]
-    shots, previous, corrected, cut = [], None, 0, []
+    shots, previous, corrected = [], None, 0
+    cut = [{"start_s": a, "end_s": b, "why": "editor confirmed no person or animal in frame"}
+           for a, b in explicit_empty]
     for range_index, (a, b) in enumerate(kept):
         for shot_index, (s0, s1) in enumerate(_split(a, b, _in(samples, a, b), min_shot_s, max_shot_s)):
             window = _in(samples, s0, s1) or [min(samples, key=lambda s: abs(s.time_s - s0))]
@@ -263,9 +276,17 @@ def plan(samples: list[Sample], ranges: list[list[float]] | None = None, *, face
                     framing = "wide"
                     continue
                 pivot = [round(focus_pivot(sx, zoom, focus_target[0]), 3), round(focus_pivot(sy, zoom, focus_target[1]), 3)]
+                # Cover sizing already centers the cropped axis. Zoom about that subject to keep it there.
+                if source_aspect and target_aspect:
+                    if target_aspect < source_aspect:
+                        pivot[0] = round(sx, 3)
+                    elif target_aspect > source_aspect:
+                        pivot[1] = round(sy, 3)
                 shot = {"start_s": s0, "end_s": s1, "framing": framing, "zoom": round(zoom, 3),
                         "subject": [round(sx, 3), round(sy, 3)], "anchor": pivot,
                         "hit_s": round(peak.time_s, 3) if framing == "crash" else None, "why": why}
+                if source_aspect and target_aspect:
+                    shot["viewport"] = framing_review.viewport(source_aspect, target_aspect, (sx, sy), zoom, pivot)
                 problems = framing_review.issues(shot, action, must_see_faces, upscale, max_upscale)
                 if not problems or framing == "wide":
                     break

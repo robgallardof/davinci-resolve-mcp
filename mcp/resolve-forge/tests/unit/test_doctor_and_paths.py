@@ -72,3 +72,35 @@ def test_doctor_without_resolve_running_stops_before_connecting(monkeypatch):
     monkeypatch.setattr(doctor, "Session", lambda: pytest.fail("must not connect"))
     checks = {c.name: c for c in doctor.run()}
     assert not checks["Resolve abierto"].ok and "Conexión" not in checks
+
+
+def test_a_busy_resolve_is_reported_as_busy_not_missing():
+    from resolve_forge.gateway import ResolveUnavailable, Session
+
+    class Busy:
+        name, busy = "bridge", False
+
+        def connect(self):
+            self.busy = True
+            return None
+
+    with pytest.raises(ResolveUnavailable, match="busy"):
+        Session([Busy()]).resolve()
+
+
+def test_busy_bridge_does_not_launch_native_probe_and_has_actionable_code():
+    from resolve_forge.gateway import ResolveBusy, Session
+    from resolve_forge.errors import payload
+
+    class Busy:
+        name, busy = "bridge", True
+        def connect(self): return None
+
+    class Native:
+        name = "direct"
+        def connect(self): pytest.fail("Do not probe the SDK while the bridge is stalled")
+
+    with pytest.raises(ResolveBusy) as caught:
+        Session([Busy(), Native()]).resolve()
+    assert payload(caught.value)["code"] == "RESOLVE_BUSY"
+    assert payload(TimeoutError("timed out"))["code"] == "RESOLVE_BUSY"

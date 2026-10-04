@@ -18,6 +18,7 @@ from .render_service import DEFAULT_OUTPUT
 
 
 def plan(session, source, format="tiktok", mode="auto", people=None, active=None, min_segment_s=1.5) -> dict:
+    manual_speakers = active is not None
     fmt = formats.get(format)
     path = source_path(session, source)
     if people is None or active is None:
@@ -33,8 +34,12 @@ def plan(session, source, format="tiktok", mode="auto", people=None, active=None
                                    min_segment_s=min_segment_s)
     counts = {name: sum(1 for s in segments if s["layout"] == name) for name in ("single", "split", "wide")}
     return {"source": source, "format": fmt.key, "people": [list(p) for p in people], "segments": segments,
+            "active_samples": [[t, list(who)] for t, who in active],
             "layouts": counts, "duration_s": round(duration, 3), "time_basis": "source seconds",
             "note": "Stylistic choice: use when the user asked for it or approved the suggestion.",
+            "speaker_evidence": "manual" if manual_speakers else "mouth motion + audio energy",
+            "warnings": ["Automatic speaker candidates use mouth motion and audio energy, not voice identity or speech diarization. Review each handoff; supply active manually when music, laughter, camera motion or moving participants confuse detection.",
+                         "Crops that cannot contain complete faces at the target aspect are fitted with padding; inspect the composed frames before adding captions."],
             "next": "build_speaker_layout(source, name, format, segments) — review the composed clip with review_video"}
 
 
@@ -66,12 +71,13 @@ def _graph(segments, sw, sh, out_w, out_h, fps):
             cw, ch = _even((x1 - x0) * sw), _even((y1 - y0) * sh)
             cx, cy = min(int(x0 * sw), sw - cw), min(int(y0 * sh), sh - ch)
             parts.append(f"[0:v]trim={a}:{b},setpts=PTS-STARTPTS,fps={fps},crop={cw}:{ch}:{cx}:{cy},"
-                         f"scale={pw}:{ph}:flags=lanczos,setsar=1[p{i}_{j}]")
+                         f"scale={pw}:{ph}:flags=lanczos:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+                         f"pad={pw}:{ph}:(ow-iw)/2:(oh-ih)/2,setsar=1[p{i}_{j}]")
             tiles.append((f"[p{i}_{j}]", panel["screen"]))
         if len(tiles) == 1:
             parts.append(f"{tiles[0][0]}scale={out_w}:{out_h}:flags=lanczos,setsar=1[v{i}]")
         else:
-            layout = "|".join(f"{_even(r[0] * out_w)}_{_even(r[1] * out_h)}" for _, r in tiles)
+            layout = "|".join(f"{int(round(r[0] * out_w)) // 2 * 2}_{int(round(r[1] * out_h)) // 2 * 2}" for _, r in tiles)
             parts.append("".join(t for t, _ in tiles) + f"xstack=inputs={len(tiles)}:layout={layout}:fill=black,"
                          f"scale={out_w}:{out_h},setsar=1[v{i}]")
         parts.append(f"[0:a]atrim={a}:{b},asetpts=PTS-STARTPTS[a{i}]")
@@ -92,6 +98,10 @@ def build(session, source, name, format="tiktok", segments=None, mode="auto", in
         for panel in seg["panels"]:
             if not all(0 <= float(v) <= 1 for v in (*panel["crop"], *panel["screen"])):
                 raise ValueError("Panel crop/screen must be normalized 0..1")
+            for key in ("crop", "screen"):
+                rect = panel[key]
+                if len(rect) != 4 or not (rect[0] < rect[2] and rect[1] < rect[3]):
+                    raise ValueError("Panel crop/screen must contain four ordered coordinates with positive area")
     if dry_run:
         return {"dry_run": True, "segments": segments, "duration_s": round(sum(s["end_s"] - s["start_s"] for s in segments), 3)}
     import cv2

@@ -82,3 +82,45 @@ def test_unknown_backend():
     _, it = item()
     with pytest.raises(ForgeError):
         apply_plan(it, plan(), SRC, DST, backend="magic")
+
+
+def test_partial_native_keys_are_cleared_before_fusion_fallback():
+    raw, it = item()
+    original = raw.AddKeyframe
+    raw.AddKeyframe = lambda prop, frame, value: False if prop == "Pan" else original(prop, frame, value)
+    result = apply_plan(it, plan(), SRC, DST)
+    assert result["backend"] == "fusion"
+    assert not any(raw.keys.values()), "Partial native motion must not compound with Fusion"
+
+
+def test_silent_fusion_pivot_rejection_is_not_reported_as_success():
+    from resolve_forge.services.appliers import _set_point, Unsupported
+
+    class Refused:
+        def SetInput(self, name, value): return False
+        def GetInput(self, name): return [.5, .5]
+
+    with pytest.raises(Unsupported, match="point input"):
+        _set_point(Refused(), "Pivot", .8, .3)
+
+
+@pytest.mark.parametrize("operation", ["apply", "clear"])
+def test_fusion_motion_preserves_existing_effect_graph(operation):
+    from resolve_forge.services.appliers import Unsupported
+    raw, it = item(keyframes=False)
+    comp = raw.AddFusionComp()
+    effect = comp.AddTool("ColorCorrector")
+    effect.ConnectInput("Input", comp.FindTool("MediaIn1"))
+    comp.FindTool("MediaOut1").ConnectInput("Input", effect)
+    if operation == "clear":
+        motion = comp.AddTool("Transform")
+        motion.SetAttrs({"TOOLS_Name": FUSION_TOOL})
+    before = dict(comp.tools)
+    applier = FusionTransformApplier()
+    with pytest.raises(Unsupported, match="existing effects"):
+        if operation == "apply":
+            applier.apply(it, plan(), SRC, DST)
+        else:
+            applier.clear(it)
+    assert comp.tools == before
+    assert comp.FindTool("MediaOut1").connected["Input"] is effect

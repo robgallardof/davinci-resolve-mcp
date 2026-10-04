@@ -34,7 +34,7 @@ DESIGNS = {d.name: d for d in (
                "#FF916F", "pop", True, 2, "tiktok_punch", 0.8, True),
 )}
 LEGACY_STYLES = ("box", "outline", "yellow", "dark")
-ANIMATIONS = ("none", "fade", "lift", "pop")
+ANIMATIONS = ("none", "fade", "lift", "pop", "karaoke")
 
 
 def resolve_style(style: str, width: int, height: int) -> str:
@@ -62,7 +62,9 @@ def accent_rgba(accent: str | None, style: str) -> tuple[int, int, int, int]:
 def catalog() -> dict:
     return {"styles": [asdict(d) for d in DESIGNS.values()], "legacy_styles": list(LEGACY_STYLES),
             "automatic": "creator for vertical, studio for horizontal/square",
-            "animations": list(ANIMATIONS), "brand_color": "accent=#RRGGBB",
+            "animations": list(ANIMATIONS),
+            "karaoke": "Word-timed growing underline; fixed typography, no inferred activity in silent gaps. Requires word timestamps for captions.",
+            "brand_color": "accent=#RRGGBB",
             "workflow": "Choose a coherent style; preview it; review transcript; add captions; reserve motion and overlays for meaningful moments."}
 
 
@@ -79,6 +81,14 @@ class CaptionCue:
     def active_at(self, seconds: float) -> int | None:
         # No colored word while the speaker pauses; short word gaps do not move the layout.
         return next((i for i, word in enumerate(self.words) if word.start <= seconds < word.end), None)
+
+    def progress_at(self, seconds: float) -> float | None:
+        """Spoken-word progress; silence has no moving underline or guessed timing."""
+        active = self.active_at(seconds)
+        if active is None:
+            return None
+        word = self.words[active]
+        return max(0.0, min(1.0, (seconds - word.start) / (word.end - word.start)))
 
 
 def cues(words: list[Word], max_words: int, *, end_s: float | None = None) -> list[CaptionCue]:
@@ -137,7 +147,7 @@ def motion_state(animation: str, frame: int, frames: int, fps: float) -> tuple[f
     """Opacity, scale and vertical offset in short-side fractions. Entry only; text holds at full strength."""
     if animation not in ANIMATIONS:
         raise ValueError("Unknown animation")
-    if animation == "none":
+    if animation in ("none", "karaoke"):
         return 1.0, 1.0, 0.0
     ramp = max(1, min(round(fps * 0.18), frames - 1))
     t = min(1.0, frame / ramp)

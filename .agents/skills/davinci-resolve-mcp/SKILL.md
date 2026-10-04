@@ -9,7 +9,7 @@ Hay un solo servidor con edición por intención y herramientas de API:
 
 | Servidor | Para qué |
 |---|---|
-| `resolve-forge` — intención (de 58 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` — intención (de 65 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
 | `resolve-forge` — ritmo y enfoque | `plan_energized_edit` (detecta acción, caras y tiempo muerto; plan de planos cortos con encuadres alternos) → `energize_timeline` (un clip por plano con su zoom/enfoque). Skill `entertainment-pacing` |
 | `resolve-forge` — autorrevisión | `review_shots` (antes de construir: recortes reales, caras, textos, color) y `review_video` (después de renderizar). Obligatorio mirar la hoja |
 | `resolve-forge` — varias personas | `plan_speaker_layout` / `build_speaker_layout`: encuadra a quien habla y divide la pantalla cuando hablan varios (solo si el usuario lo quiere) |
@@ -25,6 +25,11 @@ Hay un solo servidor con edición por intención y herramientas de API:
    - **Studio**: Preferences → System → General → External scripting using = **Local** (o usa el bridge igual que en Free).
    - Diagnóstico completo: `cd mcp/resolve-forge && uv run resolve-forge-doctor`.
 3. `list_clips` antes de mutar nada.
+
+Si después de reiniciar Resolve el bridge conserva el puerto y no responde: `repair_bridge_connection()`
+inspecciona helpers huérfanos en Windows. Solo con candidato verificado usa `dry_run=false`; vuelve a lanzar
+Workspace → Scripts → resolve_bridge en Resolve actual. Nunca detiene Resolve ni un bridge con padre vivo.
+Forge prueba primero un bridge ya disponible; si está ocupado evita lanzar además un probe SDK nativo.
 
 ## Free vs Studio
 
@@ -43,6 +48,7 @@ Cada error de forge trae `code` y casi siempre `hint`. No interpretes el texto: 
 | code | Qué hacer |
 |---|---|
 | `RESOLVE_UNREACHABLE` | Pide abrir Resolve con un proyecto (Free: arrancar `resolve_bridge`) y vuelve a intentar |
+| `RESOLVE_BUSY` | Detén reproducción, espera render/cierra diálogos y reintenta; si sigue bloqueado reinicia el bridge. No repitas una escritura a ciegas |
 | `NO_PROJECT` / `NO_TIMELINE` | Abre o crea un proyecto o timeline (`assemble_timeline` crea uno) |
 | `CLIP_NOT_FOUND` / `EMPTY_TRACK` | Vuelve a leer con `list_clips` (los índices empiezan en 1) |
 | `INVALID_ARGUMENT` | Corrige el argumento (estilo, formato, ancla, rangos) |
@@ -70,6 +76,8 @@ Para leer estado sin tools: resources `resolve://status`, `resolve://timeline`, 
 - Más quirks, con evidencia: `docs/api-behavior.md`.
 
 ## Qué skill sigue
+
+- Audio, color, presets y LUT → `color-audio-finishing`: `enhance_audio`, `apply_grade_preset` y `preflight_render`.
 
 - Vertical (TikTok, Reels, FB Reels, Shorts, Stories, Snapchat, 4:5) → `vertical-video`
 - Horizontal (YouTube, Facebook, LinkedIn, X, web) → `horizontal-video`

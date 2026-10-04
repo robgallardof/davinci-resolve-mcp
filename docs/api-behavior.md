@@ -23,7 +23,14 @@
   Las llamadas se encolan al hilo principal. Un fuscript huérfano de una sesión anterior de Resolve puede retener el
   puerto (todos los objetos devuelven vacío): el bridge sale solo cuando su Resolve deja de responder, y `health`
   informa `root_type`. Diagnóstico: proceso que escucha en el puerto vs hora de inicio de Resolve.
+- Mientras Resolve reproduce el timeline (o renderiza, o tiene un diálogo abierto) no atiende llamadas de script:
+  el bridge queda bloqueado dentro de la llamada (la API nativa retiene el GIL, así que ni `health` responde).
+  Se resuelve deteniendo la reproducción; Forge lo informa como "Resolve is busy" en vez de "cannot reach".
 - Proxies nativos pueden devolver dir() vacío: la lista de métodos se sondea contra la allowlist.
 - OpenCV 5 eliminó CascadeClassifier: `vision` fija opencv<5 y el ancla de cara cae a la posición por defecto si falta.
 
 Guardas correspondientes: tests/unit/test_bridge.py, test_edit_decisions.py, tests/integration/test_authoring_tools.py y test_story_and_beat_tools.py; render/Fusion cuentan además con la suite live existente.
+
+### WAV sin Frames en Free 21 (2026-10-04)
+
+En la prueba live de producción, un WAV PCM importado devolvió Frames vacío. No significa duración cero: SFX lee getnframes/framerate del archivo WAV y convierte a FPS de fuente, y convierte aparte la duración de lanes a FPS de timeline. Ver test_live_production.py.

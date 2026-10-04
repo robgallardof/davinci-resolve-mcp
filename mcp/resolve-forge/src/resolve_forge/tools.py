@@ -48,9 +48,12 @@ def run_in_resolve_thread(fn: Callable[..., Any], *args: Any) -> Any:
 
 
 def register(mcp: FastMCP, session: Session) -> None:
-    from . import authoring_tools, production_tools
+    from . import authoring_tools, composition_tools, producer_tools, production_tools, qa_tools
     authoring_tools.register(mcp, session, _safe)
     production_tools.register(mcp, session, _safe)
+    qa_tools.register(mcp, session, _safe)
+    producer_tools.register(mcp, session, _safe)
+    composition_tools.register(mcp, session, _safe)
     @mcp.tool()
     @_safe
     def forge_status() -> dict:
@@ -196,7 +199,7 @@ def register(mcp: FastMCP, session: Session) -> None:
         style: auto selects Creator for vertical and Studio for horizontal; creator | studio | editorial | impact.
         Legacy styles outline | yellow | box | dark stay available, with no motion by default.
         Modern designs highlight the spoken word (Editorial uses chosen emphasis only), with measured two-line layout.
-        animation: auto | none | fade | lift | pop. accent: brand color #RRGGBB. reduced_motion disables movement.
+        animation: auto | none | fade | lift | pop | karaoke. accent: brand color #RRGGBB. reduced_motion disables movement.
         emphasis_words: selected words to accent, preserving the complete transcript.
         words: optional corrected {text,start,end} entries in timeline seconds, from transcribe_timeline(include_words=true).
         Provided words bypass Whisper. Returns a separate UTF-8 SRT file as well as the designed caption track.
@@ -237,7 +240,7 @@ def register(mcp: FastMCP, session: Session) -> None:
         """On-screen text (hook, POV, labels; emoji supported) for an exact time range, inside the safe zone.
 
         start_s is in timeline seconds. style: auto | creator | studio | editorial | impact, plus legacy box/outline/yellow/dark.
-        animation: auto | none | fade | lift | pop. accent: #RRGGBB. position: top | middle | bottom.
+        animation: auto | none | fade | lift | pop | karaoke. accent: #RRGGBB. position: top | middle | bottom.
         Each call adds a new top video track so it never collides with existing clips.
         """
         if duration_s <= 0:

@@ -20,6 +20,7 @@ class ForgeError(RuntimeError):
 
 # Stable codes (documented in the skill `davinci-resolve-mcp`).
 RESOLVE_UNREACHABLE = "RESOLVE_UNREACHABLE"
+RESOLVE_BUSY = "RESOLVE_BUSY"
 NO_PROJECT = "NO_PROJECT"
 NO_TIMELINE = "NO_TIMELINE"
 EMPTY_TRACK = "EMPTY_TRACK"
@@ -35,10 +36,12 @@ MEDIA_NOT_FOUND = "MEDIA_NOT_FOUND"
 
 def payload(exc: BaseException) -> dict:
     """Shape any expected exception as the tool's error response."""
-    from .gateway import ResolveUnavailable  # local: gateway must not depend on this module's users
+    from .gateway import ResolveUnavailable, ResolveBusy  # local: avoid circular imports
 
     if isinstance(exc, ForgeError):
         code, hint, message = exc.code, exc.hint, exc.message
+    elif isinstance(exc, (ResolveBusy, TimeoutError)):
+        code, hint, message = RESOLVE_BUSY, "Stop playback, wait for rendering or close dialogs, then retry. If the bridge remains stalled, restart Workspace > Scripts > resolve_bridge.", str(exc)
     elif isinstance(exc, ResolveUnavailable):
         code, hint, message = RESOLVE_UNREACHABLE, "Run `uv run resolve-forge-doctor` for the exact next step.", str(exc)
     elif isinstance(exc, OSError):

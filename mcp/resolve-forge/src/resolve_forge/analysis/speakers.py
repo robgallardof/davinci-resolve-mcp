@@ -1,8 +1,7 @@
 """Who is speaking, moment by moment? Faces grouped into people + mouth motion while there is voice.
 
-Active-speaker evidence without a neural model: a person speaks when the mouth region of their face moves
-clearly more than usual for them *and* the audio has voice at that moment. Good enough to choose framings
-for podcasts and interviews; the agent still reviews the result (review_shots / review_video).
+Active-speaker candidates without a neural model: mouth motion plus audio energy. This does not identify
+voices or distinguish speech from music/laughter; the agent reviews handoffs (review_shots / review_video).
 """
 
 from __future__ import annotations
@@ -79,12 +78,15 @@ def _voice(path, times, step_s):
         from .audio_events import levels
         values, _, step = levels(path, step_s=step_s)
     except Exception:
-        return [True] * len(times)
+        return [False] * len(times)
     if not values:
-        return [True] * len(times)
+        return [False] * len(times)
     floor = sorted(values)[len(values) // 5]
+    # Continuous dialogue may have no silent samples: floor+10 alone would reject the entire clip.
+    ceiling = sorted(values)[min(len(values) - 1, int(len(values) * .9))]
+    threshold = max(-45.0, min(floor + 10, ceiling - 6))
     out = []
     for t in times:
         i = min(len(values) - 1, int(t / step))
-        out.append(values[i] > max(-45.0, floor + 10))
+        out.append(values[i] > threshold)
     return out

@@ -176,11 +176,25 @@ class FusionComp:
         self.tools["MediaOut1"].connected["Input"] = self.tools["MediaIn1"]
 
     def FindTool(self, name): return self.tools.get(name)
+    def GetToolList(self, _selected=False): return dict(self.tools)
     def Lock(self): self.locked = True
     def Unlock(self): self.locked = False
     def StartUndo(self, _name): return True
     def EndUndo(self, _keep): return True
     def GetAttrs(self): return {"COMPN_RenderStart": self.render_start}
+
+    def clone(self) -> "FusionComp":
+        """DuplicateTimeline copies each clip's comp: same tool names, values and connections."""
+        new = FusionComp(self.render_start)
+        new.tools = {}
+        for name, tool in self.tools.items():
+            twin = FusionTool(new, name, tool.reg)
+            twin.static, twin.animated = copy.deepcopy(tool.static), set(tool.animated)
+            twin.timed = copy.deepcopy(tool.timed)
+            new.tools[name] = twin
+        for name, tool in self.tools.items():
+            new.tools[name].connected = {inp: new.tools[src.name] for inp, src in tool.connected.items()}
+        return new
 
     def AddTool(self, reg, _x=-32768, _y=-32768):
         n = 1
@@ -370,6 +384,7 @@ class Timeline:
 def _clone(item: TimelineItem) -> TimelineItem:
     new = TimelineItem(item.mpi, item.start, item.duration, edition=item.edition, left=item.left)
     new.props = dict(item.props)
+    new.comps = [comp.clone() for comp in item.comps]
     return new
 
 

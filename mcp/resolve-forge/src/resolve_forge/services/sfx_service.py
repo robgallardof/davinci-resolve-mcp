@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import wave
 from pathlib import Path
 
 from ..domain.sound_design import cues as validate_cues, density_warnings, lanes
@@ -22,7 +23,7 @@ def _with_gain(source_file: str, gain_db: float, folder: Path) -> str:
     output = folder / f"{Path(source_file).stem}_{gain_db:+.1f}dB.wav"
     if not output.exists():
         run([ffmpeg_executable(), "-hide_banner", "-nostdin", "-n", "-i", source_file, "-vn",
-             "-af", f"volume={gain_db}dB,alimiter=limit=0.95", "-ar", "48000", "-c:a", "pcm_s24le", str(output)])
+             "-af", f"volume={gain_db}dB,alimiter=limit=0.95:level=false:latency=true", "-ar", "48000", "-c:a", "pcm_s24le", str(output)])
         if not output.is_file() or output.stat().st_size < 44:
             raise ForgeError("The gain-adjusted effect was not written.", code="AUDIO_PROCESSING_FAILED")
     return str(output)
@@ -44,13 +45,22 @@ def place(session, raw_cues, gain_db=-8.0, dry_run=True):
     pool = ctx.media_pool
     clips, intervals = [], []
     for cue in timed:
-        clip = find_or_import(pool, files[(cue["source"], cue["gain_db"])])
+        audio_file = files[(cue["source"], cue["gain_db"])]
+        clip = find_or_import(pool, audio_file)
+        source_fps = float(clip.GetClipProperty("FPS") or ctx.fps)
         frames = int(float(clip.GetClipProperty("Frames") or 0))
+        if frames < 1:
+            # Free 21 can omit Frames for imported PCM audio; read the actual WAV duration.
+            try:
+                with wave.open(audio_file, "rb") as wav:
+                    frames = round(wav.getnframes() / wav.getframerate() * source_fps)
+            except (wave.Error, OSError):
+                pass
         if frames < 1:
             raise ForgeError(f"Resolve reports no duration for {cue['source']}.", code="RESOLVE_REFUSED")
         start = ctx.seconds_to_frame(cue["time_s"])
         clips.append((clip, frames, start))
-        intervals.append((start, start + frames))
+        intervals.append((start, start + round(frames / source_fps * ctx.fps)))
     lane_of = lanes(intervals)
     base = int(ctx.timeline.GetTrackCount("audio"))
     for _ in range(max(lane_of) + 1):

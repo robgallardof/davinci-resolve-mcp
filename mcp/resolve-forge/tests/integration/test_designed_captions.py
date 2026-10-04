@@ -58,3 +58,19 @@ def test_catalog_and_preview_work_without_changing_the_timeline(forge):
     result = forge("preview_text_style", text="Tu próxima idea", width=540, height=960)
     assert result["ok"] and Path(result["poster"]).exists()
     assert forge.project.current is master
+
+
+def test_karaoke_encodes_word_progress_and_accessible_fallback(forge):
+    words = [dict(text="Muy", start=0, end=1), dict(text="bien", start=1.3, end=2)]
+    result = forge("add_captions", style="creator", animation="karaoke", words=words)
+    assert result["ok"] and result["animation"] == "karaoke"
+    sequence = sorted(next(Path(result["files"]).glob("cap*")).glob("*.png"))
+    with Image.open(sequence[3]) as early, Image.open(sequence[24]) as late:
+        assert ImageChops.difference(early.convert("RGB"), late.convert("RGB")).getbbox() is not None
+        assert early.getchannel("A").getbbox() == late.getchannel("A").getbbox()
+    assert sequence[32].read_bytes() == sequence[36].read_bytes()  # silent gap
+    assert "Muy bien" in Path(result["srt_file"]).read_text(encoding="utf-8")
+    preview = forge("preview_text_style", text="Muy bien", animation="karaoke", width=540, height=960)
+    assert preview["ok"] and preview["animation"] == "karaoke"
+    reduced = forge("add_captions", style="creator", animation="karaoke", words=words, reduced_motion=True)
+    assert reduced["ok"] and reduced["animation"] == "none"

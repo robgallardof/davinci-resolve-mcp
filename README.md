@@ -5,7 +5,7 @@
 ## English
 
 Edit DaVinci Resolve by talking to an AI agent that works like a producer and a professional editor. One MCP of our own
-(**resolve-forge**, 58 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
+(**resolve-forge**, 65 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
 Cursor, Gemini CLI and VS Code.
 
 We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way (pure domain rules →
@@ -54,7 +54,7 @@ uv run resolve-forge-doctor
 ## Español
 
 Edita video en DaVinci Resolve hablando con un agente que trabaja como productor y editor profesional. Un solo MCP
-propio (**resolve-forge**, **58 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
+propio (**resolve-forge**, **65 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
 y `video-director`, y skills portables.
 
 Las mejores capacidades de los MCP públicos se reimplementaron a nuestra manera: reglas puras, servicios por
@@ -71,12 +71,30 @@ responsabilidad, transporte aislado y tools MCP finas. No se importa ni empaquet
 | Ritmo y enfoque (entretenimiento) | plan_energized_edit, energize_timeline |
 | Autorrevisión (antes y después de render) | review_shots, review_video |
 | Varias personas (podcast, entrevista) | plan_speaker_layout, build_speaker_layout |
+| Composición multi-fuente y encargos del productor | plan_composition, build_composition, plan_production |
 | Producción por género | plan_edit, find_story_moments, analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer |
 | Sonido | add_music_bed, place_sound_effects, analyse_audio, normalise_audio, sync_audio |
 | Proyectos y media | project_workflow, configure_project, list_media, ingest_media, organise_media, media_metadata |
 | Timeline | timeline_versions, edit_clips, timeline_markers, configure_track, export_interchange |
 | Color y Fusion | grade_clips, inspect_grade, prepare_lut, gallery_stills, apply_fusion_graph, inspect_fusion |
+| Acabado y revisión previa | preflight_render, apply_grade_preset, enhance_audio |
+| Recuperación de conexión | repair_bridge_connection |
 | Análisis y AI nativa | analyse_scenes, native_ai |
+
+Acabado: `preflight_render` revisa fuentes, pistas habilitadas, huecos y propiedades antes de renderizar;
+la revisión visual sigue siendo necesaria. `apply_grade_preset` ofrece natural/warm/crisp/muted con intensidad
+y preview; aplica CDL en una copia. `enhance_audio` genera un WAV nuevo con filtro suave, compresión y limitador,
+midiendo LUFS/true peak antes y después. No separa voces ni sustituye la normalización de la mezcla final.
+Subtítulos: `animation="karaoke"` anima el progreso por palabra con texto estable y respeta `reduced_motion`.
+Layouts: hasta cinco o más participantes, caras completas y cambios de hablante revisables; la detección por boca
+y energía no identifica voces. Ver skill `color-audio-finishing` para color, LUT y mezcla.
+Composición: `plan_composition` combina hasta cinco videos/fotos por segmento (mosaico o hero + apoyo) con
+inicio independiente por fuente y UNA pista de audio maestra explícita; genera preview y hoja sin tocar Resolve.
+`build_composition` exige `reviewed=true` y crea un asset nuevo (y opcionalmente una timeline nueva).
+`plan_production` convierte el brief en encargos para composición, audio, color, títulos y QA, con criterios
+de aceptación; los especialistas proponen y solo el productor escribe en Resolve, en serie.
+Conexión: `repair_bridge_connection` revisa en Windows si un fuscript del bridge anterior conserva el puerto
+después de cerrar Resolve. Preview por defecto; solo retira un helper huérfano cuya identidad completa se verificó.
 
 ### Uso
 
