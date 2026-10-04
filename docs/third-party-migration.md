@@ -1,6 +1,6 @@
 # Migración: herramientas propias a partir del análisis de la competencia
 
-Forge implementa 56 herramientas propias: edición editorial, producción por género, sonido y authoring de proyectos,
+Forge implementa 58 herramientas propias: edición editorial, producción por género, sonido y authoring de proyectos,
 media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP estudiados.
 
 ## ¿Cuánto lleva? (2026-10-04)
@@ -19,7 +19,7 @@ media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP 
 | 8. Documentación, skills y roles al día | ✅ Hecho | README (tabla verificada por test), skill `editorial-direction` |
 | 9. Prueba live de las fases 6–7 | ⏳ Pendiente | `tests/live/test_live_production.py` (listo, falta ejecutarlo con el bridge) |
 
-En números: 56 tools, 497 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
+En números: 58 tools, 497 pruebas sin Resolve aprobadas, lint sin errores. Lo único que falta para cerrar es ejecutar
 la suite live con Resolve abierto y el bridge iniciado (Workspace → Scripts → resolve_bridge).
 
 ## Arquitectura
@@ -73,7 +73,7 @@ Se retiraron el segundo servidor, patches, config/references.json y scripts/refe
 Lee esto antes de seguir. Última actualización: 2026-10-04.
 
 ### Hecho
-- Migración: Forge propio (56 tools), bridge propio, sin código ni servidores de terceros; 497 pruebas sin Resolve.
+- Migración: Forge propio (58 tools), bridge propio, sin código ni servidores de terceros; 497 pruebas sin Resolve.
 - Diseño de textos (pedido: subtítulos "bonitos", animados, no simples): estilos `creator`, `studio`, `editorial`,
   `impact` con palabra activa, acento de marca, entradas `fade/lift/pop`, `reduced_motion`, preview PNG/WebP
   (`list_text_styles`, `preview_text_style`). Legacy `box/outline/yellow/dark` solo a pedido.
@@ -91,6 +91,9 @@ Lee esto antes de seguir. Última actualización: 2026-10-04.
   - Autorrevisión: el plan baja zooms que recortan la acción, dejan al sujeto en el borde, cortan caras o pasan la
     nitidez de la fuente; `review_shots` (antes) y `review_video` (después) generan hojas que el agente debe mirar;
     color/exposición con CDL suave y textos que no tapan caras. Skill `video-qa`.
+  - Interacción: los planos de personas de espaldas sin cara ni acción se cortan (`cut_dull`).
+  - Varias personas: `plan_speaker_layout` / `build_speaker_layout` (hablante activo, pantalla dividida).
+    Falta prueba con material real de varias personas.
   - Skill `editorial-direction` y roles actualizados para usar todo lo anterior.
 
 ### Pendiente (por prioridad)

@@ -45,6 +45,17 @@ Ningún pico de audio es un chiste ni un drop hasta que lo ves o lo escuchas.
 | **Gaming** | Contexto espacial, HUD legible, la jugada que explica el resultado | Acelera la espera, nunca la jugada | `creator`; subtítulos fuera del HUD (`position="top"` si el HUD está abajo) |
 | **Vlog** | Momentos auténticos, lugar | Alterna detalle y presencia; J/L cuts | `creator`; `vlog_mix` |
 
+## Varias personas (podcast, entrevista, dos en un sillón)
+
+Opción de estilo, no regla: a muchos no les gusta. Recomiéndala como productor y úsala solo si el usuario la quiere.
+- `plan_speaker_layout(source, format, mode)`: detecta a cada persona y quién habla (boca + voz).
+  - `auto`: encuadra a quien habla; si hablan 2+ a la vez, divide la pantalla.
+  - `split`: siempre dividido. `single`: siempre una persona.
+  - Vertical: 2 apiladas, 3 = dos arriba + una abajo, 4 = 2×2. Horizontal: lado a lado.
+- Revisa los segmentos (sin parpadeos: mínimo 1.5 s por layout), luego `build_speaker_layout` (clip nuevo con el audio
+  original + timeline nuevo) y `review_video` antes de añadir subtítulos y textos.
+- Si la detección se equivoca, pasa `people` (cajas de cara) y `active` (quién habla y cuándo) a mano.
+
 ## Subtítulos y textos que se vean bien
 
 - `list_text_styles` → `preview_text_style(texto, style, width, height)` para revisar antes de quemar nada.

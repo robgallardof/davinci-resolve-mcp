@@ -5,7 +5,7 @@
 ## English
 
 Edit DaVinci Resolve by talking to an AI agent that works like a producer and a professional editor. One MCP of our own
-(**resolve-forge**, 56 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
+(**resolve-forge**, 58 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
 Cursor, Gemini CLI and VS Code.
 
 We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way (pure domain rules →
@@ -32,6 +32,8 @@ Resolve starts). Studio: Preferences → System → General → External scripti
 - **Self-review**: before building, a contact sheet of what each shot really shows (crop, faces, subject, text
   boxes) with flagged problems, text positions that avoid faces and an exposure/colour check with a gentle CDL;
   after rendering, a sheet of the delivered file with black/frozen detection. Bad zooms are downgraded automatically.
+- **Multi-person layouts** (optional, on request): frame whoever is speaking (faces + mouth motion + voice) and
+  split the screen when several talk at once — stacked in vertical, side by side in horizontal, 2+1 for three.
 - **Production by genre**: an editorial brief per genre (comedy, music, electronic, interview, cinematic, education,
   product, gaming, vlog); candidate punchlines, reactions and questions; beat grid and phrase-aligned music cuts;
   music videos and visualizers; exact lyrics/script timing; motivated sound effects; music beds ducked under the voice.
@@ -52,7 +54,7 @@ uv run resolve-forge-doctor
 ## Español
 
 Edita video en DaVinci Resolve hablando con un agente que trabaja como productor y editor profesional. Un solo MCP
-propio (**resolve-forge**, **56 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
+propio (**resolve-forge**, **58 herramientas**), bridge propio para Free, roles `vertical-editor`, `horizontal-editor`
 y `video-director`, y skills portables.
 
 Las mejores capacidades de los MCP públicos se reimplementaron a nuestra manera: reglas puras, servicios por
@@ -68,6 +70,7 @@ responsabilidad, transporte aislado y tools MCP finas. No se importa ni empaquet
 | Voz, texto y entrega | transcribe_timeline, align_text, list_text_styles, preview_text_style, add_captions, add_text_overlay, render_for, render_status |
 | Ritmo y enfoque (entretenimiento) | plan_energized_edit, energize_timeline |
 | Autorrevisión (antes y después de render) | review_shots, review_video |
+| Varias personas (podcast, entrevista) | plan_speaker_layout, build_speaker_layout |
 | Producción por género | plan_edit, find_story_moments, analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer |
 | Sonido | add_music_bed, place_sound_effects, analyse_audio, normalise_audio, sync_audio |
 | Proyectos y media | project_workflow, configure_project, list_media, ingest_media, organise_media, media_metadata |

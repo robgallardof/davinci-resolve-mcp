@@ -40,6 +40,13 @@ dentro, no recortando de más.
 7. **Render y revisión final**: `render_for` → `review_video(file)` y **abre la hoja**. Si hay negro, congelados,
    textos sobre caras, encuadres raros o color feo, corrige y vuelve a renderizar. No entregues sin esto.
 
+## Sin interacción, se corta
+
+Una persona **de espaldas**, sin cara visible, y sin que pase nada más (la mascota quieta, nadie mira, nada se
+mueve con intención) es tiempo muerto aunque haya movimiento. `plan_energized_edit` (drop_dull=true) los corta y
+los lista en `cut_dull` con el motivo. Si un plano así importa para la historia, protégelo con
+`hints: [{start_s, end_s, keep: true}]` o con `focus` sobre lo que sí pasa (la mascota). Revisa siempre `cut_dull`.
+
 ## Criterio de encuadre
 
 | Momento | Encuadre |

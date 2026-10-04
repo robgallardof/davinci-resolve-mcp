@@ -1,7 +1,7 @@
 """Thin MCP surface for genre-aware direction, music assets and reviewed multi-source cuts."""
 
 from .domain.editorial import plan
-from .services import energize_service, review_service, montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
+from .services import energize_service, review_service, speaker_layout_service, montage_service, music_bed_service, music_service, sfx_service, story_service, transcript_service
 
 
 def register(mcp, session, safe):
@@ -168,3 +168,26 @@ def register(mcp, session, safe):
         """
         return energize_service.apply(session, source, name, format, shots, dry_run,
                                       ranges=ranges, max_shot_s=max_shot_s, max_zoom=max_zoom, hints=hints)
+
+    @mcp.tool()
+    @safe
+    def plan_speaker_layout(source: str, format: str = "tiktok", mode: str = "auto", people: list[list[float]] | None = None,
+                            active: list[list] | None = None, min_segment_s: float = 1.5) -> dict:
+        """Multi-person layouts (podcast, interview, couch): frame whoever is speaking; when 2+ talk at once,
+        split the screen (vertical: stacked; horizontal: side by side; 3 = two on top + one below; 4 = 2x2).
+
+        Detects people (faces) and the active speaker (mouth motion while there is voice). mode: auto | single |
+        split (always split). people: [[x0, y0, x1, y1]] face boxes to override detection; active:
+        [[time_s, [person indices]]]. A stylistic choice: only when the user asks for it or approves it.
+        """
+        return speaker_layout_service.plan(session, source, format, mode, people,
+                                           [(row[0], row[1]) for row in active] if active else None, min_segment_s)
+
+    @mcp.tool()
+    @safe
+    def build_speaker_layout(source: str, name: str, format: str = "tiktok", segments: list[dict] | None = None,
+                             mode: str = "auto", into_resolve: bool = True, dry_run: bool = True) -> dict:
+        """Compose the planned layout into a NEW clip (original audio kept, source untouched) and, with
+        into_resolve, a new timeline with it at the platform format. Then review_video and add captions/texts.
+        """
+        return speaker_layout_service.build(session, source, name, format, segments, mode, into_resolve, dry_run)
