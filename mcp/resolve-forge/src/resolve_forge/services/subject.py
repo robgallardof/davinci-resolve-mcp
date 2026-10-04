@@ -6,6 +6,7 @@ from typing import Any
 
 from ..analysis import faces
 from ..gateway import call
+from .. import errors as E
 from .context import ForgeError, source_path
 
 Anchor = str | list[float] | tuple[float, float]
@@ -15,7 +16,8 @@ def resolve_anchor(anchor: Anchor, item: Any) -> tuple[tuple[float, float], str]
     """Returns (point, how) — `how` explains where the point came from."""
     if isinstance(anchor, (list, tuple)):
         if len(anchor) != 2 or not all(0 <= float(v) <= 1 for v in anchor):
-            raise ForgeError("anchor point must be [x, y] with values in 0..1 (top-left origin)")
+            raise ForgeError("anchor point must be [x, y] with values in 0..1 (top-left origin)",
+                             code=E.INVALID_ARGUMENT)
         return (float(anchor[0]), float(anchor[1])), "given"
     if anchor == "center":
         return (0.5, 0.5), "center"
@@ -30,4 +32,4 @@ def resolve_anchor(anchor: Anchor, item: Any) -> tuple[tuple[float, float], str]
                 return track.center, f"face ({track.hits}/{track.samples} samples)"
         why = "opencv not installed" if not faces.available() else "no face found"
         return faces.TALKING_HEAD_DEFAULT, f"talking_head default ({why})"
-    raise ForgeError("anchor must be 'face', 'center', 'talking_head' or [x, y]")
+    raise ForgeError("anchor must be 'face', 'center', 'talking_head' or [x, y]", code=E.INVALID_ARGUMENT)

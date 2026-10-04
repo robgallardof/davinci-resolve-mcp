@@ -57,9 +57,10 @@ def test_apply_motion_cuts_are_timeline_seconds(forge: Forge):
 
 def test_apply_motion_subset_and_validation(forge: Forge):
     assert forge("apply_motion", style="warm_push", clips=[2])["clips"][0]["index"] == 2
-    assert not forge("apply_motion", style="warm_push", clips=[9])["ok"]
-    assert "unknown style" in forge("apply_motion", style="spin360")["error"]
-    assert not forge("apply_motion", style="warm_push", anchor=[2, 0])["ok"]
+    assert forge("apply_motion", style="warm_push", clips=[9])["code"] == "CLIP_NOT_FOUND"
+    bad_style = forge("apply_motion", style="spin360")
+    assert "unknown style" in bad_style["error"] and bad_style["code"] == "INVALID_ARGUMENT"
+    assert forge("apply_motion", style="warm_push", anchor=[2, 0])["code"] == "INVALID_ARGUMENT"
 
 
 def test_fusion_backend_forced_works_everywhere(forge: Forge):
@@ -96,7 +97,8 @@ def test_make_platform_version_vertical(forge: Forge):
 def test_make_platform_version_twice_names_clash(forge: Forge):
     assert forge("make_platform_version", format="reels")["ok"]
     forge.project.current = forge.project.timelines[0]
-    assert "already exist" in forge("make_platform_version", format="reels")["error"]
+    clash = forge("make_platform_version", format="reels")
+    assert clash["code"] == "TIMELINE_EXISTS" and clash["hint"]
 
 
 def test_smart_reframe_only_on_studio_falls_back_on_free(forge: Forge):
@@ -126,14 +128,15 @@ def test_errors_are_actionable_without_resolve():
     f = Forge(False, True, True, reachable=False)
     r = f("forge_status")
     assert not r["ok"] and "resolve_bridge" in r["error"] and "External scripting" in r["error"]
+    assert r["code"] == "RESOLVE_UNREACHABLE" and "doctor" in r["hint"]
 
 
 def test_errors_without_project_or_timeline():
     f = Forge(False, True, True)
     f.project.current = None
-    assert "No current timeline" in f("list_clips")["error"]
+    assert f("list_clips")["code"] == "NO_TIMELINE"
     f.resolve.project = None
-    assert "No project" in f("forge_status")["error"]
+    assert f("forge_status")["code"] == "NO_PROJECT"
 
 
 def test_list_formats_by_orientation(forge: Forge):

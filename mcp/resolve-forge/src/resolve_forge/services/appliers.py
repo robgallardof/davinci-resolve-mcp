@@ -18,6 +18,7 @@ from ..domain.framing import Sizing, rezoom_keeping
 from ..domain.keyframes import Track
 from ..domain.motion import MotionPlan
 from ..gateway import call
+from .. import errors as E
 from .context import ForgeError
 
 EDIT_PROPS = ("ZoomX", "ZoomY", "Pan", "Tilt", "RotationAngle")
@@ -177,9 +178,11 @@ def apply_plan(item, plan: MotionPlan, src, dst, backend: str = "auto") -> dict:
     reasons = {}
     for name in order:
         if name not in APPLIERS:
-            raise ForgeError(f"unknown backend '{name}'. Use one of: auto, {', '.join(APPLIERS)}")
+            raise ForgeError(f"unknown backend '{name}'. Use one of: auto, {', '.join(APPLIERS)}",
+                             code=E.INVALID_ARGUMENT)
         try:
             return APPLIERS[name].apply(item, plan, src, dst)
         except Unsupported as exc:
             reasons[name] = str(exc)
-    raise ForgeError(f"no motion backend could animate '{item.GetName()}': {reasons}")
+    raise ForgeError(f"no motion backend could animate '{item.GetName()}': {reasons}",
+                     code=E.BACKEND_UNSUPPORTED, hint="Use backend='auto' or 'fusion' (works on every edition).")

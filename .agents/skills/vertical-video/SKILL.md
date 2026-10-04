@@ -12,6 +12,9 @@ duración máxima, loudness) lo da `list_formats(orientation="vertical")`. La ta
 ## Flujo
 
 1. **Estado**: `forge_status` y `list_clips`.
+   Clip largo sin editar (por ejemplo un video del teléfono de varios minutos): `find_highlights(source)` para
+   ver los mejores momentos y `assemble_timeline(source, cuts=[[ini, fin], ...], name, format="reels")` para
+   armar el corte directamente en 9:16. Si haces esto, sáltate el paso 2.
 2. **Formato**. Si la fuente es 16:9: `make_platform_version(format=<plataforma>, subject="face")`.
    Crea una copia con la cara centrada y el master no se toca.
    - Varias plataformas 9:16 comparten resolución: una sola versión `reels` sirve para TikTok, Shorts y FB Reels.
@@ -22,12 +25,15 @@ duración máxima, loudness) lo da `list_formats(orientation="vertical")`. La ta
 3. **Corte editorial** (con `davinci-resolve`): fuera silencios, muletillas y retomas.
    Duración: 15–35 s es lo más seguro; 30–60 s si la idea lo necesita. Respeta `max_seconds` del formato.
 4. **Hook (0–3 s)**: la primera frase es la promesa o el conflicto. Primer cambio visual antes de los 2 s.
-5. **Movimiento** (skill `dynamic-zoom-talking-head`):
-   `apply_motion("tiktok_punch" | "tiktok_smooth" | "vlog_mix", cuts_s=<inicios de frase>)`.
+5. **Movimiento** (skill `dynamic-zoom-talking-head`): `transcribe_timeline()` y luego
+   `apply_motion("tiktok_punch" | "tiktok_smooth" | "vlog_mix", cuts_s=<cuts_s>, hits_s=<hits_s>)`.
    Los estilos `tiktok_*` sirven para cualquier vertical; el nombre indica el ritmo, no la plataforma.
-6. **Subtítulos** (casi todo se ve sin sonido): 2–5 palabras por bloque, fuente gruesa con contorno o caja,
-   dentro de `safe_rect_px`, en el tercio medio. Studio: Create Subtitles from Audio. Free: transcripción del upstream
-   o SRT externo.
+6. **Texto** (casi todo se ve sin sonido):
+   - Hay voz: `add_captions(style="outline" | "yellow" | "box", position="bottom", max_words=3)`.
+     Funciona en Free y queda dentro de la safe zone más estricta.
+   - Sin voz (vlog visual o con música): cuenta la historia con `add_text_overlay(text, start_s, duration_s,
+     style="box", position="top")`, por ejemplo "POV: …" en el hook y un giro a mitad del video.
+     Emoji permitidos.
 7. **Pattern interrupts** cada 2–4 s: punch-in, B-roll, texto, SFX. Varía el tipo.
 8. **Loop**: que el final conecte con el inicio cuando se pueda.
 9. **Entrega** (skill `resolve-delivery`): `render_for(format=<plataforma>)`, una por destino si cambian las specs.

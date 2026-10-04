@@ -3,10 +3,14 @@ name = "resolve-forge"
 version = "0.1.0"
 description = "Intent-level DaVinci Resolve MCP: dynamic zooms for talking heads, platform versions, delivery."
 requires-python = ">=3.10,<3.14"
-dependencies = ["mcp[cli]>=1.30,<2"]
+dependencies = ["mcp[cli]>=1.30,<2", "pillow>=10.1"]
 
 [project.optional-dependencies]
+# face anchors + highlight detection
 vision = ["opencv-python-headless>=4.9"]
+# local transcription (Free-edition captions / cut points). GPU when CUDA works, CPU otherwise.
+speech = ["faster-whisper>=1.1", "av>=12", "nvidia-cublas-cu12; sys_platform == 'win32' or sys_platform == 'linux'",
+          "nvidia-cudnn-cu12<10; sys_platform == 'win32' or sys_platform == 'linux'"]
 
 [project.scripts]
 resolve-forge = "resolve_forge.server:main"

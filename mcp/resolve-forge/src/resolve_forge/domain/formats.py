@@ -96,6 +96,17 @@ def by_orientation(orientation: str | None = None) -> dict[str, Format]:
     return {k: f for k, f in FORMATS.items() if f.orientation == orientation}
 
 
+def safe_for(width: int, height: int) -> SafeZone:
+    """Strictest safe zone among the platforms that share this resolution's aspect, so one
+    render is safe everywhere (e.g. 1080x1920 is safe for TikTok, Reels and Shorts at once)."""
+    aspect = round(width / height, 3)
+    same = [f.safe for f in FORMATS.values() if round(f.width / f.height, 3) == aspect]
+    if not same:
+        same = [f.safe for f in FORMATS.values() if f.orientation == ("vertical" if height > width else "horizontal")]
+    return SafeZone(max(z.top for z in same), max(z.bottom for z in same),
+                    max(z.left for z in same), max(z.right for z in same))
+
+
 def markdown_table() -> str:
     """The platform table used in docs/skills — generated, so docs never drift from code."""
     rows = ["| key | Plataforma | Resolución | fps | Codec | Mbps | LUFS | Safe zone (arriba/abajo/izq/der) | Máx. |",

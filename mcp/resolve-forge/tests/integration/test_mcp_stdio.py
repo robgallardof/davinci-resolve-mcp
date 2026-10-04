@@ -9,7 +9,8 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 EXPECTED_TOOLS = {"forge_status", "list_clips", "list_styles", "list_formats", "preview_motion", "apply_motion",
-                  "clear_motion", "make_platform_version", "locate_subject", "render_for", "render_status"}
+                  "clear_motion", "make_platform_version", "locate_subject", "render_for", "render_status",
+                  "transcribe_timeline", "add_captions", "add_text_overlay", "find_highlights", "assemble_timeline"}
 
 
 async def _session_run(calls):

@@ -12,6 +12,29 @@ tools.py ──► services/ ──► domain/          (puro: sin Resolve, 100 
 server.py = raíz de composición (crea Session, registra tools)
 ```
 
+### Módulos agregados al estudiar los otros MCPs
+
+```
+errors.py                      ForgeError(code, hint) + payload(): contrato de error para tools y resources
+resources.py                   resolve://status, resolve://timeline, forge://formats, forge://styles (hilo de Resolve)
+domain/transcript.py           puro: map_clip (fuente→timeline), sentences, caption_chunks, emphasis_hits, cut_points
+analysis/media.py              audio vía PyAV (sin binario ffmpeg)
+analysis/transcribe.py         WhisperTranscriber: corre en un proceso hijo y cachea por archivo
+analysis/whisper_worker.py     el proceso hijo: faster-whisper, GPU (large-v3-turbo) → CPU (small)
+analysis/highlights.py         movimiento por segundo (cv2) + rank() puro de ventanas
+graphics/cards.py              tarjetas PNG de cuadro completo: estilos, wrap balanceado, emoji, safe zone
+services/transcript_service    palabras de cada clip re-temporizadas al timeline
+services/overlay_service       tarjetas → secuencias PNG (hardlinks) → pista nueva, frame-exactas
+services/captions_service      transcript → chunks → overlay_service
+services/assembly_service      lista de cortes → timeline nuevo (opcionalmente a resolución de plataforma)
+services/highlight_service     clip → ventanas destacadas
+services/media_lookup          clip del media pool por nombre o ruta (importa si hace falta)
+```
+
+¿Por qué secuencias PNG para los textos? La API no puede recortar títulos ni stills (un still siempre dura 5 s e
+ignora `endFrame`), pero una secuencia de N imágenes entra como un clip de exactamente N frames con alfa.
+Los frames son hardlinks a un único PNG, así que casi no ocupan disco.
+
 ## Principios aplicados
 
 - **SRP**: cada módulo tiene una razón para cambiar. La matemática de encuadre (`framing`) no sabe de MCP; las tools no saben de keyframes.

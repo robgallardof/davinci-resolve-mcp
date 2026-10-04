@@ -9,6 +9,7 @@ from __future__ import annotations
 from ..domain import formats
 from ..domain.framing import frame_subject
 from ..gateway import Session, call
+from .. import errors as E
 from .context import ForgeError, current, source_size
 from .subject import Anchor, resolve_anchor
 
@@ -20,7 +21,8 @@ def make_version(session: Session, format_key: str, *, subject: Anchor = "face",
     name = name or f"{ctx.timeline.GetName()} [{fmt.key}]"
     copy = ctx.timeline.DuplicateTimeline(name)
     if copy is None:
-        raise ForgeError(f"DuplicateTimeline failed (does a timeline named '{name}' already exist?)")
+        raise ForgeError(f"DuplicateTimeline failed: a timeline named '{name}' probably exists.",
+                         code=E.TIMELINE_EXISTS, hint="Pass a different `name`.")
     ctx.project.SetCurrentTimeline(copy)  # DuplicateTimeline already moves 'current'; make it explicit
 
     settings = {"useCustomSettings": "1", "timelineResolutionWidth": str(fmt.width),
@@ -29,7 +31,8 @@ def make_version(session: Session, format_key: str, *, subject: Anchor = "face",
         copy.SetSetting(key, value)
     got = (int(copy.GetSetting("timelineResolutionWidth")), int(copy.GetSetting("timelineResolutionHeight")))
     if got != (fmt.width, fmt.height):
-        raise ForgeError(f"Resolve kept the timeline at {got[0]}x{got[1]}; set it manually in Timeline Settings.")
+        raise ForgeError(f"Resolve kept the timeline at {got[0]}x{got[1]}.", code=E.RESOLVE_REFUSED,
+                         hint="Set the resolution manually in Timeline Settings.")
 
     dst = (fmt.width, fmt.height)
     framed = []

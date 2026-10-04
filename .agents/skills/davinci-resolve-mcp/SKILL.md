@@ -9,7 +9,7 @@ Hay dos servidores que se usan juntos:
 
 | Servidor | Para qué |
 |---|---|
-| `resolve-forge` (11 tools) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` (16 tools + 4 resources) | Intención: `apply_motion` (zooms y movimiento), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
 | `davinci-resolve` (upstream, 37 tools) | Todo lo demás: media pool, markers, color, Fairlight, Fusion granular, transcripción, análisis |
 
 ## Arranque (siempre)
@@ -30,7 +30,23 @@ Hay dos servidores que se usan juntos:
 | Reencuadre | Encuadre por cara/punto | Además `smart_reframe=true` |
 | Codecs | H.264 (H.265 cae a H.264) | H.264/H.265 |
 | Render | Solo dentro de `~/Movies` (raíces del bridge) | Cualquier carpeta |
-| Subtítulos automáticos | No (usa la transcripción del upstream o un SRT) | Create Subtitles from Audio |
+| Subtítulos | `add_captions` (Whisper local, quemados en el video) | `add_captions`, o Create Subtitles from Audio de Studio |
+
+## Errores: decide según `code`
+
+Cada error de forge trae `code` y casi siempre `hint`. No interpretes el texto: usa el código.
+
+| code | Qué hacer |
+|---|---|
+| `RESOLVE_UNREACHABLE` | Pide abrir Resolve con un proyecto (Free: arrancar `resolve_bridge`) y vuelve a intentar |
+| `NO_PROJECT` / `NO_TIMELINE` | Abre o crea un proyecto o timeline (`assemble_timeline` crea uno) |
+| `CLIP_NOT_FOUND` / `EMPTY_TRACK` | Vuelve a leer con `list_clips` (los índices empiezan en 1) |
+| `INVALID_ARGUMENT` | Corrige el argumento (estilo, formato, ancla, rangos) |
+| `TIMELINE_EXISTS` | Usa otro `name` |
+| `MISSING_DEPENDENCY` | Ejecuta el `hint` (`uv sync --extra speech` o `--extra vision`) |
+| `MEDIA_NOT_FOUND` / `RESOLVE_REFUSED` / `RENDER_REFUSED` | Sigue el `hint` (en Free: rutas dentro del perfil y `~/Movies`) |
+
+Para leer estado sin tools: resources `resolve://status`, `resolve://timeline`, `forge://formats`, `forge://styles`.
 
 ## Reglas de seguridad
 

@@ -19,14 +19,82 @@ TIMELINE_START = 86400  # 01:00:00:00 at 24 fps — Resolve's default origin
 
 
 class MediaPoolItem:
-    def __init__(self, name: str, width: int = 1920, height: int = 1080, path: str = "", frames: int = 300):
-        self.name, self.width, self.height, self.path, self.frames = name, width, height, path, frames
+    def __init__(self, name: str, width: int = 1920, height: int = 1080, path: str = "", frames: int = 300,
+                 fps: float = 30):
+        self.name, self.width, self.height, self.path, self.frames, self.fps = name, width, height, path, frames, fps
 
     def GetName(self): return self.name
 
     def GetClipProperty(self, key=None):
-        props = {"Resolution": f"{self.width}x{self.height}", "File Path": self.path, "Frames": str(self.frames)}
+        props = {"Resolution": f"{self.width}x{self.height}", "File Path": self.path, "Frames": str(self.frames),
+                 "FPS": str(self.fps)}
         return props if key is None else props.get(key, "")
+
+
+class Folder:
+    def __init__(self, name: str):
+        self.name, self.clips, self.subfolders = name, [], []
+
+    def GetName(self): return self.name
+    def GetClipList(self): return list(self.clips)
+    def GetSubFolderList(self): return list(self.subfolders)
+
+
+class MediaPool:
+    """ImportMedia, AppendToTimeline and folders, with Resolve's real quirks:
+    a folder of numbered PNGs imports as ONE sequence clip; stills would ignore endFrame."""
+
+    def __init__(self, project: "Project"):
+        self.project, self.root = project, Folder("Master")
+        self.current = self.root
+
+    def GetRootFolder(self): return self.root
+    def GetCurrentFolder(self): return self.current
+
+    def SetCurrentFolder(self, folder):
+        self.current = folder
+        return True
+
+    def AddSubFolder(self, parent, name):
+        sub = Folder(name)
+        parent.subfolders.append(sub)
+        return sub
+
+    def ImportMedia(self, paths):
+        from pathlib import Path
+        out = []
+        for raw in paths:
+            p = Path(raw)
+            if p.is_dir():
+                frames = sorted(p.glob("*.png"))
+                if not frames:
+                    continue
+                item = MediaPoolItem(f"{p.name}_[0000-{len(frames) - 1:04d}].png", path=str(p), frames=len(frames))
+            elif p.is_file():
+                item = MediaPoolItem(p.name, path=str(p), frames=self.project.resolve.import_frames)
+            else:
+                continue
+            self.current.clips.append(item)
+            out.append(item)
+        return out
+
+    def CreateEmptyTimeline(self, name):
+        tl = Timeline(self.project, name, [[]])
+        self.project.timelines.append(tl)
+        return tl
+
+    def AppendToTimeline(self, infos):
+        tl, placed = self.project.current, []
+        for info in infos:
+            track = int(info.get("trackIndex", 1))
+            while len(tl.tracks) < track:
+                tl.tracks.append([])
+            item = TimelineItem(info["mediaPoolItem"], int(info["recordFrame"]),
+                                int(info["endFrame"]) - int(info["startFrame"]), edition=self.project.resolve,
+                                left=int(info["startFrame"]))
+            tl.tracks[track - 1].append(item)
+            placed.append(item)
+        return placed
 
 
 class FusionTool:
@@ -93,8 +161,8 @@ class FusionComp:
 
 
 class TimelineItem:
-    def __init__(self, mpi: MediaPoolItem | None, start: int, duration: int, *, edition: "Resolve"):
-        self.mpi, self.start, self.duration, self.edition = mpi, start, duration, edition
+    def __init__(self, mpi: MediaPoolItem | None, start: int, duration: int, *, edition: "Resolve", left: int = 0):
+        self.mpi, self.start, self.duration, self.edition, self.left = mpi, start, duration, edition, left
         self.props = {"ZoomX": 1.0, "ZoomY": 1.0, "Pan": 0.0, "Tilt": 0.0, "RotationAngle": 0.0}
         self.keys: dict[str, dict[int, float]] = {}
         self.interp: dict[tuple[str, int], str] = {}
@@ -113,7 +181,8 @@ class TimelineItem:
     def GetEnd(self, *_): return self.start + self.duration
     def GetDuration(self, *_): return self.duration
     def GetMediaPoolItem(self): return self.mpi
-    def GetSourceStartFrame(self): return 0
+    def GetSourceStartFrame(self): return self.left
+    def GetLeftOffset(self, *_): return self.left
     def GetSourceEndFrame(self): return self.duration
 
     def GetProperty(self, key=None): return dict(self.props) if key is None else self.props.get(key)
@@ -157,6 +226,11 @@ class Timeline:
     def GetSetting(self, key=None): return self.settings.get(key, "")
     def GetTrackCount(self, kind): return len(self.tracks) if kind == "video" else 0
 
+    def AddTrack(self, kind, *_):
+        if kind == "video":
+            self.tracks.append([])
+        return True
+
     def SetSetting(self, key, value):
         if key.startswith("timelineResolution") and self.settings["useCustomSettings"] != "1":
             return False  # Resolve requires custom settings before per-timeline resolution
@@ -178,7 +252,7 @@ class Timeline:
 
 
 def _clone(item: TimelineItem) -> TimelineItem:
-    new = TimelineItem(item.mpi, item.start, item.duration, edition=item.edition)
+    new = TimelineItem(item.mpi, item.start, item.duration, edition=item.edition, left=item.left)
     new.props = dict(item.props)
     return new
 
@@ -190,10 +264,13 @@ class Project:
         self.current: Timeline | None = None
         self.render: dict[str, Any] = {}
         self.jobs: dict[str, dict] = {}
+        self.pool = MediaPool(self)
 
     def GetName(self): return self.name
     def GetCurrentTimeline(self): return self.current
-    def GetMediaPool(self): return object()
+    def GetMediaPool(self): return self.pool
+    def GetTimelineCount(self): return len(self.timelines)
+    def GetTimelineByIndex(self, i): return self.timelines[i - 1]
     def GetSetting(self, key=None): return {"timelineFrameRate": "30", "timelineResolutionWidth": "1920",
                                             "timelineResolutionHeight": "1080"}.get(key, "")
 
@@ -226,6 +303,7 @@ class Project:
 class Resolve:
     def __init__(self, *, studio: bool, keyframes: bool = True, version: str = "21.0.4.5"):
         self.studio, self.keyframes, self.version = studio, keyframes, version
+        self.import_frames = 900  # frames of any imported movie file
         self.project: Project | None = Project(self)
 
     def GetVersionString(self): return self.version

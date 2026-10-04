@@ -12,8 +12,12 @@ from mcp.server.fastmcp import FastMCP
 from . import doctor
 from .analysis import faces
 from .domain import formats, styles
+from .errors import payload
 from .gateway import ResolveUnavailable, Session
-from .services import format_service, motion_service, render_service
+from . import resources
+from .domain.transcript import Span
+from .services import (assembly_service, captions_service, format_service, highlight_service, motion_service,
+                       overlay_service, render_service, transcript_service)
 from .services.appliers import APPLIERS
 from .services.context import ForgeError, current, describe, video_items
 from .services.subject import resolve_anchor
@@ -33,8 +37,13 @@ def _safe(fn: Callable[..., dict]) -> Callable[..., Any]:
                 _RESOLVE_THREAD, functools.partial(fn, *args, **kwargs))
             return {"ok": True, **result}
         except (ForgeError, ResolveUnavailable, KeyError, ValueError) as exc:
-            return {"ok": False, "error": str(exc).strip("'\"")}
+            return payload(exc)
     return wrapper
+
+
+def run_in_resolve_thread(fn: Callable[..., Any], *args: Any) -> Any:
+    """Await `fn` on the Resolve thread (resources use it; they have no error envelope of their own)."""
+    return asyncio.get_running_loop().run_in_executor(_RESOLVE_THREAD, functools.partial(fn, *args))
 
 
 def register(mcp: FastMCP, session: Session) -> None:
@@ -160,3 +169,63 @@ def register(mcp: FastMCP, session: Session) -> None:
     def render_status(job_id: str) -> dict:
         """Status and progress of a render job returned by render_for."""
         return render_service.status(session, job_id)
+
+    @mcp.tool()
+    @_safe
+    def transcribe_timeline(language: str | None = None, include_words: bool = False, track: int = 1) -> dict:
+        """What is said on the timeline, in TIMELINE seconds (respects every cut). Local Whisper: works on Free.
+
+        Returns sentences, `cuts_s` (sentence starts) and `hits_s` (numbers, exclamations, stressed endings)
+        ready for apply_motion. GPU when available, CPU otherwise; cached per source file.
+        language: 'es', 'en', ... or omit to auto-detect.
+        """
+        return transcript_service.analyse(session, track=track, language=language, include_words=include_words)
+
+    @mcp.tool()
+    @_safe
+    def add_captions(style: str = "outline", position: str = "bottom", max_words: int = 4,
+                     language: str | None = None) -> dict:
+        """Burned-in captions from the timeline's speech, on a new top track. Works on Free (no Studio AI needed).
+
+        style: outline (white, black stroke) | yellow | box (TikTok-native) | dark.
+        position: bottom | middle | top, always inside the safe zone of the timeline's resolution.
+        max_words: words per caption block (2-5 is the short-form sweet spot).
+        """
+        return captions_service.add_captions(session, style=style, position=position, max_words=max_words,
+                                             language=language)
+
+    @mcp.tool()
+    @_safe
+    def add_text_overlay(text: str, start_s: float, duration_s: float, style: str = "box",
+                         position: str = "top") -> dict:
+        """On-screen text (hook, POV, labels; emoji supported) for an exact time range, inside the safe zone.
+
+        start_s is in timeline seconds. style: box | outline | yellow | dark. position: top | middle | bottom.
+        Each call adds a new top video track so it never collides with existing clips.
+        """
+        if duration_s <= 0:
+            raise ValueError("duration_s must be > 0")
+        return overlay_service.place_cards(session, [Span(text, start_s, start_s + duration_s)],
+                                           style=style, position=position)
+
+    @mcp.tool()
+    @_safe
+    def find_highlights(source: str, top: int = 6, window_s: float = 4.0) -> dict:
+        """Rank the best moments of a long clip by visual motion + audio activity (needs the vision extra).
+
+        source: media-pool clip name or absolute file path (imported if needed).
+        Returns non-overlapping windows in SOURCE seconds, sorted by time, for assemble_timeline.
+        """
+        return highlight_service.find(session, source, top=top, window_s=window_s)
+
+    @mcp.tool()
+    @_safe
+    def assemble_timeline(source: str, cuts: list[list[float]], name: str, format: str | None = None) -> dict:
+        """Build a new timeline from source ranges: cuts=[[start_s, end_s], ...] in SOURCE seconds, in order.
+
+        format (optional): set the timeline to a platform resolution (see list_formats), e.g. 'reels'.
+        The new timeline becomes current; nothing existing is modified.
+        """
+        return assembly_service.assemble(session, source, cuts, name=name, format=format)
+
+    resources.register(mcp, session, run_in_resolve_thread)

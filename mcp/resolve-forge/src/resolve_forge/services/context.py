@@ -5,11 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .. import errors as E
+from ..errors import ForgeError  # noqa: F401  (re-exported: services import it from here)
 from ..gateway import Session, call
-
-
-class ForgeError(RuntimeError):
-    """A user-facing failure with an actionable message."""
 
 
 @dataclass
@@ -35,10 +33,12 @@ def current(session: Session, *, need_timeline: bool = True) -> Context:
     resolve = session.resolve()
     project = resolve.GetProjectManager().GetCurrentProject()
     if project is None:
-        raise ForgeError("No project open in Resolve.")
+        raise ForgeError("No project open in Resolve.", code=E.NO_PROJECT,
+                         hint="Open or create a project in Resolve (not just the Project Manager).")
     timeline = project.GetCurrentTimeline()
     if need_timeline and timeline is None:
-        raise ForgeError("No current timeline. Open or create one first.")
+        raise ForgeError("No current timeline.", code=E.NO_TIMELINE,
+                         hint="Open a timeline, or build one with assemble_timeline.")
     src = timeline if timeline is not None else project
     return Context(
         resolve=resolve, project=project, timeline=timeline, media_pool=project.GetMediaPool(),
@@ -52,12 +52,13 @@ def video_items(ctx: Context, track: int = 1, indices: list[int] | None = None) 
     """Clips on a video track, optionally filtered by 1-based position."""
     items = [i for i in (ctx.timeline.GetItemListInTrack("video", track) or []) if i is not None]
     if not items:
-        raise ForgeError(f"Video track {track} has no clips.")
+        raise ForgeError(f"Video track {track} has no clips.", code=E.EMPTY_TRACK, hint="Check list_clips(track=...).")
     if not indices:
         return items
     bad = [i for i in indices if not 1 <= i <= len(items)]
     if bad:
-        raise ForgeError(f"Clip index out of range {bad}; track {track} has {len(items)} clips.")
+        raise ForgeError(f"Clip index out of range {bad}; track {track} has {len(items)} clips.",
+                         code=E.CLIP_NOT_FOUND, hint="Indices are 1-based; see list_clips.")
     return [items[i - 1] for i in indices]
 
 

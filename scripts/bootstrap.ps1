@@ -20,7 +20,7 @@ $env:PYTHONIOENCODING = "utf-8"
 Pop-Location
 
 Push-Location (Join-Path $root "mcp\resolve-forge")
-uv sync --python 3.12 --extra vision
+uv sync --python 3.12 --extra vision --extra speech   # speech: local Whisper (captions/transcription on Free)
 uv run pytest -q
 Pop-Location
 

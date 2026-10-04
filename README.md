@@ -30,13 +30,14 @@ Claude Code, Codex, Cursor, Gemini CLI and VS Code.
 9. [Platforms](#platforms)
 10. [Tests](#testing)
 11. [Troubleshooting](#troubleshooting)
-12. [Repository layout](#repository-layout)
+12. [Credits and what we improved](#credits-and-what-we-improved)
+13. [Repository layout](#repository-layout)
 
 ## What's inside
 
 | Piece | What it does |
 |---|---|
-| **`resolve-forge`** (our MCP) | Intent-level editing: motion for talking heads, platform versions (vertical ↔ horizontal), spec-correct renders. 11 tools |
+| **`resolve-forge`** (our MCP) | Intent-level editing: motion for talking heads, platform versions (vertical ↔ horizontal), spec-correct renders, captions/text on Free, transcription, highlights and assembly. 16 tools + 4 resources |
 | **`davinci-resolve`** (upstream MCP, [samuelgursky](https://github.com/samuelgursky/davinci-resolve-mcp)) | The whole Resolve API: media pool, markers, color, Fairlight, Fusion, transcription, analysis. 37 tools |
 | **Agents** | `vertical-editor`, `horizontal-editor` and `video-director` (coordinates both) |
 | **Skills** | `vertical-video`, `horizontal-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp` |
@@ -128,6 +129,14 @@ The agent and skill files are written in Spanish; agents follow them in any lang
 | `locate_subject` | Where the face is in a clip |
 | `list_formats` | Per-platform specs, filterable by `orientation` |
 | `render_for` / `render_status` | Render with the platform's specs, and its progress |
+| `transcribe_timeline` | What is said, in **timeline** seconds (respects every cut). Local Whisper, GPU or CPU: works on Free. Returns `cuts_s`/`hits_s` for `apply_motion` |
+| `add_captions` | Burned-in captions from the speech, inside the safe zone. Works on Free (no Studio AI) |
+| `add_text_overlay` | On-screen text with emoji (hook, POV, labels) for an exact time range |
+| `find_highlights` | Ranks the best moments of a long clip by motion + audio |
+| `assemble_timeline` | Builds a timeline from source ranges (a cut list), optionally at a platform resolution |
+
+Errors return a stable `code` (`RESOLVE_UNREACHABLE`, `NO_TIMELINE`, `CLIP_NOT_FOUND`, `MISSING_DEPENDENCY`...) plus a `hint`.
+Read-only resources: `resolve://status`, `resolve://timeline`, `forge://formats`, `forge://styles`.
 
 Technical details: [docs/architecture.md](docs/architecture.md).
 
@@ -158,7 +167,7 @@ LUFS and safe zones is generated from code:
 
 ```powershell
 cd mcp/resolve-forge
-uv run pytest            # 132 tests without Resolve: domain, backends, every tool on Free/Studio/R19, stdio, workspace
+uv run pytest            # 198 tests without Resolve: domain, backends, every tool on Free/Studio/R19, stdio, workspace
 uv run pytest -m live    # end-to-end against your open Resolve (Free or Studio)
 ```
 
@@ -178,6 +187,21 @@ The upstream MCP is exercised live too.
 | Motion uses `fusion`, not `keyframes` | Normal on Free 21.0.4: same result, verified at render time. The node is called `ForgeMotion` |
 | H.265 comes out as H.264 | Your edition or GPU lacks H.265; the fallback to H.264 is automatic |
 | The agent doesn't see the tools | Open the agent inside `davinci-agents/` and approve `.mcp.json`. If you moved the folder, run `uv run --no-project python scripts/sync.py` |
+
+## Credits and what we improved
+
+`resolve-forge` is original code. It runs next to
+[samuelgursky/davinci-resolve-mcp](https://github.com/samuelgursky/davinci-resolve-mcp) (MIT): we use its
+in-app bridge for the Free edition and its catalogue of verified API quirks, but we don't copy it into this repo
+(bootstrap clones it). Ideas studied in the other public Resolve MCPs, and how we took them further:
+
+| Source | Their idea | Our version |
+|---|---|---|
+| [hiteshK03](https://github.com/hiteshK03/davinci-resolve-mcp) | Local Whisper as the Free-edition replacement for Studio's AI | Their `transcribe_timeline` returns the **first clip's source** times. Ours maps every clip into **timeline** seconds (respects the edit), runs Whisper in an isolated worker (GPU→CPU fallback, no DLL deadlock), caches it, turns it into `cuts_s`/`hits_s` for motion, and **burns captions on Free** (`add_captions`) |
+| [DigitalWorkflowCompany](https://github.com/DigitalWorkflowCompany/resolve-mcp), [Tooflex](https://github.com/Tooflex/davinci-resolve-mcp) | MCP resources for readable state; composite workflows | Resources run on the dedicated Resolve thread (never block stdio) and return typed errors. Composite tools are editorial: `find_highlights` → `assemble_timeline` → `apply_motion` → `add_captions` |
+| [kerwilgil](https://github.com/kerwilgil/davinci-resolve-mcp) | Layered architecture, typed errors | Every error has a stable `code` and a `hint`; pure `domain/` with no Resolve dependency |
+| [Tooflex](https://github.com/Tooflex/davinci-resolve-mcp) | Probe the native module before using it | Probe in a **child process**, plus the `PYTHONHOME` fix that stops `fusionscript.dll` from segfaulting inside a venv |
+| [lordhoell](https://github.com/lordhoell/davinci-resolve-mcp) | Animate Fusion inputs with `BezierSpline` | Bridge-safe: dense `SetInput` samples outside `comp.Lock()`, verified at render time with a pixel diff |
 
 ## Repository layout
 
@@ -226,7 +250,8 @@ Claude Code, Codex, Cursor, Gemini CLI y VS Code.
 9. [Plataformas](#plataformas)
 10. [Tests](#tests-1)
 11. [Problemas comunes](#problemas-comunes)
-12. [Estructura del repo](#estructura-del-repo)
+12. [Créditos y qué mejoramos](#créditos-y-qué-mejoramos)
+13. [Estructura del repo](#estructura-del-repo)
 
 ---
 
@@ -234,7 +259,7 @@ Claude Code, Codex, Cursor, Gemini CLI y VS Code.
 
 | Pieza | Qué hace |
 |---|---|
-| **`resolve-forge`** (MCP propio) | Edición por intención: movimiento para talking heads, versiones por plataforma (vertical ↔ horizontal), render con specs. 11 tools |
+| **`resolve-forge`** (MCP propio) | Edición por intención: movimiento para talking heads, versiones por plataforma (vertical ↔ horizontal), render con specs, subtítulos y textos en Free, transcripción, highlights y armado. 16 tools + 4 resources |
 | **`davinci-resolve`** (MCP upstream, [samuelgursky](https://github.com/samuelgursky/davinci-resolve-mcp)) | Toda la API de Resolve: media pool, markers, color, Fairlight, Fusion, transcripción, análisis. 37 tools |
 | **Agentes** | `vertical-editor`, `horizontal-editor` y `video-director` (coordina a los dos) |
 | **Skills** | `vertical-video`, `horizontal-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp` |
@@ -324,6 +349,14 @@ Claude Code los ve vía `.claude/` (links), y Codex, Cursor y Gemini leen `AGENT
 | `locate_subject` | Dónde está la cara en un clip |
 | `list_formats` | Specs por plataforma, filtrables por `orientation` |
 | `render_for` / `render_status` | Render con las specs de la plataforma y su estado |
+| `transcribe_timeline` | Lo que se dice, en segundos del **timeline** (respeta cada corte). Whisper local en GPU o CPU: funciona en Free. Devuelve `cuts_s`/`hits_s` para `apply_motion` |
+| `add_captions` | Subtítulos quemados a partir de la voz, dentro de la safe zone. Funciona en Free (sin la IA de Studio) |
+| `add_text_overlay` | Texto en pantalla con emoji (hook, POV, etiquetas) con duración exacta |
+| `find_highlights` | Ordena los mejores momentos de un clip largo por movimiento y audio |
+| `assemble_timeline` | Arma un timeline desde rangos de la fuente (lista de cortes), opcionalmente a la resolución de una plataforma |
+
+Los errores devuelven un `code` estable (`RESOLVE_UNREACHABLE`, `NO_TIMELINE`, `CLIP_NOT_FOUND`, `MISSING_DEPENDENCY`...) y un `hint`.
+Resources de solo lectura: `resolve://status`, `resolve://timeline`, `forge://formats`, `forge://styles`.
 
 Detalle técnico: [docs/architecture.md](docs/architecture.md).
 
@@ -352,7 +385,7 @@ safe zones: [.agents/skills/resolve-delivery/references/platforms.md](.agents/sk
 
 ```powershell
 cd mcp/resolve-forge
-uv run pytest            # 132 tests sin Resolve: dominio, backends, todas las tools en Free/Studio/R19, stdio, workspace
+uv run pytest            # 198 tests sin Resolve: dominio, backends, todas las tools en Free/Studio/R19, stdio, workspace
 uv run pytest -m live    # end-to-end contra tu Resolve abierto (Free o Studio)
 ```
 
@@ -372,6 +405,21 @@ Además se prueba el MCP upstream en vivo.
 | Motion usa `fusion` y no `keyframes` | Normal en Free 21.0.4: el resultado es el mismo y está verificado al render. El nodo se llama `ForgeMotion` |
 | H.265 sale como H.264 | Tu edición o GPU no soporta H.265; la caída a H.264 es automática |
 | El agente no ve las tools | Abre el agente dentro de `davinci-agents/` y aprueba `.mcp.json`. Si moviste la carpeta, ejecuta `uv run --no-project python scripts/sync.py` |
+
+## Créditos y qué mejoramos
+
+`resolve-forge` es código propio. Corre junto a
+[samuelgursky/davinci-resolve-mcp](https://github.com/samuelgursky/davinci-resolve-mcp) (MIT): usamos su bridge
+in-app para la versión Free y su catálogo de quirks verificados de la API, pero no lo copiamos en este repo
+(lo clona el bootstrap). Ideas estudiadas en los otros MCPs públicos de Resolve, y cómo las llevamos más lejos:
+
+| Fuente | Su idea | Nuestra versión |
+|---|---|---|
+| [hiteshK03](https://github.com/hiteshK03/davinci-resolve-mcp) | Whisper local como reemplazo de la IA de Studio en Free | Su `transcribe_timeline` devuelve tiempos **de la fuente del primer clip**. El nuestro mapea cada clip a segundos del **timeline** (respeta el corte), corre Whisper en un worker aislado (GPU→CPU, sin deadlock de DLLs), cachea, lo convierte en `cuts_s`/`hits_s` para el movimiento y **quema subtítulos en Free** (`add_captions`) |
+| [DigitalWorkflowCompany](https://github.com/DigitalWorkflowCompany/resolve-mcp), [Tooflex](https://github.com/Tooflex/davinci-resolve-mcp) | Resources MCP con estado legible; workflows compuestos | Los resources corren en el hilo dedicado de Resolve (nunca bloquean stdio) y devuelven errores tipados. Las tools compuestas son editoriales: `find_highlights` → `assemble_timeline` → `apply_motion` → `add_captions` |
+| [kerwilgil](https://github.com/kerwilgil/davinci-resolve-mcp) | Arquitectura por capas, errores tipados | Cada error tiene `code` estable y `hint`; `domain/` puro sin dependencia de Resolve |
+| [Tooflex](https://github.com/Tooflex/davinci-resolve-mcp) | Revisar el módulo nativo antes de usarlo | Sonda en un **subproceso**, más el arreglo de `PYTHONHOME` que evita el segfault de `fusionscript.dll` dentro de un venv |
+| [lordhoell](https://github.com/lordhoell/davinci-resolve-mcp) | Animar inputs de Fusion con `BezierSpline` | Compatible con el bridge: muestras densas de `SetInput` fuera de `comp.Lock()`, verificadas al render con diferencia de píxeles |
 
 ## Estructura del repo
 

@@ -13,7 +13,8 @@ y sin que el espectador note "efecto". La cara manda: todo zoom se ancla al rost
 1. `forge_status` → mira `native_keyframes`. Si es true, se usan keyframes del Inspector, editables a mano. En Free se usa el backend `fusion` (nodo `ForgeMotion` en la página Fusion del clip); es automático y está verificado al render.
 2. `list_clips` → índices y duraciones.
 3. Decide **dónde** cambian los planos (mejor que el ritmo automático):
-   - Con transcripción (`davinci-resolve` → transcribe/analysis): `cuts_s` = inicios de frase/idea; `hits_s` = palabras clave, números, remates.
+   - Con voz: `transcribe_timeline()` devuelve `cuts_s` (inicios de frase) y `hits_s` (números, exclamaciones,
+     remates) ya en segundos del timeline. Pásalos tal cual, o recórtalos con criterio. Usa Whisper local y funciona en Free.
    - Sin transcripción: omite `cuts_s` y el estilo genera un ritmo irregular (2.5–3.5 s vertical, 6–9 s horizontal).
 4. `preview_motion` con el estilo elegido → revisa `peak_zoom` y los tiempos.
 5. `apply_motion(style, cuts_s, hits_s, anchor="face", intensity)`.

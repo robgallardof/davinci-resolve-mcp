@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..domain import formats
 from ..gateway import Session
+from .. import errors as E
 from .context import ForgeError, current
 
 
@@ -24,7 +25,8 @@ def queue(session: Session, format_key: str, target_dir: str | None = None, *, n
     if not p.SetCurrentRenderFormatAndCodec(fmt.container, codec):
         codec = "H264"  # H.265 is Studio/hardware-dependent
         if not p.SetCurrentRenderFormatAndCodec(fmt.container, codec):
-            raise ForgeError(f"Resolve refused {fmt.container}/{fmt.codec} and {fmt.container}/H264.")
+            raise ForgeError(f"Resolve refused {fmt.container}/{fmt.codec} and {fmt.container}/H264.",
+                             code=E.RENDER_REFUSED)
 
     # CustomName must be non-empty or Resolve rejects the whole payload.
     custom = name or f"{ctx.timeline.GetName()}_{fmt.key}"
@@ -33,13 +35,15 @@ def queue(session: Session, format_key: str, target_dir: str | None = None, *, n
     try:
         accepted = p.SetRenderSettings(settings)
     except Exception as exc:  # the Free bridge refuses paths outside its allowed roots
-        raise ForgeError(f"Render settings refused ({exc}). On Free, render under {DEFAULT_OUTPUT.parent} "
-                         "or add the folder to allowed_output_roots in the bridge.json.") from exc
+        raise ForgeError(f"Render settings refused ({exc}).", code=E.RENDER_REFUSED,
+                         hint=f"On Free, render under {DEFAULT_OUTPUT.parent} or add the folder to "
+                              "allowed_output_roots in the bridge.json.") from exc
     if not accepted:
-        raise ForgeError(f"SetRenderSettings rejected {settings}")
+        raise ForgeError(f"SetRenderSettings rejected {settings}", code=E.RENDER_REFUSED)
     job = p.AddRenderJob()
     if not job:
-        raise ForgeError("AddRenderJob failed (is the Deliver page reachable / disk writable?)")
+        raise ForgeError("AddRenderJob failed.", code=E.RENDER_REFUSED,
+                         hint="Check the Deliver page is reachable and the disk is writable.")
     started = bool(p.StartRendering([job], False)) if start else False
     return {"job_id": job, "codec": codec, "file": str(Path(target_dir) / custom), "started": started,
             "timeline_resolution": f"{ctx.width}x{ctx.height}",
