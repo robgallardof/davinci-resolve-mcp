@@ -1,165 +1,153 @@
-# Migración: herramientas propias a partir del análisis de la competencia
+# Migration: our own tools, built from the competitive analysis
 
-Forge implementa 65 herramientas propias: edición editorial, producción por género, sonido y authoring de proyectos,
-media, timeline, color, Fusion y QC. No importa ni empaqueta código de los MCP estudiados.
+Forge implements 65 tools of its own: editorial editing, production by genre, multi-source composition, sound,
+finishing, project authoring, media, timeline, color, Fusion and QC. It neither imports nor packages code from the MCPs studied.
 
-## ¿Cuánto lleva? (2026-10-04)
+## How far along? (2026-10-04)
 
-**Implementación propia ampliada; verificación final en Resolve pendiente de reconectar el bridge. Ver evidencia actual abajo antes de asumir cobertura.**
+**Own implementation complete; the final live verification in Resolve is pending a bridge reconnect. Read the evidence below before assuming coverage.**
 
-| Fase | Estado | Evidencia |
+| Phase | Status | Evidence |
 |---|---|---|
-| 1. Estudio de los 7 MCP públicos y selección | ✅ Hecho | [mcp-landscape.md](mcp-landscape.md), [mcp-reviews.md](mcp-reviews.md), `config/provenance.json` |
-| 2. Reimplementación propia (proyecto, media, timeline, color, Fusion, audio, QC) | ✅ Hecho | tools de authoring, tabla de abajo |
-| 3. Bridge Free propio (HMAC, antireplay, métodos explícitos) e instalador | ✅ Hecho, verificado en Free 21.0.4.5 | `bridge/`, `bridge_install/`, `test_bridge*.py` |
-| 4. Retiro del código de terceros (servidor, patches, third_party/, gestor de referencias) | ✅ Hecho | `test_workspace.py`; wheel sin módulos externos |
-| 5. Textos con diseño y animación (Creator/Studio/Editorial/Impact, preview) | ✅ Código y live de captions | `test_designed_captions.py`, `test_live_editing.py` |
-| 6. Producción por género (comedia, música, electrónica, entrevista…) | ✅ Código y live de montaje/align · parcial para material real | `plan_edit`, `find_story_moments`, `plan_beat_cuts`, `assemble_montage`, `create_music_visualizer`, `align_text` |
-| 7. Sonido (música bajo la voz con ducking, SFX motivados) | ✅ Live de bed/SFX; enhance_audio nuevo pendiente en Resolve | `add_music_bed`, `place_sound_effects` |
-| 8. Documentación, skills y roles al día | ✅ Hecho | README (tabla verificada por test), skill `editorial-direction` |
-| 9. Repetición live de la versión ampliada | ⏳ Última pasada pendiente | `tests/live/test_live_production.py`, karaoke y encuadre lateral listos; requiere bridge de Resolve actual |
+| 1. Study of the 7 public MCPs and selection | ✅ Done | [mcp-landscape.md](mcp-landscape.md), [mcp-reviews.md](mcp-reviews.md), `config/provenance.json` |
+| 2. Own reimplementation (project, media, timeline, color, Fusion, audio, QC) | ✅ Done | authoring tools, table below |
+| 3. Own Free bridge (HMAC, anti-replay, explicit methods) and installer | ✅ Done, verified on Free 21.0.4.5 | `bridge/`, `bridge_install/`, `test_bridge*.py` |
+| 4. Third-party code removed (server, patches, third_party/, reference manager) | ✅ Done | `test_workspace.py`; wheel without external modules |
+| 5. Designed, animated text (Creator/Studio/Editorial/Impact, karaoke, preview) | ✅ Code and live captions | `test_designed_captions.py`, `test_live_editing.py` |
+| 6. Production by genre (comedy, music, electronic, interview…) | ✅ Code and live montage/align · partial on real footage | `plan_edit`, `find_story_moments`, `plan_beat_cuts`, `assemble_montage`, `create_music_visualizer`, `align_text` |
+| 7. Sound (music under the voice with ducking, motivated SFX, dialogue enhancement) | ✅ Live bed/SFX; `enhance_audio` pending in Resolve | `add_music_bed`, `place_sound_effects`, `enhance_audio` |
+| 8. Producer + specialists, multi-source composition | ✅ Code and unit tests with real ffmpeg renders | `plan_production`, `plan_composition`, `build_composition`, `.agents/agents/` |
+| 9. Docs, skills and roles (English, agent replies in the user's language) | ✅ Done | README (table verified by test), 10 skills, 8 roles |
+| 10. Live re-run of the extended version | ⏳ Pending | `tests/live/`; needs the current Resolve bridge |
 
-En números: 65 tools, 658 pruebas sin Resolve aprobadas en la revisión del 2026-10-04.
-La suite live reúne 13 casos, incluyendo sujeto centrado y lateral en la prueba de zoom. Primera pasada conectada: 10 aprobadas y un fallo SFX; tras corregirlo,
-la prueba aislada SFX aprobó, al igual que la nueva prueba de encuadre/zoom vertical por píxeles.
-La segunda pasada encontró un bridge huérfano ligado a un Resolve anterior: no se cuenta como aprobada.
-Se retiró únicamente ese fuscript tras verificar ejecutable, script, puerto y padre muerto. Último inventario
-real: ningún helper huérfano. El bridge de la instancia nueva aún debe iniciarse para la última pasada; además siguen pendientes material real de múltiples personas y revisión editorial de comedia.
+In numbers: 65 tools, 658 tests without Resolve passing on 2026-10-04. The live suite has 13 cases. First connected
+pass: 10 passed and one SFX failure; after the fix, the isolated SFX test passed, as did the vertical framing/zoom pixel
+test. A second pass hit an orphaned bridge bound to a previous Resolve: not counted as passed. That helper was retired
+after verifying executable, script, port and dead parent.
 
-## Ampliación de entretenimiento y acabado (2026-10-04)
+## What the latest rounds added (2026-10-04)
 
-- Ronda de acabado: nuevas `preflight_render`, `apply_grade_preset`, `enhance_audio`, `repair_bridge_connection`.
-- Zooms: wide realmente fijo; focus/crash no agregan drift por encima del zoom revisado. La animación
-  se limita al pico aprobado. Keyframes nativos parciales se limpian antes de caer a Fusion;
-  pivotes y rechazos de escritura se comprueban. Cover/encuadre del sujeto se aplican y leen de vuelta.
-- Revisión horizontal → vertical: viewport con proporción real y aumento efectivo de fuente.
-  Prueba live de píxeles: zoom ×1.20, sujeto centrado, plano fijo y círculo sin distorsión, aprobada.
-- Cortes: hints `subject=none` eliminan rangos vacíos confirmados aunque se mueva la cámara;
-  `subject=animal|person` conserva sujetos quietos. No se afirma reconocimiento automático de animales.
-- Hablantes: composición con cinco o más personas sin truncar a cuatro; caras completas con padding
-  cuando no caben, origen de paneles corregido y estabilidad durante pausas. Boca + energía son candidatos,
-  no identificación de voz ni diarización; material real con múltiples personas sigue requiriendo revisión.
-- Texto: `animation=karaoke`, progreso por palabra, layout estable y reduced_motion respetado.
-- Acabado: CDL natural/warm/crisp/muted con intensidad y preview, aplicado sobre copia; audio dialogue/podcast/
-  entertainment a WAV nuevo con medición LUFS/true peak. No convierte Log/HDR, separa voces ni normaliza la mezcla final.
-- QA: revisión técnica de cobertura, fuentes y transforms; revisión visual/escucha todavía obligatorias.
-  Especialización portable `color-audio-finishing` integrada al productor y skills sincronizadas.
-- Hallazgo live: Free 21 no devuelve Frames para ciertos WAV. SFX usa duración real del PCM como fallback;
-  cálculo de lanes respeta FPS de fuente y timeline. Limitador sin makeup automático; conserva ganancia prevista.
-  Prueba de sonido aislada aprobada después de corregirlo.
-- Conexión: bridge disponible primero, sin probe nativo adicional cuando está ocupado; timeouts devuelven
-  `RESOLVE_BUSY`. Recuperación Windows de helper huérfano con identidad/puerto/padre verificados y preview.
-  No se reinicia Resolve ni se detiene un bridge vivo. Un timeout de escritura no autoriza repetirla a ciegas.
+- Finishing: `preflight_render`, `apply_grade_preset` (natural/warm/crisp/muted CDL with intensity and preview, on a copy),
+  `enhance_audio` (dialogue/podcast/entertainment chains to a new WAV with LUFS/true-peak measurement),
+  `repair_bridge_connection` (Windows orphaned-helper recovery with verified identity/port/parent and preview).
+- Zooms: wide shots really static; focus/crash add no drift above the reviewed zoom. Partial native keyframes are cleared
+  before falling back to Fusion; pivots and write refusals are checked. Comps with foreign Fusion effects are refused and
+  preserved (`BACKEND_UNSUPPORTED`).
+- Cuts: `subject=none` hints remove confirmed empty ranges even with camera movement; `subject=animal|person` keeps
+  still subjects. No claim of automatic animal recognition.
+- Speakers: layouts for five or more people without truncating to four; complete faces with padding. Mouth + energy
+  give candidates, not voice identification or diarization.
+- Text: `animation=karaoke`, per-word progress, stable layout, `reduced_motion` respected.
+- Multi-source composition (user request: references with several takes, interview + photo + support):
+  `plan_composition` / `build_composition` — mosaic 1–5 or hero + support, independent start per source, stills,
+  manual `subject`/`crop` and one explicit audio master; preview + sheet before building; `reviewed=true` required.
+- Producer orders: `plan_production` generates work orders for composition-editor, audio-editor, colorist,
+  titles-editor and qa-editor (dependencies, tools, acceptance, report). Only the producer writes to Resolve.
+- QA: `review_video` includes the last frame and reports unreadable samples without aborting.
+- Connection: an available bridge is tried first, with no extra native probe while it is busy; timeouts return
+  `RESOLVE_BUSY`. A write timeout never authorises a blind retry.
+- Live finding: Free 21 returns no Frames for some WAVs. SFX uses the real PCM duration as a fallback.
+- Portability: skills, roles, AGENTS.md, README and docs in English; new skill `captions-and-titles`; doctor output in English.
 
-## Arquitectura
+## Architecture
 
-- domain/: decisiones puras (cortes, grafos, LUT, diseño de texto, momentos de historia, cortes al beat, ducking, alineación de texto); no conoce Resolve, MCP ni archivos.
-- analysis/: decodificación y extracción de señales; no modifica el proyecto.
-- services/: un módulo por responsabilidad. native.py comparte capacidades, rechazos, readback y creación de copias; media_lookup.py comparte selección de fuentes sin ambigüedad.
-- tools.py, authoring_tools.py y production_tools.py: schemas MCP y delegación. Todas las llamadas a Resolve pasan por el mismo executor serial; no se accede a managers privados de FastMCP.
-- gateway.py y native_paths.py: selección de transporte y SDK por sistema operativo; probe nativo aislado.
-- bridge/: protocolo, autenticación y proxy separados de la política de llamadas. Runtime estándar sin librerías nativas. La lista de métodos es explícita; no hay execute_python/execute_lua ni una tool de llamada arbitraria.
-- bridge_install/: instala nuestros módulos y launcher, conserva token y raíces. No descarga otro servidor.
+- `domain/`: pure decisions (cuts, graphs, LUTs, text design, story moments, beat cuts, ducking, text alignment,
+  composition, production orders, presets); knows nothing about Resolve, MCP or files.
+- `analysis/`: decoding and signal extraction; never modifies the project.
+- `services/`: one module per responsibility. `native.py` shares capabilities, refusals, readback and copy creation;
+  `media_lookup.py` shares unambiguous source selection.
+- Thin MCP modules: schemas and delegation. Every Resolve call goes through the same serial executor; FastMCP private
+  managers are never touched.
+- `gateway.py` and `native_paths.py`: transport and SDK selection per OS; isolated native probe.
+- `bridge/`: protocol, authentication and proxy separated from call policy. Standard runtime without native libraries.
+  The method list is explicit; there is no execute_python/execute_lua or arbitrary-call tool.
+- `bridge_install/`: installs our modules and launcher, keeps token and roots. It downloads no other server.
 
-Session y los objetos nativos son dependencias inyectadas en los casos de uso; las mismas herramientas funcionan con fakes directos o JSON y con Resolve real. No hay un servidor entero adaptado mediante monkey-patching.
+Session and native objects are injected dependencies; the same tools work with direct or JSON fakes and with real
+Resolve. No whole server is adapted through monkey-patching.
 
-## Selección y mejoras
+## Selection and improvements
 
-| Capacidad estudiada | Implementación propia y mejora |
+| Capability studied | Own implementation and improvement |
 |---|---|
-| Proyecto y backup (apvlv/DWC/hitesh) | project_workflow, configure_project: backups nuevos, guardado previo, comprobación del archivo y readback |
-| Bins, import y metadata (DWC/hitesh) | list_media, ingest_media, organise_media, media_metadata: deduplicación por ruta, rechazo de nombres ambiguos, restauración del bin current |
-| Timeline y tracks (DWC/hitesh) | timeline_versions, edit_clips, configure_track: previews por defecto, versiones sin sobrescritura, edición de propiedades sobre copias y readback |
-| Marcadores y QC (DWC/hitesh/samuelgursky) | timeline_markers, audit_timeline: segundos relativos, verificación de rangos, preservación de marcadores existentes, gaps/overlaps y visibilidad de fuentes |
-| Interchange | export_interchange: OTIO/FCPXML/AAF/EDL/DRT mediante constantes observadas, guardado previo, destino nuevo y verificación de archivo |
-| Color y LUT (DWC/hitesh/samuelgursky) | grade_clips, inspect_grade, prepare_lut, gallery_stills: CDL validado, copias, tablas .cube finitas y completas, mezcla con identidad, archivos originales preservados |
-| Fusion (apvlv/lordhoell) | apply_fusion_graph, inspect_fusion: DAG validado, ids propios, palette acotada, conexiones sin duplicados; valores fuera de Lock para que sobrevivan al render |
-| Audio y análisis | analyse_audio, analyse_scenes, normalise_audio, sync_audio: cortes con margen de respiración, tiempos de fuente explícitos, histogramas de escena, loudness en dos pasos y medición del WAV final; ffmpeg viene en la dependencia de Forge |
-| AI nativa (DWC/hitesh) | native_ai: capacidades observadas; subtítulos/scene cuts sobre copias, rechazo real en edición/build no compatible; alternativas locales Free |
-| Capabilities/resources/arquitectura (kerwilgil/DWC) | list_capabilities, resources existentes, servicios por responsabilidad, errores tipados y transportes intercambiables |
-| Transcripción y subtítulos (hiteshK03/samuelgursky) | transcribe_timeline, align_text, add_captions, list_text_styles, preview_text_style: tiempos de timeline para cada clip, texto exacto de guion/letra, diseños animados con palabra activa y preview antes de quemar |
-| Análisis de beats y silencios (samuelgursky) | analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer: grilla con confianza, cortes por frases y más rápidos solo en rangos confirmados, música maestra continua, visualizer estéreo |
-| Momentos y dirección (sin equivalente en los MCP estudiados) | plan_edit, find_story_moments: criterio por género y candidatos con evidencia (pausa+remate, reacción, pregunta, acento) que el agente confirma |
-| Mezcla (sin equivalente) | add_music_bed, place_sound_effects: ducking desde la transcripción y SFX con motivo obligatorio, horneados en WAV nuevos sobre copias |
-| Compatibilidad y seguridad | MCP<2, paths multiplataforma, consola cp1252, probe aislado, HMAC, expiración, antireplay para el intervalo completo, raíz de archivos y límite de requests; ninguna ejecución arbitraria |
+| Project and backup (apvlv/DWC/hitesh) | project_workflow, configure_project: new backups, save first, file check and readback |
+| Bins, import and metadata (DWC/hitesh) | list_media, ingest_media, organise_media, media_metadata: path dedup, ambiguous names refused, current bin restored |
+| Timeline and tracks (DWC/hitesh) | timeline_versions, edit_clips, configure_track: previews by default, versions never overwritten, edits on copies with readback |
+| Markers and QC (DWC/hitesh/samuelgursky) | timeline_markers, audit_timeline: relative seconds, range checks, existing markers preserved, gaps/overlaps and source visibility |
+| Interchange | export_interchange: OTIO/FCPXML/AAF/EDL/DRT through observed constants, save first, new target and file check |
+| Color and LUT (DWC/hitesh/samuelgursky) | grade_clips, inspect_grade, prepare_lut, gallery_stills, apply_grade_preset: validated CDL, copies, finite complete .cube tables, blend with identity, originals preserved |
+| Fusion (apvlv/lordhoell) | apply_fusion_graph, inspect_fusion: validated DAG, own ids, bounded palette, no duplicate connections; values outside Lock so they survive render |
+| Audio and analysis | analyse_audio, analyse_scenes, normalise_audio, sync_audio, enhance_audio: cuts with breathing margin, explicit source times, scene histograms, two-pass loudness and final-WAV measurement; ffmpeg ships with Forge |
+| Native AI (DWC/hitesh) | native_ai: observed capabilities; subtitles/scene cuts on copies, real refusal on unsupported editions; local Free alternatives |
+| Capabilities/resources/architecture (kerwilgil/DWC) | list_capabilities, resources, services per responsibility, typed errors and swappable transports |
+| Transcription and captions (hiteshK03/samuelgursky) | transcribe_timeline, align_text, add_captions, list_text_styles, preview_text_style: timeline timing per clip, exact script/lyrics, animated designs with active word and preview before burning |
+| Beats and silences (samuelgursky) | analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer: grid with confidence, phrase cuts and faster only in confirmed ranges, continuous music master, stereo visualizer |
+| Moments and direction (no equivalent) | plan_edit, find_story_moments: judgement by genre and candidates with evidence that the agent confirms |
+| Mix (no equivalent) | add_music_bed, place_sound_effects: ducking from the transcript and SFX with a mandatory reason, baked into new WAVs on copies |
+| Composition and production (no equivalent) | plan_composition, build_composition, plan_production, speaker layouts: producer-chosen layouts, explicit audio master, serial writer |
+| Compatibility and safety | MCP<2, cross-platform paths, cp1252 console, isolated probe, HMAC, expiry, anti-replay, file roots and request limit; no arbitrary execution |
 
-No se incorporan cientos de wrappers de getters, gestión de bases de datos/cloud, destrucción de proyectos/media, ejecución de código ni instaladores/actualizadores de otros repos. Esta selección cubre los flujos de edición útiles y hace explícitos los límites.
+Not included: hundreds of getter wrappers, database/cloud management, project/media destruction, code execution or
+other repos' installers/updaters. This selection covers the useful editing flows and makes the limits explicit.
 
-## Verificación y límites
+## Verification and limits
 
-Los contratos se prueban en cuatro configuraciones (Free/Studio, bridge/directo y keyframes presentes/ausentes). Hay pruebas de aislamiento de master, rechazos nativos, marcadores relativos, deduplicación, ambigüedad, DAG, autenticación/replay, audio/escenas sintéticos y loudness del archivo final. La conexión y las lecturas se verifican en Resolve Free 21.0.4.5 con el bridge propio.
+Contracts are tested in four configurations (Free/Studio, bridge/direct, keyframes present/absent): master isolation,
+native refusals, relative markers, dedup, ambiguity, DAG, authentication/replay, synthetic audio/scenes, final-file
+loudness and real ffmpeg composition renders checked by pixel colour and audio frequency. Connection and reads are
+verified on Resolve Free 21.0.4.5 with our bridge. Historical evidence in real Resolve: render with pixel comparison,
+motion/clear, vertical format, captions, markers, CDL and Fusion graphs; it does not mean the live suite was re-run in
+this revision.
 
-Verificación actual sin Resolve: 628 pruebas aprobadas en la suite completa; 16 pruebas de recuperación verificadas después de corregir el inventario real Windows. Wheel construido e inspeccionado sin módulos externos. Evidencia histórica en Resolve real: render con comparación de píxeles, motion/clear, formato vertical, subtítulos, marcadores, CDL y grafos Fusion. Esa evidencia no implica que la suite live se haya vuelto a ejecutar en esta revisión. El paquete wheel se construye sin módulos de los servidores externos; los proyectos de prueba se conservan y se restaura el proyecto anterior.
+A method being available does not guarantee the edition/licence accepts it: the return value is checked. CDL can only
+be verified by native acceptance and visual review. Onsets are energy candidates, not a tempo/downbeat model.
+No universal coverage of every Resolve API is claimed.
 
-La disponibilidad de un método no garantiza que la edición/licencia acepte su ejecución: se comprueba el retorno. CDL solo puede verificarse por aceptación nativa y revisión visual. Los onsets son candidatos de energía, no un modelo de tempo/downbeat. No se afirma cobertura universal de todas las APIs de Resolve.
+## Cleanup
 
-## Limpieza
+The second server, patches, config/references.json and scripts/references.py were removed. Studied commits are kept in
+config/provenance.json. The 154 files in third_party/ were removed from Git and disk. By the user's decision, vendor/ and
+the leftovers in resolve_forge/api/ stay local and ignored by Git; they are not imported or packaged.
 
-Se retiraron el segundo servidor, patches, config/references.json y scripts/references.py. Se conservan los commits consultados en config/provenance.json. Los 154 archivos de third_party/ se retiraron del índice de Git y del disco. Por decisión del usuario, vendor/ y los restos de resolve_forge/api/ quedan locales e ignorados por Git; no se importan ni empaquetan, y no son necesarios para ejecutar o distribuir Forge.
+## Status for the next agent (Claude, Codex…)
 
-## Estado para el próximo agente (Claude, Codex…)
+Read this before continuing. Last update: 2026-10-04. Reply to the user in Spanish (their language).
 
-Lee esto antes de seguir. Última actualización: 2026-10-04.
+### Done
+- Forge of our own (65 tools), own bridge, no third-party code or servers; 658 tests without Resolve passing.
+- Designed text: `creator`, `studio`, `editorial`, `impact` styles with active word, brand accent, `fade/lift/pop/karaoke`,
+  `reduced_motion`, PNG/WebP preview. Legacy `box/outline/yellow/dark` only on request.
+- Production by genre: `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`,
+  `create_music_visualizer`, `align_text`, `place_sound_effects`, `add_music_bed`.
+- Entertainment pacing: `plan_energized_edit` / `energize_timeline`, `cut_dull`, `subject` hints; skill `entertainment-pacing`.
+- Self-review: `review_shots` (before) and `review_video` (after) produce sheets the agent must look at; skill `video-qa`.
+- Several people: `plan_speaker_layout` / `build_speaker_layout` (active speaker, split for 2–5+).
+- Multi-source composition and producer orders: `plan_composition`, `build_composition`, `plan_production`;
+  specialist roles in `.agents/agents/` and `editorial-direction/references/producer-coordination.md`.
+- Finishing: `preflight_render`, `apply_grade_preset`, `enhance_audio`, `repair_bridge_connection`; skill `color-audio-finishing`.
+- Everything portable is in English; new skill `captions-and-titles`.
 
-### Hecho
-- Migración: Forge propio (65 tools), bridge propio, sin código ni servidores de terceros; 658 pruebas sin Resolve aprobadas el 2026-10-04.
-- Revisión inicial: Resolve estaba cerrado y las pruebas live se omitieron. Después se conectó Free 21.0.4.5,
-  aprobaron 10 casos y falló SFX por Frames ausente en WAV. La prueba aislada SFX aprobó tras corregirlo.
-  Las fixtures guardan proyectos; la prueba de sonido crea montaje independiente y preserva la edición de imagen.
-  La prueba de render de subtítulos ahora usa Creator/karaoke y verifica píxeles del acento de marca #FF3366.
-  Creator/pop y la prueba de píxeles centrada aprobaron en Resolve. Karaoke, encuadre lateral, nuevo preset y
-  enhance_audio sobre script real siguen pendientes de la última pasada tras ampliar las pruebas.
-  Se identificó y retiró el bridge huérfano anterior; herramienta de recuperación comprobada en Windows con preview.
-- Diseño de textos (pedido: subtítulos "bonitos", animados, no simples): estilos `creator`, `studio`, `editorial`,
-  `impact` con palabra activa, acento de marca, entradas `fade/lift/pop`, `reduced_motion`, preview PNG/WebP
-  (`list_text_styles`, `preview_text_style`). Legacy `box/outline/yellow/dark` solo a pedido.
-- Producción por género (pedido: editar como productor profesional, música/electrónica, comedia, YouTube, nada robótico):
-  - `plan_edit`: dirección, qué evitar, estilo de texto/motion y tools según el género.
-  - `find_story_moments`: candidatos de remate (pausa + línea corta), reacción/risa (audio sin voz tras una línea),
-    pregunta y palabra acentuada, con evidencia. Son candidatos: el agente los revisa.
-  - `analyse_music` (BPM/beats/energía), `plan_beat_cuts` (cortes por frase, más rápidos solo en rangos confirmados),
-    `assemble_montage` (música maestra continua en A1), `create_music_visualizer` (espectro/anillos con audio estéreo).
-  - `align_text`: letra o guion exactos con los tiempos de la voz, listos para `add_captions(words=...)`.
-  - `place_sound_effects`: SFX del usuario en momentos confirmados, con motivo, ganancia horneada y pistas nuevas.
-  - `add_music_bed`: música de fondo con ducking bajo la voz (−20 dB al hablar, −10 dB entre frases), WAV nuevo.
-  - Ritmo de entretenimiento: `plan_energized_edit` / `energize_timeline` (detección de acción, caras y tiempo muerto;
-    planos de 1.2–2.8 s con encuadres alternos y crash zooms) y skill `entertainment-pacing`.
-  - Autorrevisión: el plan baja zooms que recortan la acción, dejan al sujeto en el borde, cortan caras o pasan la
-    nitidez de la fuente; `review_shots` (antes) y `review_video` (después) generan hojas que el agente debe mirar;
-    color/exposición con CDL suave y textos que no tapan caras. Skill `video-qa`.
-  - Interacción: los planos de personas de espaldas sin cara ni acción se cortan (`cut_dull`).
-  - Varias personas: `plan_speaker_layout` / `build_speaker_layout` (hablante activo, pantalla dividida).
-    Falta prueba con material real de varias personas.
-  - Composición multi-fuente (pedido: referencias con varias tomas, entrevista + foto + apoyo):
-    `plan_composition` / `build_composition` — mosaico 1–5 o hero + apoyo, inicio independiente por fuente,
-    fotos fijas, `subject`/`crop` manual y un único audio maestro explícito; preview + hoja antes de construir.
-  - Encargos del productor: `plan_production` genera órdenes para composition-editor, audio-editor, colorist,
-    titles-editor y qa-editor (dependencias, tools, aceptación, informe). Solo el productor escribe en Resolve.
-    Roles nuevos en `.agents/agents/` y `editorial-direction/references/producer-coordination.md`.
-  - `clear_motion` rechaza (BACKEND_UNSUPPORTED) grafos Fusion con efectos ajenos y conserva el grafo;
-    `review_video` incluye el último frame. El fake de DuplicateTimeline copia ahora las comps Fusion.
-  - Skill `editorial-direction` y roles actualizados para usar todo lo anterior.
+### Pending (by priority)
+1. **Live verification**: `uv run pytest -m live` with Resolve open and the bridge started (Free: Workspace → Scripts →
+   resolve_bridge). Karaoke, side framing, the new preset and `enhance_audio` on a real script are still pending.
+   Also: `find_story_moments` on real comedy footage, layouts on real multi-person footage and
+   `build_composition(into_resolve=true)` with the user's references (collage of takes, interview + photo).
+2. **Fusion motion on comps with existing effects**: refused today; inserting ForgeMotion without breaking the graph is pending.
+3. **Lyrics over a full mix**: `align_text(focus_vocals=true)` helps but does not separate stems. Real separation
+   (Demucs/torch) was not added: heavy dependency, needs user confirmation.
+4. **Mix**: SFX gain and ducking are baked into new WAVs (no verified per-clip volume API). If Resolve exposes verifiable
+   audio volume/keyframes, migrate so it stays editable in Fairlight.
+5. Local leftovers ignored by Git (`vendor/`, `mcp/resolve-forge/src/resolve_forge/api/`): delete only if the user asks.
 
-### Pendiente (por prioridad)
-1. **Verificación en vivo**: `uv run pytest -m live` con Resolve abierto y el bridge iniciado.
-   `tests/live/test_live_production.py` ya cubre montaje al beat (cortes ±1 frame, música continua en A1),
-   `align_text` con Whisper real, `add_music_bed` y `place_sound_effects`. `test_live_editing.py` incluye ahora
-   render de captions Creator con color de marca; falta ejecutarlo y mirar el resultado.
-   Falta además `find_story_moments` sobre material real de comedia, el layout sobre varias personas reales y
-   `build_composition(into_resolve=true)` en Resolve real con las referencias del usuario (collage de tomas).
-   Motion Fusion sobre comps con efectos existentes se rechaza; insertar sin romper el grafo queda pendiente.
-2. **Letras sobre mezcla**: `align_text(focus_vocals=true)` ayuda (canal central en banda de voz) pero no separa stems.
-   Separación real (Demucs/torch) no se añadió: dependencia pesada, requiere confirmación del usuario.
-3. **Mezcla**: hoy la ganancia de SFX y el ducking se hornean en WAV nuevos (no hay API verificada de volumen por clip).
-   Si Resolve expone volumen/keyframes de audio verificables, migrar a eso para que sea editable en Fairlight.
-4. Restos locales ignorados por Git (`vendor/`, `mcp/resolve-forge/src/resolve_forge/api/`): borrar solo si el usuario lo pide.
+Verified outside Resolve with real audio and real Whisper: `align_text` (100 % of words) and `find_story_moments`
+(punchline after a 2.2 s pause and a question detected in a TTS joke).
 
-Verificado fuera de Resolve con audio real y Whisper real: `align_text` (100 % de palabras) y `find_story_moments`
-(remate tras pausa de 2.2 s y pregunta detectados en un chiste TTS).
-
-### Reglas que el usuario fijó
-- Nada copiado de la competencia: ideas mejoradas, a nuestra manera (SRP/SOLID/DRY, domain → services → tools).
-- Herramientas que miden; el criterio editorial (chiste, drop, emoción) lo confirma el agente viendo/escuchando.
-- El agente actúa como productor: propone mejoras a la idea y edita según el género, nada robótico.
-- Al añadir una tool: tabla del README, conteos (test), skill correspondiente y esta sección.
-- Ediciones sobre copias; el master no se toca.
+### Rules the user set
+- Nothing copied from competitors: improved ideas, our way (SRP/SOLID/DRY, domain → services → tools).
+- Tools measure; editorial judgement (joke, drop, emotion) is confirmed by the agent watching/listening.
+- The agent acts as a producer: proposes improvements to the idea and edits by genre, nothing robotic.
+- Entertainment first: the screen keeps changing, zooms on the action, animated text; empty footage is cut.
+- Layouts with several people/sources are the producer's choice, guided by the user's references, not fixed rules.
+- When adding a tool: README table, counts (test), matching skill and this section.
+- Edits on copies; the master is never touched.
+- Skills/roles/docs in English for other users; the agent always answers in the user's language.

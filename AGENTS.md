@@ -1,49 +1,60 @@
-# davinci-agents — instrucciones para cualquier agente
+# davinci-agents — instructions for any agent
 
-Workspace de edición de video con IA sobre **DaVinci Resolve 21** (Windows). Funciona con cualquier agente
-compatible con `AGENTS.md`, Agent Skills (`SKILL.md`) y MCP: Claude Code, Codex, Cursor, Gemini CLI, VS Code, etc.
+AI video-editing workspace on **DaVinci Resolve 21** (Windows; Free and Studio). Works with any agent that supports
+`AGENTS.md`, Agent Skills (`SKILL.md`) and MCP: Claude Code, Codex, Cursor, Gemini CLI, VS Code, etc.
+Skills and roles are written in English; always reply to the user in the user's language.
 
-## Qué hay aquí
+## What is here
 
-| Ruta | Qué es |
+| Path | What it is |
 |---|---|
-| `mcp/resolve-forge/` | MCP propio: motion para talking heads, versiones por plataforma y render. Python 3.12 + uv |
-| `.agents/skills/` | Skills portables (fuente canónica) |
-| `.agents/agents/` | Roles/subagentes portables (fuente canónica) |
-| `config/mcp.servers.json` | Fuente única de servidores MCP → `python scripts/sync.py` genera los configs de cada cliente |
-| `docs/` | Instalación, arquitectura, panorama de MCPs y playbook de edición |
+| `mcp/resolve-forge/` | Our own MCP server: intent-based editing, motion, captions, production by genre, finishing and render. Python 3.12 + uv |
+| `.agents/skills/` | Portable skills (canonical source) |
+| `.agents/agents/` | Portable roles/subagents (canonical source) |
+| `config/mcp.servers.json` | Single source of MCP servers → `python scripts/sync.py` generates each client's config |
+| `docs/` | First steps, install, architecture, editing playbook, API behaviour and migration status |
 
-## Cómo trabajar
+## How to work
 
-1. Antes de tocar Resolve, carga la skill `davinci-resolve-mcp` y ejecuta `forge_status`.
-   Si no conecta: `cd mcp/resolve-forge && uv run resolve-forge-doctor` dice el siguiente paso
-   (en Free: Workspace → Scripts → resolve_bridge, cada vez que se abre Resolve).
-2. Elige el rol según la orientación del entregable:
+1. Before touching Resolve, load the `davinci-resolve-mcp` skill and run `forge_status`.
+   If it does not connect: `cd mcp/resolve-forge && uv run resolve-forge-doctor` tells you the next step
+   (Free: Workspace → Scripts → resolve_bridge, every time Resolve is opened).
+2. Pick the role by deliverable:
    - **9:16 / 4:5** (TikTok, Reels, FB Reels, Shorts, Stories, Snapchat, feed) → `.agents/agents/vertical-editor.md`
    - **16:9** (YouTube, Facebook, LinkedIn, X, web) → `.agents/agents/horizontal-editor.md`
-   - Ambas o varias entregas → `.agents/agents/video-director.md`
-   Si tu runtime no tiene subagentes, lee el archivo del rol y síguelo tú mismo.
-3. Skills: `vertical-video`, `horizontal-video`, `entertainment-pacing` (ritmo para entretener: nunca >3 s sin cambio,
-   zooms con motivo), `video-qa` (mirar las hojas de revisión antes de construir y después de renderizar),
-   `editorial-direction` (criterio por género: comedia, música, entrevista…),
-   `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp`.
-4. **Calidad**: ningún video se entrega sin revisión visual (`review_shots` antes, `review_video` después).
-5. **Seguridad**: nunca modifiques el master sin copia; no borres media ni proyectos sin un pedido explícito;
-   guarda el proyecto antes de renderizar. En Free, renderiza dentro de `~/Movies`.
+   - Both, several deliverables, references or specialists → `.agents/agents/video-director.md` (the producer)
+   - Specialists the producer briefs: `composition-editor`, `audio-editor`, `colorist`, `titles-editor`, `qa-editor`
+   If your runtime has no subagents, read the role file and follow it yourself.
+3. Skills:
+   | Skill | Use it for |
+   |---|---|
+   | `davinci-resolve-mcp` | Connection, Free vs Studio, error codes, API pitfalls |
+   | `editorial-direction` | Producer judgement by genre (comedy, music, interview…), several people, multi-source composition |
+   | `entertainment-pacing` | Entertainment pacing: never >3 s without a change, zooms with a reason, cut dead time |
+   | `vertical-video` / `horizontal-video` | Orientation method and checklist |
+   | `dynamic-zoom-talking-head` | Motion for people talking to camera |
+   | `captions-and-titles` | Exact words, caption/title design, karaoke, placement off faces |
+   | `color-audio-finishing` | Color presets/LUTs, dialogue enhancement, measured mix |
+   | `video-qa` | Look at the review sheets before building and after rendering |
+   | `resolve-delivery` | Per-platform export specs, loudness and file verification |
+4. **Quality**: no video is delivered without a visual review (`review_shots` before, `review_video` after)
+   and `preflight_render` before rendering. Tools measure; the agent decides by watching and listening.
+5. **Safety**: never modify the master without a copy; never delete media or projects without an explicit request;
+   save the project before rendering. In Free, render inside `~/Movies`. Only one agent writes to Resolve at a time.
 
-## Desarrollo de resolve-forge
+## Developing resolve-forge
 
-- Capas: `domain/` (puro, sin Resolve) → `services/` (casos de uso + backends) → `tools.py`, `authoring_tools.py`,
-  `production_tools.py` (MCP fino) → `server.py` (composición).
-  `gateway.py` es lo único que sabe cómo se conecta con Resolve.
-- Añadir un estilo de motion: registra una función con `@style(...)` en `domain/styles.py`. No hace falta tocar nada más.
-- Añadir un backend de animación: implementa `apply`/`clear` en `services/appliers.py` y regístralo en `APPLIERS`.
-- Tests: `cd mcp/resolve-forge && uv run pytest` (sin Resolve: fakes de Free/bridge, Studio y Resolve 19, stdio
-  real, consistencia del workspace) y `uv run pytest -m live` (end-to-end con render y comparación de píxeles).
-- Las specs de plataformas viven en `domain/formats.py`; `references/platforms.md` se genera desde ahí.
-- Antes de "descubrir" un comportamiento raro de la API, búscalo en `docs/api-behavior.md`.
-- Tras editar `config/` o `.agents/`, ejecuta `python scripts/sync.py`.
-- Al añadir una tool: inclúyela en la tabla del README y actualiza los conteos (`test_workspace` lo comprueba),
-  menciónala en la skill que corresponda y anota el avance en la sección de estado de `docs/third-party-migration.md`.
-- Implementaciones propias: no copies servidores ni módulos de competidores. Mantén domain → services → tools y transportes aislados.
-  Registro de procedencia y mejoras: `docs/third-party-migration.md`.
+- Layers: `domain/` (pure, no Resolve) → `services/` (use cases + backends) → thin MCP modules (`tools.py`,
+  `authoring_tools.py`, `production_tools.py`, `qa_tools.py`, `producer_tools.py`, `composition_tools.py`) → `server.py`.
+  `gateway.py` is the only module that knows how to connect to Resolve.
+- New motion style: register a function with `@style(...)` in `domain/styles.py`. Nothing else to touch.
+- New animation backend: implement `apply`/`clear` in `services/appliers.py` and register it in `APPLIERS`.
+- Tests: `cd mcp/resolve-forge && uv run pytest` (no Resolve: Free/bridge, Studio and Resolve 19 fakes, real
+  stdio, workspace consistency) and `uv run pytest -m live` (end-to-end with render and pixel comparison).
+- Platform specs live in `domain/formats.py`; `references/platforms.md` is generated from there.
+- Before "discovering" odd API behaviour, look it up in `docs/api-behavior.md`.
+- After editing `config/` or `.agents/`, run `python scripts/sync.py`.
+- When adding a tool: add it to the README table and update the counts (`test_workspace` checks them),
+  mention it in the matching skill and log progress in the status section of `docs/third-party-migration.md`.
+- Own implementations only: do not copy competitors' servers or modules. Keep domain → services → tools and isolated transports.
+  Provenance and improvements log: `docs/third-party-migration.md`.

@@ -56,22 +56,22 @@ def test_doctor_reports_connection_project_and_next_step(monkeypatch, capsys):
     monkeypatch.setattr(doctor, "resolve_process_running", lambda: True)
     monkeypatch.setattr(doctor, "Session", _session(_Resolve("DaVinci Resolve", _Named("Master"))))
     checks = {c.name: c for c in doctor.run()}
-    assert checks["Conexión"].ok and "Free 21.0.4.5 vía bridge" in checks["Conexión"].detail
-    assert checks["Proyecto/timeline"].ok and checks["Proyecto/timeline"].detail == "Demo / Master"
+    assert checks["Connection"].ok and "Free 21.0.4.5 via bridge" in checks["Connection"].detail
+    assert checks["Project/timeline"].ok and checks["Project/timeline"].detail == "Demo / Master"
 
     monkeypatch.setattr(doctor, "Session", _session(None))
     checks = {c.name: c for c in doctor.run()}
-    assert not checks["Conexión"].ok and "resolve_bridge" in checks["Conexión"].fix
+    assert not checks["Connection"].ok and "resolve_bridge" in checks["Connection"].fix
     assert doctor.main() == 1
     out = capsys.readouterr().out
-    assert "[!!] Conexión" in out and "Siguiente paso:" in out
+    assert "[!!] Connection" in out and "Next step:" in out
 
 
 def test_doctor_without_resolve_running_stops_before_connecting(monkeypatch):
     monkeypatch.setattr(doctor, "resolve_process_running", lambda: False)
     monkeypatch.setattr(doctor, "Session", lambda: pytest.fail("must not connect"))
     checks = {c.name: c for c in doctor.run()}
-    assert not checks["Resolve abierto"].ok and "Conexión" not in checks
+    assert not checks["Resolve running"].ok and "Connection" not in checks
 
 
 def test_a_busy_resolve_is_reported_as_busy_not_missing():

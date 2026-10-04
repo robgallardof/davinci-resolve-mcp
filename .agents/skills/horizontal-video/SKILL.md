@@ -1,50 +1,50 @@
 ---
 name: horizontal-video
-description: "Editar video horizontal 16:9 para cualquier destino — YouTube, Facebook, LinkedIn, X, web/Vimeo, cursos, podcasts en video, entrevistas, presentaciones — en DaVinci Resolve con ritmo que retiene: punch-ins, B-roll, jump cuts, capítulos, subtítulos y export 1080p/4K. Úsala cuando pidan horizontal, 16:9, landscape, YouTube, long-form, podcast, curso, webinar o convertir un vertical en horizontal."
+description: "Edit horizontal 16:9 video for any destination — YouTube, Facebook, LinkedIn, X, web/Vimeo, courses, video podcasts, interviews, presentations — in DaVinci Resolve with pacing that retains: punch-ins, B-roll, jump cuts, chapters, captions and 1080p/4K export. Use it when asked for horizontal, 16:9, landscape, YouTube, long-form, podcast, course, webinar or converting a vertical into horizontal."
 ---
 
-# Video horizontal (16:9)
+# Horizontal video (16:9)
 
-Un solo método para todos los destinos 16:9. Las specs por plataforma salen de
-`list_formats(orientation="horizontal")`; la tabla completa está en `../resolve-delivery/references/platforms.md`.
+One method for every 16:9 destination. Per-platform specs come from
+`list_formats(orientation="horizontal")`; the full table is in `../resolve-delivery/references/platforms.md`.
 
-## Flujo
+## Flow
 
-1. **Estado**: `forge_status` y `list_clips`.
-2. **Formato**. Si la fuente es vertical: `make_platform_version(format="youtube_1080" | "facebook_1080" | ...)`.
-   El clip se escala para llenar el 16:9 alrededor del sujeto. Si recortar demasiado arruina el plano, usa un
-   fondo desenfocado (Fusion o `resolve-forge`) con el vertical encima.
-3. **Assembly** (con `resolve-forge`): ordena tomas, quita retomas y silencios, y marca capítulos con markers.
-   Según el género (podcast, comedia, videoclip, cine), aplica la skill `editorial-direction` (`plan_edit`).
-4. **Ritmo**: un cambio visual cada **3–7 s**. De mayor a menor valor: B-roll que *muestra* lo dicho,
-   gráfico o texto, punch-in, cambio de cámara.
-5. **Movimiento** (skill `dynamic-zoom-talking-head`):
-   - Primero `transcribe_timeline()`: te da `cuts_s` (inicios de frase) y `hits_s` (datos y remates) en segundos del timeline.
-   - Talking head: `apply_motion("youtube_dynamic", cuts_s=<cuts_s>)`. Pese al nombre, sirve para cualquier 16:9.
-   - Momentos emocionales o testimonios: `warm_push` con intensity 0.6–0.8. Cierres: `warm_pull`.
-   - Datos y remates: `emphasis` con `hits_s`.
-   - Multicam: el corte entre cámaras ya es el cambio. Usa `warm_push` suave en el plano abierto.
-6. **Hook por destino**:
-   - YouTube / web: la promesa del título en 5–10 s, más un preview del mejor momento.
-   - Facebook / LinkedIn / X: autoplay sin sonido, así que el mensaje tiene que entenderse con subtítulos
-     en los primeros 3 s: `add_captions(style="studio", position="bottom")` (o `auto`; revisa antes con `preview_text_style`).
-     Considera también una versión `square` o `feed_4x5`.
-   - Títulos, nombres o lower thirds: `add_text_overlay(..., style="studio" | "editorial", position="bottom")`.
-7. **Audio**: Voice Isolation; música bajo la voz con `add_music_bed(music_source)` (ducking desde la transcripción,
-   preview primero); −14 LUFS y −1 dBTP.
-8. **YouTube**: deja libres los últimos 20 s para el end screen; los capítulos salen de los markers.
-9. **Entrega** (skill `resolve-delivery`): `render_for(format=...)`.
+1. **State**: `forge_status` and `list_clips`.
+2. **Format**. If the source is vertical: `make_platform_version(format="youtube_1080" | "facebook_1080" | ...)`.
+   The clip is scaled to fill 16:9 around the subject. If cropping that much ruins the shot, use a
+   blurred background (Fusion or `resolve-forge`) with the vertical on top.
+3. **Assembly** (with `resolve-forge`): order takes, remove retakes and silences, and mark chapters with markers.
+   Depending on the genre (podcast, comedy, music video, film), apply the `editorial-direction` skill (`plan_edit`).
+4. **Pacing**: a visual change every **3–7 s**. From most to least valuable: B-roll that *shows* what is said,
+   graphic or text, punch-in, camera change.
+5. **Movement** (skill `dynamic-zoom-talking-head`):
+   - First `transcribe_timeline()`: it gives you `cuts_s` (sentence starts) and `hits_s` (data and punchlines) in timeline seconds.
+   - Talking head: `apply_motion("youtube_dynamic", cuts_s=<cuts_s>)`. Despite the name, it works for any 16:9.
+   - Emotional moments or testimonials: `warm_push` with intensity 0.6–0.8. Endings: `warm_pull`.
+   - Data and punchlines: `emphasis` with `hits_s`.
+   - Multicam: the cut between cameras is already the change. Use a gentle `warm_push` on the wide shot.
+6. **Hook per destination**:
+   - YouTube / web: the title's promise in 5–10 s, plus a preview of the best moment.
+   - Facebook / LinkedIn / X: muted autoplay, so the message must work with captions
+     in the first 3 s: `add_captions(style="studio", position="bottom")` (or `auto`; check first with `preview_text_style`).
+     Also consider a `square` or `feed_4x5` version.
+   - Titles, names or lower thirds: `add_text_overlay(..., style="studio" | "editorial", position="bottom")`.
+7. **Audio**: Voice Isolation; music under the voice with `add_music_bed(music_source)` (ducking from the transcript,
+   preview first); −14 LUFS and −1 dBTP.
+8. **YouTube**: keep the last 20 s free for the end screen; chapters come from the markers.
+9. **Delivery** (skill `resolve-delivery`): `render_for(format=...)`.
 
-## Errores comunes
+## Common mistakes
 
-- Punch-in tras punch-in sin B-roll: se siente como "TikTok estirado". Alterna.
-- Zoom por encima de ×1.2 sobre material 1080p en un timeline 1080p: se nota el blando.
-- Cortar la respiración final de las frases: suena ansioso. Deja 3–6 frames.
+- Punch-in after punch-in with no B-roll: feels like a "stretched TikTok". Alternate.
+- Zoom above ×1.2 on 1080p footage in a 1080p timeline: the softness shows.
+- Cutting the final breath of sentences: sounds anxious. Leave 3–6 frames.
 
 ## Checklist
 
-- [ ] Resolución correcta y master intacto
-- [ ] Cambio visual cada 3–7 s, con B-roll donde se pueda mostrar algo
-- [ ] Subtítulos si el destino hace autoplay en mudo
-- [ ] Audio a −14 LUFS
-- [ ] Render completo y verificado
+- [ ] Correct resolution and master intact
+- [ ] Visual change every 3–7 s, with B-roll wherever something can be shown
+- [ ] Captions if the destination autoplays muted
+- [ ] Audio at −14 LUFS
+- [ ] Render complete and verified

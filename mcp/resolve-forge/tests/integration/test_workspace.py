@@ -32,7 +32,8 @@ def test_every_skill_follows_the_open_standard():
         assert 50 < len(fm["description"]) <= 1024
         names.append(skill.name)
     assert {"davinci-resolve-mcp", "vertical-video", "horizontal-video",
-            "dynamic-zoom-talking-head", "resolve-delivery", "editorial-direction", "entertainment-pacing", "video-qa"} <= set(names)
+            "dynamic-zoom-talking-head", "resolve-delivery", "editorial-direction", "entertainment-pacing", "video-qa",
+            "color-audio-finishing", "captions-and-titles"} <= set(names)
 
 
 def test_agents_exist_and_only_reference_real_skills():
@@ -42,7 +43,7 @@ def test_agents_exist_and_only_reference_real_skills():
     for name, text in agents.items():
         assert _frontmatter(AGENTS / f"{name}.md")["name"] == name
         for ref in re.findall(r"`([a-z0-9-]+)`", text):
-            if ref.endswith(("-video", "-mcp", "-delivery", "-head")):
+            if ref.endswith(("-video", "-mcp", "-delivery", "-head", "-direction", "-pacing", "-qa", "-finishing", "-titles")):
                 assert ref in skills, f"{name} references missing skill {ref}"
 
 

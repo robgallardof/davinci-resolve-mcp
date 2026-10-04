@@ -1,47 +1,48 @@
-# Referencias y coordinación del productor
+# Producer references and coordination
 
-Lee esta referencia para piezas con varios especialistas, referencias visuales o composición de varios planos.
-El productor posee las decisiones finales y la escritura MCP; los especialistas proponen sobre evidencia.
+Read this reference for pieces with several specialists, visual references or multi-shot composition.
+The producer owns final decisions and MCP writes; specialists propose from evidence.
 
-## Interpretar la referencia
+## Interpreting the reference
 
-Separa lo observado de su aplicación: fuentes/ángulos, sujetos reales, continuidad temporal, jerarquía de
-paneles, texto y función narrativa. No deduzcas cuatro participantes porque haya cuatro imágenes: pueden
-ser tomas diferentes de una misma persona. Entrevista + fotografía + plano con cámara puede sugerir apoyo,
-contexto o historia; no obliga a mantener un collage toda la duración.
+Separate what is observed from how it applies: sources/angles, real subjects, temporal continuity, panel
+hierarchy, text and narrative function. Do not infer four participants because there are four images: they may
+be different takes of the same person. Interview + photo + camera shot may suggest support,
+context or story; it does not require keeping a collage for the whole duration.
 
-Para cada idea registra `observation`, `candidate`, `reason`, `use_when`, `avoid_when` y `available_sources`.
-Si faltan tomas equivalentes, elige una adaptación honesta (recorte comprobado, B-roll disponible, otro layout);
-no promete perspectiva nueva a partir de un único plano. El número de personas por sí solo no elige layout.
-Dos hablantes horizontales en vertical pueden alternar caras con turnos confirmados y reacciones protegidas;
-grupo numeroso puede funcionar mejor con rotación/plano general que con caras ilegibles en miniatura.
+For each idea record `observation`, `candidate`, `reason`, `use_when`, `avoid_when` and `available_sources`.
+If equivalent takes are missing, choose an honest adaptation (verified crop, available B-roll, another layout);
+do not promise a new perspective from a single shot. The number of people alone does not choose a layout.
+Two horizontal speakers in a vertical can alternate faces on confirmed turns with protected reactions;
+a large group may work better with rotation/wide shot than with illegible thumbnail faces.
 
-## Brief y contrato de propuesta
+## Brief and proposal contract
 
-Entrega a cada especialista el mismo `job_id`, objetivo/género, referencias observadas, formato/dimensiones/FPS,
-proyecto/timeline y versión, copia de trabajo, fuentes con identificadores estables/rangos, montaje confirmado,
-límites de autoridad, dueño de tarea, dependencias y aceptación. Rangos fuente y timeline son distintos: usa
-segundos relativos a su inicio declarado, intervalos `[start, end)`, y conserva offsets/FPS para conversión.
-Al cambiar montaje actualiza versión y remapeo; un plan sobre versión anterior no se aplica.
+Give every specialist the same `job_id`, goal/genre, observed references, format/dimensions/FPS,
+project/timeline and version, working copy, sources with stable ids/ranges, confirmed cut,
+authority limits, task owner, dependencies and acceptance. Source and timeline ranges differ: use
+seconds relative to their declared start, `[start, end)` intervals, and keep offsets/FPS for conversion.
+When the cut changes, bump the version and remap; a plan based on an older version is not applied.
+`plan_production` produces these work orders from the brief; specialists fill in the proposals.
 
-Usa JSON para la propuesta; este es un contrato de coordinación, no una tool MCP ni un schema implementado:
+Use JSON for the proposal; this is a coordination contract, not an MCP tool or an implemented schema:
 
 ```json
 {
   "job_id": "reel-01",
   "owner": "composition-editor",
   "base_version": "cut-v2",
-  "target": {"project": "Proyecto", "timeline": "Reel_COPY", "format": "vertical"},
+  "target": {"project": "Project", "timeline": "Reel_COPY", "format": "vertical"},
   "depends_on": ["cut-v2"],
-  "observations": [{"evidence": "frame-001.png", "finding": "La referencia reúne tomas de una persona"}],
+  "observations": [{"evidence": "frame-001.png", "finding": "The reference combines takes of one person"}],
   "proposals": [{
     "id": "composition-01",
     "source_id": "clip-A",
     "source_range_s": [4.0, 7.0],
     "timeline_range_s": [0.0, 3.0],
-    "reason": "Acercar la reacción confirmada",
+    "reason": "Bring the confirmed reaction closer",
     "operation": {"tool": null, "args": {}, "schema_verified": false},
-    "acceptance": ["Cara completa en inicio, mitad y final", "Sin salto de zoom"],
+    "acceptance": ["Complete face at start, middle and end", "No zoom jump"],
     "evidence_required": ["before_after_same_time", "readback"],
     "uncertainties": []
   }],
@@ -50,26 +51,26 @@ Usa JSON para la propuesta; este es un contrato de coordinación, no una tool MC
 }
 ```
 
-`operation.tool` y `args` solo se completan con nombres/parámetros de tools disponibles y schemas inspeccionados;
-si no están disponibles deja null y explica operación deseada. Nunca inventes una tool para satisfacer el contrato.
-Para herramientas de planning existentes, adjunta sus resultados y avisos sin confundirlos con ejecución.
-Personas/cajas/turnos incluyen evidencia y confianza; no etiquetas una detección como confirmada sin revisión.
+`operation.tool` and `args` are only filled with names/parameters of available tools and inspected schemas;
+if unavailable leave null and describe the desired operation. Never invent a tool to satisfy the contract.
+For existing planning tools, attach their results and warnings without confusing them with execution.
+People/boxes/turns include evidence and confidence; never label a detection as confirmed without review.
 
-## Aplicación serial y evidencia
+## Serial application and evidence
 
-Solo coordinador ejecuta mutaciones MCP y operaciones que seleccionen proyecto/timeline. Los especialistas
-usan copias de artefactos locales para trabajo paralelo. Ni lectura de estado equivale a permiso para cambiarlo.
-Antes de aplicar: target activo correcto, versión vigente, argumentos verificados, dependencias satisfechas y
-preview/dry-run revisado si existe. Tras aplicar: registra resultado, readback, evidencia visual/sonora y versión
-nueva. Distingue `planned`, `applied`, `verified`, `failed`; no declares verificado solo por retorno exitoso.
-En timeout/fallo inspecciona estado para saber si hubo cambio antes de reintentar.
+Only the coordinator executes MCP mutations and operations that select a project/timeline. Specialists
+use copies of local artifacts for parallel work. Reading state is not permission to change it.
+Before applying: correct active target, current version, verified arguments, dependencies satisfied and
+preview/dry-run reviewed when it exists. After applying: record the result, readback, visual/audio evidence and
+the new version. Distinguish `planned`, `applied`, `verified`, `failed`; never declare verified from a successful return alone.
+On timeout/failure inspect state to learn whether anything changed before retrying.
 
-Composición/corte preceden texto y sincronía audio. Audio y color pueden analizarse en paralelo con geometría,
-pero su aplicación se serializa. Recortes nuevos invalidan cues; paneles nuevos invalidan zonas de texto. QA
-devuelve `severity`, `timeline_range_s`, `evidence`, `owner`, `fix`, `acceptance` y estado; productor resuelve
-conflictos estéticos y reasigna defectos. No permite render final con bloqueantes. Guarda proyecto antes.
+Composition/cut precede text and audio sync. Audio and color can be analysed in parallel with geometry,
+but their application is serialised. New trims invalidate cues; new panels invalidate text zones. QA
+returns `severity`, `timeline_range_s`, `evidence`, `owner`, `fix`, `acceptance` and status; the producer resolves
+aesthetic conflicts and reassigns defects. No final render with open blockers. Save the project first.
 
-QA anterior al render: revisión visual de planos y animaciones, exactitud de texto, escucha de mezcla y
-`preflight_render`. QA posterior: archivo real, specs/mediciones y `review_video` observado más escucha.
-Reporta cobertura y pendientes, no una promesa de perfección. Un contacto de frames no prueba cada frame;
-LUFS correcto no prueba inteligibilidad; readback de LUT no prueba piel natural.
+Pre-render QA: visual review of shots and animations, text accuracy, listening to the mix and
+`preflight_render`. Post-render QA: the real file, specs/measurements and an observed `review_video` plus listening.
+Report coverage and open items, not a promise of perfection. A contact sheet does not prove every frame;
+correct LUFS does not prove intelligibility; LUT readback does not prove natural skin.

@@ -1,62 +1,62 @@
 ---
 name: vertical-video
-description: "Editar video vertical (9:16 y 4:5) para cualquier plataforma — TikTok, Instagram Reels, Facebook Reels, YouTube Shorts, Stories, Snapchat, feed 4:5 — en DaVinci Resolve: reencuadre desde 16:9, hook, ritmo, zooms dinámicos, subtítulos, safe zones y export. Úsala cuando pidan vertical, 9:16, 4:5, reels, shorts, tiktok, stories, clips cortos o convertir un horizontal en vertical."
+description: "Edit vertical video (9:16 and 4:5) for any platform — TikTok, Instagram Reels, Facebook Reels, YouTube Shorts, Stories, Snapchat, 4:5 feed — in DaVinci Resolve: reframing from 16:9, hook, pacing, dynamic zooms, captions, safe zones and export. Use it when asked for vertical, 9:16, 4:5, reels, shorts, tiktok, stories, short clips or converting horizontal to vertical."
 ---
 
-# Video vertical (9:16 / 4:5)
+# Vertical video (9:16 / 4:5)
 
-Una sola forma de trabajo para todas las plataformas verticales. Lo que cambia por plataforma (safe zone,
-duración máxima, loudness) lo da `list_formats(orientation="vertical")`. La tabla completa está en
+One way of working for every vertical platform. What changes per platform (safe zone,
+maximum duration, loudness) comes from `list_formats(orientation="vertical")`. The full table is in
 `../resolve-delivery/references/platforms.md`.
 
-## Flujo
+## Flow
 
-1. **Estado**: `forge_status` y `list_clips`.
-   Clip largo sin editar (por ejemplo un video del teléfono de varios minutos): `find_highlights(source)` para
-   ver los mejores momentos y `assemble_timeline(source, cuts=[[ini, fin], ...], name, format="reels")` para
-   armar el corte directamente en 9:16. Si haces esto, sáltate el paso 2.
-2. **Formato**. Si la fuente es 16:9: `make_platform_version(format=<plataforma>, subject="face")`.
-   Crea una copia con la cara centrada y el master no se toca.
-   - Varias plataformas 9:16 comparten resolución: una sola versión `reels` sirve para TikTok, Shorts y FB Reels.
-     Cambia solo la safe zone, así que diseña para la más restrictiva (TikTok abajo/derecha, Reels abajo).
-   - `feed_4x5` para el feed de Instagram/Facebook: menos recorte, más contexto.
-   - Dos personas: `center_bias` 0.6–0.8, o por clip con `subject=[x, y]`.
+1. **State**: `forge_status` and `list_clips`.
+   Long unedited clip (e.g. a several-minute phone video): `find_highlights(source)` to
+   see the best moments and `assemble_timeline(source, cuts=[[start, end], ...], name, format="reels")` to
+   build the cut directly in 9:16. If you do this, skip step 2.
+2. **Format**. If the source is 16:9: `make_platform_version(format=<platform>, subject="face")`.
+   It creates a copy with the face centred and leaves the master untouched.
+   - Several 9:16 platforms share a resolution: a single `reels` version serves TikTok, Shorts and FB Reels.
+     Only the safe zone changes, so design for the most restrictive (TikTok bottom/right, Reels bottom).
+   - `feed_4x5` for the Instagram/Facebook feed: less cropping, more context.
+   - Two people: `center_bias` 0.6–0.8, or per clip with `subject=[x, y]`.
    - Studio: `smart_reframe=true`.
-3. **Corte editorial** (con `resolve-forge`): fuera silencios, muletillas y retomas.
-   Con intención de género (comedia, música, entrevista…), sigue la skill `editorial-direction`:
-   `find_story_moments` / `analyse_music` → revisas → `plan_edit` → corte.
-   Duración: 15–35 s es lo más seguro; 30–60 s si la idea lo necesita. Respeta `max_seconds` del formato.
-4. **Hook (0–3 s)**: la primera frase es la promesa o el conflicto. Primer cambio visual antes de los 2 s.
-5. **Ritmo y enfoque** (skill `entertainment-pacing`): para material de celular, mascotas, vlogs o retos,
-   `plan_energized_edit` → `energize_timeline` reemplaza los planos largos por planos de 1.2–2.8 s con zooms
-   sobre la acción. Para una persona hablando a cámara, sigue con el paso 6.
-6. **Movimiento** (skill `dynamic-zoom-talking-head`): `transcribe_timeline()` y luego
+3. **Editorial cut** (with `resolve-forge`): remove silences, filler words and retakes.
+   With genre intent (comedy, music, interview…), follow the `editorial-direction` skill:
+   `find_story_moments` / `analyse_music` → you review → `plan_edit` → cut.
+   Duration: 15–35 s is safest; 30–60 s if the idea needs it. Respect the format's `max_seconds`.
+4. **Hook (0–3 s)**: the first line is the promise or the conflict. First visual change before 2 s.
+5. **Pacing and focus** (skill `entertainment-pacing`): for phone footage, pets, vlogs or challenges,
+   `plan_energized_edit` → `energize_timeline` replaces long shots with 1.2–2.8 s shots with zooms
+   on the action. For a person talking to camera, continue with step 6.
+6. **Movement** (skill `dynamic-zoom-talking-head`): `transcribe_timeline()` then
    `apply_motion("tiktok_punch" | "tiktok_smooth" | "vlog_mix", cuts_s=<cuts_s>, hits_s=<hits_s>)`.
-   Los estilos `tiktok_*` sirven para cualquier vertical; el nombre indica el ritmo, no la plataforma.
-7. **Texto** (casi todo se ve sin sonido):
-   - Diseño: `list_text_styles` y `preview_text_style(texto, style, 1080, 1920)` antes de quemar.
-   - Hay voz: `add_captions(style="auto" | "creator" | "impact", accent="#RRGGBB")`. Palabra activa resaltada,
-     entrada breve, dentro de la safe zone más estricta. Funciona en Free.
-     Texto exacto: `align_text(source, text=<guion>)` o corrige `transcribe_timeline(include_words=true)`; pasa `words=`.
-   - Sin voz (vlog visual o con música): cuenta la historia con `add_text_overlay(text, start_s, duration_s,
-     style="creator", position="top")`, por ejemplo "POV: …" en el hook y un giro a mitad del video.
-     Emoji permitidos. `impact` solo para remates o mensajes de 1–4 palabras.
-8. **Pattern interrupts** donde la historia cambia (idea nueva, remate, prueba), típicamente cada 2–4 s:
-   punch-in, B-roll, texto, SFX. Varía el tipo y no cortes una pausa cómica o un momento que respira.
-9. **Audio**: música bajo la voz con `add_music_bed(music_source)` (ducking automático); SFX solo en momentos
-   confirmados con `place_sound_effects`.
-10. **Loop**: que el final conecte con el inicio cuando se pueda.
-11. **Entrega** (skill `resolve-delivery`): `render_for(format=<plataforma>)`, una por destino si cambian las specs.
+   The `tiktok_*` styles work for any vertical; the name describes the pace, not the platform.
+7. **Text** (most views are muted):
+   - Design: `list_text_styles` and `preview_text_style(text, style, 1080, 1920)` before burning.
+   - With voice: `add_captions(style="auto" | "creator" | "impact", accent="#RRGGBB")`. Active word highlighted,
+     short entrance, inside the strictest safe zone. Works in Free.
+     Exact text: `align_text(source, text=<script>)` or correct `transcribe_timeline(include_words=true)`; pass `words=`.
+   - No voice (visual or music vlog): tell the story with `add_text_overlay(text, start_s, duration_s,
+     style="creator", position="top")`, e.g. "POV: …" in the hook and a twist mid-video.
+     Emoji allowed. `impact` only for punchlines or 1–4 word messages.
+8. **Pattern interrupts** where the story changes (new idea, punchline, proof), typically every 2–4 s:
+   punch-in, B-roll, text, SFX. Vary the type and never cut a comic pause or a moment that breathes.
+9. **Audio**: music under the voice with `add_music_bed(music_source)` (automatic ducking); SFX only on
+   confirmed moments with `place_sound_effects`.
+10. **Loop**: make the ending connect to the start when possible.
+11. **Delivery** (skill `resolve-delivery`): `render_for(format=<platform>)`, one per destination if specs differ.
 
-## Specs base
+## Base specs
 
-1080×1920 (4:5: 1080×1350), 30 fps (o el fps del material), H.264 High 10–14 Mbps, AAC 48 kHz.
-Loudness −12 a −14 LUFS, −1 dBTP. Shorts se reproduce como máximo a 1080p.
+1080×1920 (4:5: 1080×1350), 30 fps (or the footage fps), H.264 High 10–14 Mbps, AAC 48 kHz.
+Loudness −12 to −14 LUFS, −1 dBTP. Shorts plays at 1080p at most.
 
 ## Checklist
 
-- [ ] Resolución del timeline = formato (`forge_status`)
-- [ ] Cara y texto dentro de la safe zone de la plataforma más restrictiva
-- [ ] Hook en 0–3 s, cambio visual antes de 2 s y nunca más de ~3 s sin un cambio en pantalla
-- [ ] Ritmo según el género (remates y reacciones intactos) y subtítulos completos y corregidos
-- [ ] Render completo (`render_status`) y archivo verificado
+- [ ] Timeline resolution = format (`forge_status`)
+- [ ] Face and text inside the safe zone of the most restrictive platform
+- [ ] Hook in 0–3 s, visual change before 2 s and never more than ~3 s without an on-screen change
+- [ ] Pacing per genre (punchlines and reactions intact) and complete, corrected captions
+- [ ] Render complete (`render_status`) and file verified

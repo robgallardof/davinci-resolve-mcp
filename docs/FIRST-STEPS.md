@@ -1,98 +1,108 @@
-# Primeros pasos (10 minutos)
+# First steps (10 minutes)
 
-Guía paso a paso para tu primer video editado por un agente. Vale igual para Resolve **Free** y **Studio**.
+Step-by-step guide to your first video edited by an agent. Same for Resolve **Free** and **Studio**.
+The agent replies in your language: you can ask in English, Spanish or anything else.
 
-## 1. Instala (una sola vez)
+## 1. Install (once)
 
 ```powershell
-cd C:\Users\<tú>\Documents\Projects\davinci-agents
+cd C:\Users\<you>\Documents\Projects\davinci-agents
 pwsh scripts/bootstrap.ps1
 ```
 
-Al terminar deberías ver `Listo.`. Si DaVinci Resolve estaba abierto, **ciérralo y vuelve a abrirlo**
-para que cargue el script del bridge.
+When it finishes you should see `Done.` If DaVinci Resolve was open, **close it and open it again**
+so it loads the bridge script.
 
-## 2. Abre Resolve y conecta
+## 2. Open Resolve and connect
 
-1. Abre DaVinci Resolve.
-2. En el Project Manager abre tu proyecto (o crea uno con **New Project**).
-   > Si cierras el Project Manager sin abrir un proyecto, Resolve se cierra.
-3. **Free**: menú **Workspace → Scripts → resolve_bridge**. No verás ninguna ventana: el bridge queda escuchando en segundo plano.
-   **Studio**: Preferences → System → General → *External scripting using* = **Local** (una sola vez).
-4. Comprueba la conexión:
+1. Open DaVinci Resolve.
+2. In the Project Manager open your project (or create one with **New Project**).
+   > If you close the Project Manager without opening a project, Resolve quits.
+3. **Free**: menu **Workspace → Scripts → resolve_bridge**. No window appears: the bridge listens in the background
+   until Resolve closes. Repeat it every time you open Resolve.
+   **Studio**: Preferences → System → General → *External scripting using* = **Local** (once).
+4. Check the connection:
 
 ```powershell
 cd mcp/resolve-forge
 uv run resolve-forge-doctor
 ```
 
-Tiene que decir `[OK] Conexión: Free 21.x vía bridge` (o `Studio … vía direct`). Si algo falla, la última línea te dice qué hacer.
+It must say `[OK] Connection: Free 21.x via bridge` (or `Studio … via direct`). If something fails, the last line tells you what to do.
 
-## 3. Prepara un timeline
+## 3. Prepare a timeline
 
-En Resolve: importa un clip de alguien hablando (Media Pool → clic derecho → Import Media) y arrástralo
-a un timeline nuevo. Con un clip de 20–60 s alcanza.
+In Resolve: import a clip of someone talking (Media Pool → right-click → Import Media) and drag it
+into a new timeline. A 20–60 s clip is enough.
 
-## 4. Abre tu agente en esta carpeta
+## 4. Open your agent in this folder
 
 ```powershell
-cd C:\Users\<tú>\Documents\Projects\davinci-agents
-claude          # o codex / gemini, o abre la carpeta en Cursor / VS Code
+cd C:\Users\<you>\Documents\Projects\davinci-agents
+claude          # or codex / gemini, or open the folder in Cursor / VS Code
 ```
 
-La primera vez, aprueba el servidor MCP `resolve-forge` (es el único).
+The first time, approve the `resolve-forge` MCP server (it is the only one).
 
-## 5. Primeros pedidos
+## 5. First requests
 
-Copia estos de a uno y mira el resultado en Resolve después de cada uno:
+Paste these one at a time and look at the result in Resolve after each:
 
 ```text
-1) Dime el estado de Resolve y qué clips hay en el timeline.
-2) Muéstrame cómo quedaría un estilo youtube_dynamic en este clip, sin aplicarlo.
-3) Aplica youtube_dynamic con intensidad 0.8 anclado a la cara.
-4) Haz una versión vertical para Reels de este timeline y dale tiktok_smooth.
-5) Ponle subtítulos bonitos con mi color de marca #FF5A36; muéstrame antes cómo se ven.
-6) Pon música de fondo bajo la voz con este archivo: C:/ruta/musica.mp3
-7) Exporta la versión vertical para Reels y la horizontal para YouTube 1080.
+1) Tell me Resolve's status and which clips are on the timeline.
+2) Show me how a youtube_dynamic style would look on this clip, without applying it.
+3) Apply youtube_dynamic at intensity 0.8 anchored to the face.
+4) Make a vertical Reels version of this timeline and give it tiktok_smooth.
+5) Add nice captions in my brand colour #FF5A36; show me how they look first.
+6) Put background music under the voice using this file: C:/path/music.mp3
+7) Check everything before rendering, then export the vertical for Reels and the horizontal for YouTube 1080.
 ```
 
-Qué vas a ver:
+What you will see:
 
-- Paso 3: en Free, los clips tienen un nodo **ForgeMotion** en la página Fusion. En Studio aparecen keyframes en el Inspector.
-- Paso 4: un timeline nuevo `… [reels]` de 1080×1920. El original no cambia.
-- Paso 5: un preview (PNG y WebP animado) y después una pista nueva con subtítulos animados, palabra activa resaltada.
-- Paso 6: una pista de audio nueva con la música bajando cuando hablas y subiendo entre frases (archivo nuevo; tu música original no cambia).
-- Paso 7: los archivos en `~/Movies/resolve-forge/`.
+- Step 3: in Free, clips get a **ForgeMotion** node on the Fusion page. In Studio, keyframes appear in the Inspector.
+- Step 4: a new `… [reels]` 1080×1920 timeline. The original does not change.
+- Step 5: a preview (PNG and animated WebP), then a new track with animated captions and the active word highlighted.
+- Step 6: a new audio track with the music dipping when you speak and rising between sentences (a new file; your original music is untouched).
+- Step 7: `preflight_render` findings, then the files in `~/Movies/resolve-forge/` and a review sheet the agent looks at.
 
-## 6. Pide como editor, no como técnico
+## 6. Ask like an editor, not a technician
 
-Los agentes entienden intención. Algunos ejemplos:
+Agents understand intent. Some examples and what they trigger:
 
-- "Del podcast saca un video para YouTube y 3 clips verticales de 30 s con lo mejor." → `video-director`
-- "Que no se vea estático, pero sin marear." → `warm_push` o `youtube_dynamic` con intensidad baja
-- "Más energía, estilo TikTok." → `tiktok_punch` con intensidad 1.2
-- "Haz zoom cuando dice 'importante' en 0:15 y 0:48." → `emphasis` con esos segundos
-- "Versión para LinkedIn." → `linkedin_1080` o `square`, con subtítulos
-- "Es comedia: encuentra los remates y no cortes las risas." → `find_story_moments` + `plan_edit` (skill `editorial-direction`)
-- "Videoclip de mi canción con cortes al beat y la letra exacta." → `analyse_music`, `plan_beat_cuts`, `assemble_montage`, `align_text`
-- "Un whoosh cuando cambio de tema." → `place_sound_effects` con tu archivo de sonido
+| You say | The agent uses |
+|---|---|
+| "From the podcast, one YouTube video and three 30 s vertical clips with the best bits." | `video-director` role, `find_highlights`, platform versions |
+| "Don't let it look static, but don't make me dizzy." | `warm_push` or `youtube_dynamic` at low intensity |
+| "More energy, TikTok style." | `tiktok_punch` at intensity 1.2 |
+| "Phone clips of my dog: make it fun, zoom on the dog, cut where nothing happens." | `plan_energized_edit` + `review_shots` (skill `entertainment-pacing`) |
+| "Zoom when I say 'important' at 0:15 and 0:48." | `emphasis` with those seconds |
+| "LinkedIn version." | `linkedin_1080` or `square`, with captions |
+| "It's comedy: find the punchlines and don't cut the laughs." | `find_story_moments` + `plan_edit` (skill `editorial-direction`) |
+| "Music video for my song with cuts on the beat and the exact lyrics." | `analyse_music`, `plan_beat_cuts`, `assemble_montage`, `align_text` |
+| "Two people in a horizontal podcast → a Reel that follows whoever speaks." | `plan_speaker_layout` / `build_speaker_layout` |
+| "Combine the interview with these photos like this reference." | `plan_composition` → `build_composition` |
+| "Make the voice clearer and give it a warm look." | `enhance_audio`, `apply_grade_preset` (skill `color-audio-finishing`) |
+| "A whoosh when I change topic." | `place_sound_effects` with your sound file |
 
-El agente propone mejoras a tu idea, pero los momentos (chiste, drop, emoción) los confirma viendo o escuchando:
-las herramientas dan candidatos con evidencia, no deciden solas.
+The agent proposes improvements to your idea, but it confirms moments (joke, drop, emotion) by watching or listening:
+the tools give candidates with evidence; they do not decide alone. You can attach reference screenshots — the producer
+treats them as inspiration for this piece, not as fixed rules.
 
-## 7. Si algo sale mal
+## 7. If something goes wrong
 
-- `uv run resolve-forge-doctor` siempre primero.
-- Quitar el movimiento: "quita el movimiento de forge de todos los clips" (`clear_motion`).
-- Volver al original: el master nunca se toca; las versiones son timelines nuevos que puedes borrar.
-- "Cannot reach DaVinci Resolve": abre un proyecto (no basta el Project Manager) y vuelve a lanzar Workspace → Scripts → resolve_bridge.
-- Falta transcripción o análisis de audio (`MISSING_DEPENDENCY`): `cd mcp/resolve-forge && uv sync --extra speech --extra vision`.
-- En Free, el render solo escribe dentro de `~/Movies`.
+- Always run `uv run resolve-forge-doctor` first.
+- Remove the motion: "remove forge motion from every clip" (`clear_motion`).
+- Back to the original: the master is never touched; versions are new timelines you can delete.
+- "Cannot reach DaVinci Resolve": open a project (the Project Manager is not enough) and run Workspace → Scripts → resolve_bridge again.
+- The bridge still holds its port after restarting Resolve: ask for `repair_bridge_connection` (preview first).
+- Missing transcription or audio analysis (`MISSING_DEPENDENCY`): `cd mcp/resolve-forge && uv sync --extra speech --extra vision`.
+- In Free, rendering only writes inside `~/Movies`.
 
-## 8. Comprueba que todo funciona en tu equipo
+## 8. Check everything works on your machine
 
 ```powershell
 cd mcp/resolve-forge
-uv run pytest            # sin Resolve
-uv run pytest -m live    # con Resolve abierto y el bridge activo; crea proyectos forge_* que se conservan para inspección
+uv run pytest            # no Resolve needed
+uv run pytest -m live    # Resolve open + bridge running; creates forge_* projects kept for inspection
 ```

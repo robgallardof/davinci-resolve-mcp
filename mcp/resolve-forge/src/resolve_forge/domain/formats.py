@@ -109,7 +109,7 @@ def safe_for(width: int, height: int) -> SafeZone:
 
 def markdown_table() -> str:
     """The platform table used in docs/skills — generated, so docs never drift from code."""
-    rows = ["| key | Plataforma | Resolución | fps | Codec | Mbps | LUFS | Safe zone (arriba/abajo/izq/der) | Máx. |",
+    rows = ["| key | Platform | Resolution | fps | Codec | Mbps | LUFS | Safe zone (top/bottom/left/right) | Max |",
             "|---|---|---|---|---|---|---|---|---|"]
     for f in FORMATS.values():
         z = f.safe

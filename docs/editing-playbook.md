@@ -1,85 +1,107 @@
-# Playbook de edición (investigación, octubre 2026)
+# Editing playbook (research, October 2026)
 
-Resumen accionable de las fuentes consultadas. Las skills en `.agents/skills/` aplican esto.
+Actionable summary of the sources consulted. The skills in `.agents/skills/` apply it.
 
-## Retención en short-form
+## Short-form retention
 
-- Un hook que se gane el primer segundo, pattern interrupts que reseteen la atención cada pocos segundos y un loop
-  que lleve el watch time por encima del 100 %. Recorta el aire inicial para llegar al hook de inmediato.
-  Apila visuales (texto, overlays, B-roll) y subtitula siempre, porque gran parte se ve sin sonido.
-- Duración: lo más seguro es 15–35 s; 30–60 s funciona si la idea lo necesita. "Haz que la idea se sienta completa
-  lo antes posible y corta antes de que haya motivo para deslizar."
-- Fuentes: [Splice — retention apps](https://spliceapp.com/blog/which-apps-enhance-viewer-retention),
+- A hook that earns the first second, pattern interrupts that reset attention every few seconds and a loop
+  that pushes watch time above 100 %. Trim the opening air to reach the hook immediately.
+  Stack visuals (text, overlays, B-roll) and always caption, because much of it is watched muted.
+- Duration: 15–35 s is safest; 30–60 s works if the idea needs it. "Make the idea feel complete
+  as early as possible and cut before there is a reason to swipe."
+- Sources: [Splice — retention apps](https://spliceapp.com/blog/which-apps-enhance-viewer-retention),
   [ShortGenius — Shorts best practices](https://shortgenius.com/blog/youtube-shorts-best-practices),
   [Revid — how to edit](https://www.revid.ai/blog/how-to-make-and-edit-videos).
 
+## Entertainment footage (pets, vlogs, challenges)
+
+- The screen never sits still for more than ~2–3 s, but every zoom must bring something that matters closer and keep
+  it whole and centred. A zoom on the wrong thing is worse than no zoom.
+- Cut stretches where nobody (person or animal) is present or nothing happens with intent, even if the camera moves.
+- Never zoom past what the source resolution allows (WhatsApp-sized sources blur quickly).
+- In Forge: `plan_energized_edit` → `review_shots` (look at the sheet) → `energize_timeline`. Skill `entertainment-pacing`.
+
 ## Talking heads (horizontal)
 
-- Cambia el encuadre o un elemento visual cada **3–7 s** (zoom, texto, B-roll).
-- Punch-in: zoom leve sobre el A-roll en puntos importantes o cada pocas frases.
-- Jump cuts + frases cortas + B-roll aceleran el ritmo. El B-roll que *muestra* lo dicho es lo que más aporta.
-- No te pases: planos de < 1–3 s de forma constante saturan.
-- Fuentes: [Subscribr — engaging talking heads](https://subscribr.ai/p/editing-talking-head-videos-engaging),
+- Change the framing or a visual element every **3–7 s** (zoom, text, B-roll).
+- Punch-in: a slight zoom on the A-roll at important points or every few sentences.
+- Jump cuts + short sentences + B-roll speed up the pace. B-roll that *shows* what is said adds the most.
+- Do not overdo it: shots constantly under 1–3 s are exhausting.
+- Sources: [Subscribr — engaging talking heads](https://subscribr.ai/p/editing-talking-head-videos-engaging),
   [Subscribr — workflow](https://subscribr.ai/youtube-strategy/talking-head-video-editing-workflow),
   [Jupitrr — edit talking head videos](https://jupitrr.com/how-to/edit-talking-head-videos).
 
-## Subtítulos y texto que se vean diseñados
+## Several people and multi-source layouts
 
-- Sincronía por palabra y jerarquía clara: una frase estable en pantalla y la palabra activa resaltada, en vez de
-  texto que salta en cada palabra. Entradas cortas (fade, lift, pop) y una sola familia tipográfica por pieza.
-- Modos según el tono: Creator (cercano, Reels/TikTok), Studio (limpio, entrevistas/educación), Editorial (cálido,
-  historias), Impact (solo remates y mensajes de 1–4 palabras). Color de marca como acento, no en todo el texto.
-- Texto, cámara y sonido no se animan a la vez: un acento por momento.
-- En Forge: `list_text_styles` → `preview_text_style` → `add_captions(style, accent, words)`; la letra o el guion
-  exactos con `align_text`.
-- Fuentes: [School of Motion — typography for motion](https://schoolofmotion.com/blog/fonts-typefaces-typography-for-motion-design),
+- Two speakers from a horizontal source in a vertical: follow whoever speaks, keep relevant reactions.
+- 3–5 people: a split or group shot only when the producer wants to show the group; faces complete, no tiny thumbnails.
+- References with several panels may be several takes of one person, or interview + photo + B-roll: a composition
+  choice (`plan_composition`), not a speaker count. One continuous audio master.
+
+## Captions and text that look designed
+
+- Per-word sync and a clear hierarchy: a stable phrase on screen with the active word highlighted, instead of
+  text that jumps on every word. Short entrances (fade, lift, pop) and a single typeface family per piece.
+- Modes by tone: Creator (friendly, Reels/TikTok), Studio (clean, interviews/education), Editorial (warm,
+  stories), Impact (only punchlines and 1–4 word messages). Brand colour as an accent, not on all text.
+- Text, camera and sound are not animated at the same time: one accent per moment.
+- In Forge: `list_text_styles` → `preview_text_style` → `add_captions(style, accent, words)`; exact lyrics or script
+  with `align_text`. Skill `captions-and-titles`.
+- Sources: [School of Motion — typography for motion](https://schoolofmotion.com/blog/fonts-typefaces-typography-for-motion-design),
   [CapCut — types of captions](https://www.capcut.com/resource/types-of-captions),
   [TikTok — creative codes](https://ads.tiktok.com/business/en-US/creative-codes).
 
-## Criterio por género
+## Judgement by genre
 
-- **Comedia**: setup → pausa → remate → reacción. La pausa es parte del chiste; se corta después de la risa, nunca
-  durante el remate, y el remate no se anticipa en un título. SFX solo si suman.
-- **Música / videoclip**: la canción manda y no se toca. Cortes por frases (4–8 beats), motivos visuales que vuelven en
-  el estribillo; la letra con tiempos reales, no transcripción de canto.
-- **Electrónica**: contraste build / drop / breakdown. Más cortes y movimiento solo en el drop confirmado al oído;
-  el breakdown respira. Sin flashes a pantalla completa.
-- **Entrevista / podcast**: respetar el sentido de cada respuesta y las reacciones reales; música de fondo bajo la voz
-  (−20 dB al hablar) y cortes cubiertos con B-roll relevante.
-- **Cine / narrativo**: cortes motivados por la historia y la dirección de pantalla, nunca por un temporizador.
-- Los detectores (pausas, energía, beats) dan **candidatos con evidencia**; el editor confirma viendo o escuchando.
-  Detalle operativo: skill `editorial-direction`.
+- **Comedy**: setup → pause → punchline → reaction. The pause is part of the joke; cut after the laugh, never
+  during the punchline, and never give the punchline away in a title. SFX only if they add.
+- **Music / music video**: the song rules and is not touched. Cuts on phrases (4–8 beats), visual motifs that return in
+  the chorus; lyrics with real timings, not sung-speech transcription.
+- **Electronic**: build / drop / breakdown contrast. More cuts and movement only on the drop confirmed by ear;
+  the breakdown breathes. No full-screen flashes.
+- **Interview / podcast**: respect the meaning of each answer and real reactions; background music under the voice
+  (−20 dB while speaking) and cuts covered with relevant B-roll.
+- **Film / narrative**: cuts motivated by the story and screen direction, never by a timer.
+- Detectors (pauses, energy, beats) give **candidates with evidence**; the editor confirms by watching or listening.
+  Operational detail: skill `editorial-direction`.
 
-## Zoom en DaVinci Resolve
+## Finishing
 
-- **Dynamic Zoom** (Inspector): zoom lineal o con ease sin keyframes; rápido para un push por clip.
-- **Keyframes** en Zoom/Position: control total del encuadre.
-- **Fusion Transform**: Size + Center/Pivot con keyframes, para curvas finas.
-- Fuentes: [Ripple Training — Dynamic Zoom](https://www.rippletraining.com/blog/davinci-resolve/use-dynamic-zoom-davinci-resolve-12-5/),
+- Dialogue first: gentle high-pass, compression and a limiter on a new file; measure LUFS/true peak and listen at
+  comparable volume. No promise of separating voices or repairing distortion.
+- Color: match shots and correct exposure/balance before any look; a creative LUT is not a Log/HDR conversion.
+  Compare same-time frames; reject orange skin, crushed blacks and clipped highlights. Skill `color-audio-finishing`.
+
+## Zoom in DaVinci Resolve
+
+- **Dynamic Zoom** (Inspector): linear or eased zoom without keyframes; quick for a push per clip.
+- **Keyframes** on Zoom/Position: full control of the framing.
+- **Fusion Transform**: Size + Center/Pivot with keyframes, for fine curves.
+- Sources: [Ripple Training — Dynamic Zoom](https://www.rippletraining.com/blog/davinci-resolve/use-dynamic-zoom-davinci-resolve-12-5/),
   [FireCut — fastest zoom](https://firecut.ai/blog/the-fastest-way-to-zoom-in-davinci-resolve/),
   [Miracamp — resize guide](https://www.miracamp.com/learn/davinci-resolve/how-to-resize-frames-and-videos-in-davinci-resolve).
 
-## Safe zones 1080×1920
+## 1080×1920 safe zones
 
-- TikTok: 240 px arriba, 660 px abajo y 120 px a cada lado, más los botones del rail derecho.
-- Reels: 269 px arriba, 672 px abajo y 65 px a los lados.
-- Son cifras conservadoras (nivel ads); en orgánico el overlay tapa algo menos.
-- Fuentes: [House of Marketers — safe zones](https://www.houseofmarketers.com/guide-to-safe-zones-tiktok-facebook-instagram-stories),
+- TikTok: 240 px top, 660 px bottom and 120 px on each side, plus the right-rail buttons.
+- Reels: 269 px top, 672 px bottom and 65 px on the sides.
+- These are conservative (ads-level) figures; in organic posts the overlay covers slightly less.
+- Sources: [House of Marketers — safe zones](https://www.houseofmarketers.com/guide-to-safe-zones-tiktok-facebook-instagram-stories),
   [Reap — short-form safe zones](https://reap.video/blog/short-form-video-safe-zones),
   [Upload-Post — checker](https://www.upload-post.com/tools/safe-zone-checker/).
 
-## Export y loudness
+## Export and loudness
 
-- YouTube: −14 LUFS integrado y −1 dBTP (solo baja el volumen de lo que esté más fuerte). TikTok/Reels: alrededor de −10 a −12 LUFS.
-- H.264 High: 1080p a 12–16 Mbps, 4K a 35–45 Mbps, Shorts/Reels a 10–14 Mbps. 30 fps para talking head con subtítulos.
-- Shorts se reproduce como máximo a 1080p.
-- Fuentes: [The Post Flow — export settings](https://thepostflow.com/post-production/post-production-workflows/export-settings-youtube-instagram-tiktok/),
+- YouTube: −14 LUFS integrated and −1 dBTP (it only turns down what is louder). TikTok/Reels: around −10 to −12 LUFS.
+- H.264 High: 1080p at 12–16 Mbps, 4K at 35–45 Mbps, Shorts/Reels at 10–14 Mbps. 30 fps for a captioned talking head.
+- Shorts plays at 1080p at most.
+- Sources: [The Post Flow — export settings](https://thepostflow.com/post-production/post-production-workflows/export-settings-youtube-instagram-tiktok/),
   [Influenceflow — specs 2026](https://influenceflow.io/resources/the-ultimate-social-media-video-specs-guide-2026-edition/).
 
-## Portabilidad de agentes
+## Agent portability
 
-- `AGENTS.md` estandariza el contexto de proyecto. `SKILL.md` (agentskills.io) lo leen más de 30 herramientas
-  (Claude Code, Codex, Cursor, Gemini CLI…). `.agents/skills/` es la convención de interoperabilidad.
-  El formato es común; las rutas de instalación y el autoload todavía varían, de ahí `scripts/sync.py`.
-- Fuentes: [Agent Skills open standard (D. Vaughan)](https://codex.danielvaughan.com/2026/05/05/agent-skills-open-standard-portable-skills-codex-cli-cross-agent/),
+- `AGENTS.md` standardises project context. `SKILL.md` (agentskills.io) is read by more than 30 tools
+  (Claude Code, Codex, Cursor, Gemini CLI…). `.agents/skills/` is the interoperability convention.
+  The format is shared; install paths and autoload still vary, hence `scripts/sync.py`.
+- Sources: [Agent Skills open standard (D. Vaughan)](https://codex.danielvaughan.com/2026/05/05/agent-skills-open-standard-portable-skills-codex-cli-cross-agent/),
   [mcp.directory — cross-agent skills](https://mcp.directory/blog/cross-agent-skills-cursor-codex-cline-antigravity-gemini-mastra-portability).

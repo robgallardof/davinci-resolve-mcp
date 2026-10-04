@@ -14,4 +14,4 @@ try {
     uv run python (Join-Path $taskRoot "scripts/sync.py")
     if ($LASTEXITCODE -ne 0) { throw "Config sync failed" }
 } finally { Pop-Location }
-Write-Host "Listo. Free: Workspace > Scripts > resolve_bridge. Pide forge_status."
+Write-Host "Done. Free: Workspace > Scripts > resolve_bridge. Then ask your agent for forge_status."

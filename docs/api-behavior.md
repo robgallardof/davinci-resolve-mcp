@@ -1,36 +1,37 @@
-# Comportamientos de Resolve que Forge debe respetar
+# Resolve behaviours Forge must respect
 
-- DuplicateTimeline puede mover el timeline current; los servicios crean una copia nueva y seleccionan explícitamente el destino.
-- AppendToTimeline usa endFrame exclusivo y recordFrame absoluto; las decisiones editoriales de herramientas usan segundos y se convierten una sola vez.
-- Fusion: los valores escritos bajo comp.Lock pueden leerse pero no afectar el render. El lock se reserva para estructura; SetInput se ejecuta tras Unlock.
-- Fusion SetInput puede devolver None aunque aplique el cambio: se verifica con GetInput; False o un valor distinto se reportan como fallo.
-- Las capacidades se observan por métodos y retornos, no por asumir que un número de versión o Studio basta.
-- En Free el bridge transporta JSON. Los objetos remotos son handles; no se usan indexadores de tools ni argumentos keyword en métodos nativos.
-- Render: CustomName no vacío, SaveProject previo, codecs dependientes de edición/hardware, archivos bajo las raíces del bridge.
-- Marcadores de timeline usan frames relativos a su inicio; los recordFrame de assembly son absolutos.
-- Audio: AppendToTimeline con mediaType=2 coloca solo audio y mediaType=1 solo video (montajes con música maestra
-  continua). No hay un método documentado y verificado para el volumen de un clip, así que la ganancia de SFX y el
-  ducking de música se hornean en un WAV nuevo (ffmpeg/numpy) y se colocan en pistas de audio nuevas.
-- Rangos de audio: el startFrame/endFrame de un clip de audio usa el FPS que reporta el clip (o el del timeline);
-  el redondeo a frames puede mover un corte al beat hasta un frame.
+- DuplicateTimeline can move the current timeline; services create a new copy and select the target explicitly.
+  It copies each clip's Fusion comps (tools, values and connections).
+- AppendToTimeline uses an exclusive endFrame and an absolute recordFrame; editorial decisions in tools use seconds and are converted once.
+- Fusion: values written under comp.Lock can be read back but do not affect the render. The lock is reserved for structure; SetInput runs after Unlock.
+- Fusion SetInput can return None even when it applies the change: it is verified with GetInput; False or a different value is reported as a failure.
+- Fusion motion only edits comps that contain MediaIn/MediaOut, ForgeMotion and its splines; comps with other effects are refused (BACKEND_UNSUPPORTED) and preserved.
+- Capabilities are observed through methods and return values, never assumed from a version number or Studio.
+- In Free the bridge carries JSON. Remote objects are handles; no tool indexers or keyword arguments on native methods.
+- Render: non-empty CustomName, SaveProject first, codecs depend on edition/hardware, files under the bridge roots.
+- Timeline markers use frames relative to its start; assembly recordFrames are absolute.
+- Audio: AppendToTimeline with mediaType=2 places audio only and mediaType=1 video only (montages with a continuous
+  music master). There is no documented, verified method for a clip's volume, so SFX gain and music ducking
+  are baked into a new WAV (ffmpeg/numpy) and placed on new audio tracks.
+- Audio ranges: an audio clip's startFrame/endFrame uses the FPS the clip reports (or the timeline's);
+  rounding to frames can move a beat cut by up to one frame.
+- Frame rate: a new timeline inherits the PROJECT rate (often 24 fps). With useCustomSettings=1 and before
+  adding clips, timelineFrameRate is set to the standard rate closest to the source (a phone reports 29.92 → 30).
+- Image sequences (text/caption cards) are imported at the PROJECT rate: on a 30 fps timeline
+  inside a 24 fps project they lasted 1.25× and the animation was slow. SetClipProperty("FPS") is set to the timeline
+  rate after import (Resolve 21 Free accepts it) and, otherwise, endFrame is recomputed.
+- Bridge in Free: scripts run in fuscript.exe and Resolve objects only respond on the script's thread.
+  Calls are queued to the main thread. An orphaned fuscript from a previous Resolve session can hold the
+  port (every object returns empty): the bridge exits on its own when its Resolve stops responding, and `health`
+  reports `root_type`. Diagnosis: the process listening on the port vs Resolve's start time; `repair_bridge_connection` automates it.
+- While Resolve plays the timeline (or renders, or has a dialog open) it does not serve script calls:
+  the bridge blocks inside the call (the native API holds the GIL, so not even `health` responds).
+  Stopping playback resolves it; Forge reports it as RESOLVE_BUSY instead of "cannot reach".
+- Native proxies can return an empty dir(): the method list is probed against the allowlist.
+- OpenCV 5 removed CascadeClassifier: `vision` pins opencv<5 and the face anchor falls back to the default position if missing.
 
-- Frame rate: un timeline nuevo hereda el rate del PROYECTO (a menudo 24 fps). Con useCustomSettings=1 y antes de
-  añadir clips se fija timelineFrameRate al rate estándar más cercano a la fuente (un móvil reporta 29.92 → 30).
-- Secuencias de imágenes (tarjetas de texto/subtítulos) se importan al rate del PROYECTO: en un timeline de 30 fps
-  dentro de un proyecto de 24 duraban 1.25× y la animación iba lenta. Se fija SetClipProperty("FPS") al rate del
-  timeline tras importar (Resolve 21 Free lo acepta) y, si no, se recalcula endFrame.
-- Bridge en Free: los scripts corren en fuscript.exe y los objetos de Resolve solo responden en el hilo del script.
-  Las llamadas se encolan al hilo principal. Un fuscript huérfano de una sesión anterior de Resolve puede retener el
-  puerto (todos los objetos devuelven vacío): el bridge sale solo cuando su Resolve deja de responder, y `health`
-  informa `root_type`. Diagnóstico: proceso que escucha en el puerto vs hora de inicio de Resolve.
-- Mientras Resolve reproduce el timeline (o renderiza, o tiene un diálogo abierto) no atiende llamadas de script:
-  el bridge queda bloqueado dentro de la llamada (la API nativa retiene el GIL, así que ni `health` responde).
-  Se resuelve deteniendo la reproducción; Forge lo informa como "Resolve is busy" en vez de "cannot reach".
-- Proxies nativos pueden devolver dir() vacío: la lista de métodos se sondea contra la allowlist.
-- OpenCV 5 eliminó CascadeClassifier: `vision` fija opencv<5 y el ancla de cara cae a la posición por defecto si falta.
+Matching guards: tests/unit/test_bridge.py, test_edit_decisions.py, tests/integration/test_authoring_tools.py and test_story_and_beat_tools.py; render/Fusion are also covered by the live suite.
 
-Guardas correspondientes: tests/unit/test_bridge.py, test_edit_decisions.py, tests/integration/test_authoring_tools.py y test_story_and_beat_tools.py; render/Fusion cuentan además con la suite live existente.
+### WAV without Frames in Free 21 (2026-10-04)
 
-### WAV sin Frames en Free 21 (2026-10-04)
-
-En la prueba live de producción, un WAV PCM importado devolvió Frames vacío. No significa duración cero: SFX lee getnframes/framerate del archivo WAV y convierte a FPS de fuente, y convierte aparte la duración de lanes a FPS de timeline. Ver test_live_production.py.
+In the live production test, an imported PCM WAV returned empty Frames. It does not mean zero duration: SFX reads getnframes/framerate from the WAV file and converts to the source FPS, and separately converts lane duration to the timeline FPS. See test_live_production.py.

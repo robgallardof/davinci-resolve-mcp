@@ -24,13 +24,13 @@ class TextDesign:
 
 
 DESIGNS = {d.name: d for d in (
-    TextDesign("creator", "Creator · cercano y dinámico", "Voz, tutoriales y Reels: palabra activa en lima, entrada pop breve.",
+    TextDesign("creator", "Creator · friendly and dynamic", "Voice, tutorials and Reels: active word in lime, brief pop entrance.",
                "#C7F464", "pop", True, 3, "tiktok_smooth", 0.8),
-    TextDesign("studio", "Studio · limpio y profesional", "Entrevistas y educación: blanco sobre placa oscura, acento lavanda y lift suave.",
+    TextDesign("studio", "Studio · clean and professional", "Interviews and education: white on a dark plate, lavender accent and gentle lift.",
                "#B8A4FF", "lift", True, 4, "youtube_dynamic", 0.7),
-    TextDesign("editorial", "Editorial · cálido y discreto", "Historias y contenido pausado: crema, subrayado de énfasis y fade corto.",
+    TextDesign("editorial", "Editorial · warm and discreet", "Stories and calm content: cream, emphasis underline and short fade.",
                "#FFD19A", "fade", False, 5, "warm_push", 0.7),
-    TextDesign("impact", "Impact · enérgico", "Remates y mensajes breves: mayúsculas, acento coral y pop contenido.",
+    TextDesign("impact", "Impact · energetic", "Punchlines and short messages: uppercase, coral accent and restrained pop.",
                "#FF916F", "pop", True, 2, "tiktok_punch", 0.8, True),
 )}
 LEGACY_STYLES = ("box", "outline", "yellow", "dark")

@@ -1,39 +1,39 @@
 ---
 name: color-audio-finishing
-description: "Acabar audio, color y LUT de una edición en DaVinci Resolve: presets suaves, mezcla inteligible, medición LUFS/true peak y comparación visual. Úsala para mejorar sonido, aplicar looks/LUT o preparar el acabado que encarga el productor."
+description: "Finish the audio, color and LUTs of an edit in DaVinci Resolve: gentle presets, intelligible mix, LUFS/true-peak measurement and visual comparison. Use it to improve sound, apply looks/LUTs or prepare the finishing the producer commissions. Triggers (EN/ES): improve audio, color grade, LUT, look, mix, 'mejorar audio', 'colores', 'presets'."
 ---
 
-# Acabado de audio y color
+# Audio and color finishing
 
-El productor fija género y referencia; esta especialización mejora la legibilidad de voz e imagen y devuelve
-evidencia de comparación. Usa `davinci-resolve-mcp` y `forge_status`; modifica copias y escribe archivos nuevos.
+The producer sets genre and reference; this specialisation improves the legibility of voice and image and returns
+comparison evidence. Use `davinci-resolve-mcp` and `forge_status`; modify copies and write new files.
 
 ## Audio
 
-- Escucha voz, música y SFX separados y juntos. `analyse_audio` mide; no demuestra inteligibilidad.
-- Para rumble y dinámica irregular: preview `enhance_audio(source, preset="dialogue"|"podcast"|"entertainment")`.
-  Revisa mediciones/filtros; `dry_run=false` escribe WAV 48 kHz/24 bits nuevo. Escucha antes/después a volumen
-  comparable. No elimina reverberación, separa voces ni recupera audio ya saturado. Importa/reemplaza la fuente
-  solo sobre una versión si la escucha confirma mejora; no desplaza sus tiempos.
-- `add_music_bed` conserva voz clara mediante ducking. SFX con motivo y ganancia moderada: `place_sound_effects`.
-- El limitador de `enhance_audio` controla picos, no entrega automáticamente el LUFS de plataforma. Mide la
-  mezcla final y usa `normalise_audio` con el objetivo de `list_formats`; comprueba el WAV final y escucha.
+- Listen to voice, music and SFX separately and together. `analyse_audio` measures; it does not prove intelligibility.
+- For rumble and uneven dynamics: preview `enhance_audio(source, preset="dialogue"|"podcast"|"entertainment")`.
+  Review measurements/filters; `dry_run=false` writes a new 48 kHz/24-bit WAV. Listen before/after at comparable
+  volume. It does not remove reverb, separate voices or recover already-distorted audio. Import/replace the source
+  only on a version and only if listening confirms the improvement; it does not shift timing.
+- `add_music_bed` keeps the voice clear with ducking. Motivated SFX at moderate gain: `place_sound_effects`.
+- The `enhance_audio` limiter controls peaks; it does not automatically deliver the platform LUFS. Measure the
+  final mix and use `normalise_audio` with the target from `list_formats`; check the final WAV and listen.
 
-## Color, presets y LUT
+## Color, presets and LUTs
 
-- Antes del look, comprueba gestión de color y espacio de entrada. Un preset creativo no convierte Log/HDR a SDR.
-  Si no sabes la cámara/espacio, inspecciona metadata y referencia antes de aplicar una conversión.
-- `review_shots`/`review_video` orientan exposición y dominante; confirma visualmente piel, blancos y altas luces.
-- `apply_grade_preset(preset="natural"|"warm"|"crisp"|"muted", intensity=.5)` es preview. Aplica solo tras comparar:
-  `dry_run=false` crea copia y reemplaza CDL del nodo 1. No acumules varias correcciones sobre el master.
-- LUT del usuario: `prepare_lut` valida la tabla y permite mezcla con identidad; conserva la original.
-  Lee su espacio de entrada/salida. Una LUT creativa y una conversión técnica no son intercambiables.
-  Usa `grade_clips`/`inspect_grade` según sus schemas y comprueba readback, sin afirmar que demuestra buen color.
-- Compara frames del mismo tiempo antes/después. Rechaza piel naranja, negros empastados, altas luces recortadas
-  o saturación que reduce legibilidad. No fuerces una LUT cuando un CDL suave basta.
+- Before any look, check color management and input space. A creative preset does not convert Log/HDR to SDR.
+  If you do not know the camera/space, inspect metadata and the reference before applying a conversion.
+- `review_shots`/`review_video` guide exposure and cast; confirm skin, whites and highlights visually.
+- `apply_grade_preset(preset="natural"|"warm"|"crisp"|"muted", intensity=.5)` is a preview. Apply only after comparing:
+  `dry_run=false` creates a copy and replaces node 1's CDL. Do not stack corrections on the master.
+- User LUT: `prepare_lut` validates the table and can blend with identity; it keeps the original.
+  Read its input/output space. A creative LUT and a technical conversion are not interchangeable.
+  Use `grade_clips`/`inspect_grade` per their schemas and check readback, without claiming it proves good color.
+- Compare same-time frames before/after. Reject orange skin, crushed blacks, clipped highlights
+  or saturation that hurts legibility. Do not force a LUT when a gentle CDL is enough.
 
-## Cierre
+## Wrap-up
 
-`preflight_render(format)` debe quedar sin errores técnicos pendientes. Mira la hoja de encuadres, escucha
-la mezcla y verifica texto/carátulas/safe zones antes de guardar y renderizar. Después usa `review_video`, mira
-la hoja y mide el audio del archivo final. Reporta qué mediste y qué revisaste con ojos/oídos.
+`preflight_render(format)` must end with no open technical errors. Look at the framing sheet, listen to
+the mix and verify text/cards/safe zones before saving and rendering. Afterwards use `review_video`, look at
+the sheet and measure the final file's audio. Report what you measured and what you checked with eyes/ears.

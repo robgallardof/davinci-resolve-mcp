@@ -1,87 +1,87 @@
 ---
 name: editorial-direction
-description: "Criterio de productor y editor profesional por género en DaVinci Resolve: comedia (setup, pausa, remate, reacción), videoclips y música electrónica (frases, build/drop, cortes al beat), entrevistas, cine/narrativo, educación, producto, gaming y vlog. Úsala antes de cortar cualquier pieza con intención: cuando pidan 'que se vea profesional', 'no robótico', 'mejora mi idea', video para una canción, visualizer, edición de comedia, detectar partes graciosas o los mejores momentos, o subtítulos bonitos acordes al tono."
+description: "Professional producer and editor judgement by genre in DaVinci Resolve: comedy (setup, pause, punchline, reaction), music videos and electronic music (phrases, build/drop, cuts on the beat), interviews, film/narrative, education, product, gaming and vlog. Use it before cutting any piece with intent: when asked to 'make it look professional', 'not robotic', 'improve my idea', a video for a song, a visualizer, a comedy edit, finding the funny parts or best moments, or nice captions that match the tone. Spanish triggers: 'que se vea profesional', 'no robótico', 'mejora mi idea', 'partes graciosas', 'subtítulos bonitos'."
 ---
 
-# Dirección editorial por género
+# Editorial direction by genre
 
-Eres productor además de editor: entiendes la idea, la mejoras y la ejecutas. Las herramientas miden; tú decides.
-Ningún pico de audio es un chiste ni un drop hasta que lo ves o lo escuchas.
+You are a producer as well as an editor: you understand the idea, improve it and execute it. Tools measure; you decide.
+No audio peak is a joke or a drop until you have seen or heard it.
 
-## Flujo
+## Flow
 
-1. **Brief**: qué quiere provocar la pieza (risa, ganas de bailar, confianza, aprender), para quién y dónde.
-   Si la idea es floja, propón una mejora concreta (un hook más fuerte, otro orden, un remate visual) antes de cortar.
-2. **Evidencia**:
-   - Voz (comedia, entrevista, educación, vlog, gaming, producto, cine): `find_story_moments(source, content_type)`.
-     Devuelve candidatos con evidencia: pausa antes de una línea corta (remate), audio sin voz justo después
-     (risa/reacción), preguntas y palabras acentuadas. Tiempos en segundos de la FUENTE.
-   - Música: `analyse_music(source)` → BPM, confianza, beats y cambios de energía (candidatos, no drops confirmados).
-3. **Revisa cada candidato** (mira/escucha). Quédate solo con los reales y pásalos con tu motivo:
+1. **Brief**: what the piece should provoke (laughter, the urge to dance, trust, learning), for whom and where.
+   If the idea is weak, propose a concrete improvement (a stronger hook, another order, a visual punchline) before cutting.
+2. **Evidence**:
+   - Voice (comedy, interview, education, vlog, gaming, product, film): `find_story_moments(source, content_type)`.
+     Returns candidates with evidence: a pause before a short line (punchline), voiceless audio right after
+     (laugh/reaction), questions and stressed words. Times in SOURCE seconds.
+   - Music: `analyse_music(source)` → BPM, confidence, beats and energy changes (candidates, not confirmed drops).
+3. **Review every candidate** (watch/listen). Keep only the real ones and pass them with your reason:
    `plan_edit(brief, content_type, platform, duration_s, moments=[{time_s, kind, reason}])`.
-   Te devuelve dirección, qué evitar, estilo de subtítulos y de motion, y las tools del flujo.
-4. **Corte** (para entretener, aplica además la skill `entertainment-pacing`: `plan_energized_edit` → `energize_timeline`):
-   - Voz: `assemble_timeline(source, cuts=[[ini, fin], ...], name, format)` protegiendo cada bloque completo.
-   - Música: `plan_beat_cuts(music_source, shots, duration_s, beats_per_cut, intense=[[ini, fin]])` y luego
+   It returns direction, what to avoid, caption and motion styles, and the tools for the flow.
+4. **Cut** (for entertainment also apply the `entertainment-pacing` skill: `plan_energized_edit` → `energize_timeline`):
+   - Voice: `assemble_timeline(source, cuts=[[start, end], ...], name, format)` protecting each complete block.
+   - Music: `plan_beat_cuts(music_source, shots, duration_s, beats_per_cut, intense=[[start, end]])` then
      `assemble_montage(shots, name, format, music_source, music_start_s, dry_run=false)`.
-5. **Movimiento, texto y sonido** acordes al tono (abajo), sin apilar efectos: un acento por momento.
-   SFX solo en momentos confirmados y con motivo: `place_sound_effects(cues=[{time_s, source, reason}])`
-   (primero en preview; atiende sus avisos de densidad). Usa sonidos con licencia del usuario.
-   Música de fondo bajo voz (entrevista, educación, vlog, producto): `add_music_bed(music_source)`; en videoclips no,
-   ahí la canción es la protagonista (`assemble_montage`).
-6. **QC**: `audit_timeline`, revisión visual de cada remate/drop y `render_for`.
+5. **Motion, text and sound** matching the tone (below), without stacking effects: one accent per moment.
+   SFX only on confirmed, motivated moments: `place_sound_effects(cues=[{time_s, source, reason}])`
+   (preview first; heed its density warnings). Use sounds the user has licensed.
+   Background music under voice (interview, education, vlog, product): `add_music_bed(music_source)`; not in music videos,
+   where the song is the star (`assemble_montage`).
+6. **QC**: `audit_timeline`, visual review of each punchline/drop and `render_for`.
 
-## Por género
+## By genre
 
-| Género | Protege | Ritmo | Texto / motion |
+| Genre | Protect | Pacing | Text / motion |
 |---|---|---|---|
-| **Comedia** | setup → pausa → remate → reacción. La pausa ES el chiste | Corta *después* de la risa, no durante el remate. Reacción solo si suma | `creator` o `impact` solo en el remate; `emphasis` con `hits_s` = remates confirmados. Nunca anticipes el chiste en un título. Sin SFX en cada broma |
-| **Música / videoclip** | La canción intacta (A1 continuo); letra con tiempos dados por el artista | Cortes en frases (4–8 beats), motivos visuales que vuelven en el estribillo | `editorial`; `warm_push` lento. Letra exacta: `align_text(source=<voz aislada, o la canción con focus_vocals=true>, text=<letra>, timeline_offset_s=-music_start_s)` → `add_captions(words=...)`. Whisper solo da tiempos |
-| **Electrónica** | Contraste build / drop / breakdown | Build: alarga planos y sube tensión; drop confirmado: `intense` con 1–2 beats por corte; breakdown: respira | `impact` corto en el drop; `tiktok_punch` solo ahí. Sin flashes a pantalla completa. Visualizer: `create_music_visualizer` |
-| **Entrevista / podcast** | Sentido de la respuesta, miradas, reacciones genuinas | Deja respirar respuestas emotivas; cubre cortes con B-roll relevante | `studio`; `youtube_dynamic` / `warm_push` |
-| **Cine / narrativo** | Dirección de pantalla, continuidad, silencios | Cortes motivados por la historia, nunca por un temporizador | `editorial`, sin animación o `fade` |
-| **Educación** | La demostración completa y las pausas que hacen falta para entender | Corta en ideas terminadas; muestra lo que se explica | `studio` (16:9) / `creator` (9:16) |
-| **Producto** | Beneficio primero, demo real, prueba legible, un solo CTA | Hook → problema → demo → prueba → CTA | `studio`; sin afirmaciones no verificadas |
-| **Gaming** | Contexto espacial, HUD legible, la jugada que explica el resultado | Acelera la espera, nunca la jugada | `creator`; subtítulos fuera del HUD (`position="top"` si el HUD está abajo) |
-| **Vlog** | Momentos auténticos, lugar | Alterna detalle y presencia; J/L cuts | `creator`; `vlog_mix` |
+| **Comedy** | setup → pause → punchline → reaction. The pause IS the joke | Cut *after* the laugh, not during the punchline. Reaction only if it adds | `creator` or `impact` only on the punchline; `emphasis` with `hits_s` = confirmed punchlines. Never give the joke away in a title. No SFX on every gag |
+| **Music / music video** | The song intact (continuous A1); lyrics with timing from the artist | Cuts on phrases (4–8 beats), visual motifs that return in the chorus | `editorial`; slow `warm_push`. Exact lyrics: `align_text(source=<isolated vocal, or the song with focus_vocals=true>, text=<lyrics>, timeline_offset_s=-music_start_s)` → `add_captions(words=...)`. Whisper only provides timing |
+| **Electronic** | Build / drop / breakdown contrast | Build: lengthen shots and raise tension; confirmed drop: `intense` with 1–2 beats per cut; breakdown: breathe | Short `impact` on the drop; `tiktok_punch` only there. No full-screen flashes. Visualizer: `create_music_visualizer` |
+| **Interview / podcast** | The meaning of the answer, eyelines, genuine reactions | Let emotional answers breathe; cover cuts with relevant B-roll | `studio`; `youtube_dynamic` / `warm_push` |
+| **Film / narrative** | Screen direction, continuity, silences | Cuts motivated by the story, never by a timer | `editorial`, no animation or `fade` |
+| **Education** | The complete demonstration and the pauses needed to understand | Cut on finished ideas; show what is being explained | `studio` (16:9) / `creator` (9:16) |
+| **Product** | Benefit first, real demo, legible proof, a single CTA | Hook → problem → demo → proof → CTA | `studio`; no unverified claims |
+| **Gaming** | Spatial context, legible HUD, the play that explains the outcome | Speed up the waiting, never the play | `creator`; captions away from the HUD (`position="top"` if the HUD is at the bottom) |
+| **Vlog** | Authentic moments, place | Alternate detail and presence; J/L cuts | `creator`; `vlog_mix` |
 
-## Varias personas (podcast, entrevista, dos en un sillón)
+## Several people (podcast, interview, two on a couch)
 
-Opción editorial, no regla ni efecto automático por cantidad de personas. El productor decide según referencia,
-historia, formato y legibilidad dentro del alcance autorizado; no pide permiso de nuevo para cambios reversibles
-de estilo ya incluidos en la edición. Para coordinar especialistas o interpretar collages de referencia, lee
+An editorial option, not a rule or an automatic effect based on the number of people. The producer decides from the
+reference, story, format and legibility within the authorised scope; do not ask permission again for reversible
+style changes already part of the edit. To coordinate specialists or interpret reference collages, read
 [references/producer-coordination.md](references/producer-coordination.md).
-- `plan_speaker_layout(source, format, mode)`: detecta a cada persona y quién habla (boca + voz).
-  - `auto`: propone encuadre según candidatos de hablante; inspecciona su resultado antes de aceptar divisiones.
-  - `split`: siempre dividido. `single`: siempre una persona.
-  - Apilado, cuadrícula o lado a lado son opciones del planner, no obligación del productor. Comprueba el schema
-    actual y legibilidad; puede convenir alternar primer plano, conservar grupo o usar apoyo visual.
-- Revisa los segmentos (sin parpadeos: mínimo 1.5 s por layout), luego `build_speaker_layout` (clip nuevo con el audio
-  original + timeline nuevo) y `review_video` antes de añadir subtítulos y textos.
-- Fuentes distintas en pantalla (varias tomas de la misma persona, entrevista + foto, reacción + B-roll):
-  `plan_composition(segments, audio_master)` → mira la hoja y el preview → `build_composition(..., reviewed=true)`.
-  Cada panel declara fuente, inicio y `subject` o `crop`; el audio maestro es uno y explícito. No inventes
-  simultaneidad ni reacciones: un collage es una decisión editorial, no una regla por número de fuentes.
-- Si la detección se equivoca, pasa `people` (cajas de cara) y `active` (quién habla y cuándo) a mano.
-- Dos personas en horizontal → Reel: `mode="single"` o `auto` para alternar al hablante; protege reacciones
-  relevantes. Tres, cuatro o cinco: `split` si el productor decide mostrar al grupo; no descartes la quinta cara.
-  Mantén caras completas y revisa el tamaño de cada panel. La detección por boca/energía no es diarización:
-  comprueba los cambios con la escucha, especialmente con risas/música o participantes móviles.
+- `plan_speaker_layout(source, format, mode)`: detects each person and who is speaking (mouth + voice).
+  - `auto`: proposes framing from speaker candidates; inspect its result before accepting splits.
+  - `split`: always split. `single`: always one person.
+  - Stacked, grid or side by side are planner options, not obligations for the producer. Check the current
+    schema and legibility; alternating close-ups, keeping the group or using visual support may work better.
+- Review the segments (no flicker: at least 1.5 s per layout), then `build_speaker_layout` (new clip with the original
+  audio + new timeline) and `review_video` before adding captions and text.
+- Different sources on screen (several takes of the same person, interview + photo, reaction + B-roll):
+  `plan_composition(segments, audio_master)` → look at the sheet and preview → `build_composition(..., reviewed=true)`.
+  Each panel declares source, start and `subject` or `crop`; the audio master is single and explicit. Do not invent
+  simultaneity or reactions: a collage is an editorial decision, not a rule based on the number of sources.
+- If detection is wrong, pass `people` (face boxes) and `active` (who speaks and when) by hand.
+- Two people in horizontal → Reel: `mode="single"` or `auto` to alternate to the speaker; protect relevant
+  reactions. Three, four or five: `split` if the producer decides to show the group; do not drop the fifth face.
+  Keep faces complete and check each panel's size. Mouth/energy detection is not diarization:
+  verify the switches by listening, especially with laughter/music or moving participants.
 
-## Subtítulos y textos que se vean bien
+## Captions and text that look good
 
-- `list_text_styles` → `preview_text_style(texto, style, width, height)` para revisar antes de quemar nada.
-- `add_captions(style="auto")`: Creator en vertical, Studio en horizontal. Estilos: `creator` (cercano, palabra
-  activa), `studio` (limpio), `editorial` (cálido, discreto), `impact` (remates y mensajes breves).
-- Color de marca con `accent="#RRGGBB"`; `emphasis_words` solo para las palabras que importan.
-- Texto exacto: si hay guion o letra, `align_text(source, text)`; si no, corrige `transcribe_timeline(include_words=true)`.
-  En ambos casos pasa `words=` a `add_captions` antes de quemar.
-- `reduced_motion=true` para contenido sereno o accesible. Los estilos legacy (`box`, `outline`, `yellow`, `dark`) solo si el usuario los pide.
-- `animation="karaoke"` anima un subrayado de progreso por palabra usando sus tiempos reales, sin saltar glifos.
-  Revisa preview; conserva pausas. Para acabado de mezcla y LUT encarga `color-audio-finishing`.
+- `list_text_styles` → `preview_text_style(text, style, width, height)` to review before burning anything.
+- `add_captions(style="auto")`: Creator in vertical, Studio in horizontal. Styles: `creator` (friendly, active
+  word), `studio` (clean), `editorial` (warm, discreet), `impact` (punchlines and short messages).
+- Brand color with `accent="#RRGGBB"`; `emphasis_words` only for the words that matter.
+- Exact text: if there is a script or lyrics, `align_text(source, text)`; otherwise correct `transcribe_timeline(include_words=true)`.
+  In both cases pass `words=` to `add_captions` before burning.
+- `reduced_motion=true` for calm or accessible content. Legacy styles (`box`, `outline`, `yellow`, `dark`) only if the user asks.
+- `animation="karaoke"` animates a per-word progress underline using real timings, without jumping glyphs.
+  Check the preview; keep pauses. For mix finishing and LUTs commission `color-audio-finishing`.
 
-## Qué no hacer
+## What not to do
 
-- Cortar cada 2 s "porque sí", zooms en cada frase o animar texto, cámara y SFX a la vez.
-- Etiquetar "drop", "chiste" o "momento emotivo" sin haberlo comprobado.
-- Estirar o reencuadrar el master musical sin pedirlo.
+- Cut every 2 s "just because", zoom on every sentence, or animate text, camera and SFX at once.
+- Label "drop", "joke" or "emotional moment" without having checked it.
+- Stretch or reframe the music master without being asked.

@@ -1,31 +1,31 @@
 ---
 name: resolve-delivery
-description: "Exportar desde DaVinci Resolve (Free o Studio) con las specs correctas para cualquier plataforma vertical u horizontal — TikTok, Reels, Facebook, Shorts, Stories, Snapchat, YouTube, LinkedIn, X, web: formato, codec, bitrate, loudness LUFS, ruta de salida y verificación del archivo. Úsala cuando pidan render, exportar, entregar, subir, deliver, specs o loudness."
+description: "Export from DaVinci Resolve (Free or Studio) with the right specs for any vertical or horizontal platform — TikTok, Reels, Facebook, Shorts, Stories, Snapchat, YouTube, LinkedIn, X, web: format, codec, bitrate, LUFS loudness, output path and file verification. Use it when asked to render, export, deliver, upload, specs or loudness."
 ---
 
 # Delivery
 
-Specs de cada plataforma: `references/platforms.md`. Se genera desde el código, así que es la fuente de verdad.
-También está disponible en vivo con `list_formats`.
+Specs for each platform: `references/platforms.md`. It is generated from the code, so it is the source of truth.
+It is also available live via `list_formats`.
 
-## Pasos
+## Steps
 
-1. `forge_status`: el timeline correcto, a la resolución del formato destino. Si no coincide, usa primero `make_platform_version`.
-   Varias plataformas con la misma resolución (por ejemplo TikTok, Reels y Shorts) pueden salir del mismo timeline.
-2. Loudness en Fairlight (con `resolve-forge` o a mano): el target está en la columna LUFS (−12 a −14) y el true peak en −1 dBTP.
+1. `forge_status`: the right timeline, at the target format's resolution. If it does not match, use `make_platform_version` first.
+   Several platforms with the same resolution (e.g. TikTok, Reels and Shorts) can come from the same timeline.
+2. Loudness in Fairlight (with `resolve-forge` or by hand): the target is in the LUFS column (−12 to −14) and true peak at −1 dBTP.
    Studio: Deliver → Audio → Normalize Audio.
-3. `preflight_render(format)` y revisión visual/escucha: corrige errores y revisa avisos. Guarda el proyecto.
-4. `render_for(format, name=...)`. Sin `target_dir` escribe en `~/Movies/resolve-forge`.
-   - **Free**: el bridge solo escribe dentro de `allowed_output_roots` (por defecto `~/Movies`). Usa subcarpetas de `~/Movies`
-     o agrega la ruta en `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\.davinci_mcp_runtime\bridge.json`.
-   - H.265 cae automáticamente a H.264 si tu edición o tu GPU no lo soportan.
-5. `render_status(job_id)` hasta `Complete`.
-6. Verifica el archivo: existe, tamaño > 0, resolución y duración. Con ffprobe:
-   `ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -of compact <archivo>`.
-7. Reporta la ruta y las specs reales de cada archivo.
+3. `preflight_render(format)` and a visual review/listen: fix errors and review warnings. Save the project.
+4. `render_for(format, name=...)`. Without `target_dir` it writes to `~/Movies/resolve-forge`.
+   - **Free**: the bridge only writes inside `allowed_output_roots` (by default `~/Movies`). Use subfolders of `~/Movies`
+     or add the path in `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\.davinci_mcp_runtime\bridge.json`.
+   - H.265 automatically falls back to H.264 if your edition or GPU does not support it.
+5. `render_status(job_id)` until `Complete`.
+6. Verify the file: exists, size > 0, resolution and duration. With ffprobe:
+   `ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -of compact <file>`.
+7. Report the path and the real specs of each file.
 
-## Trampas
+## Pitfalls
 
-- `SetRenderSettings` hereda el preset cargado en Deliver; `render_for` fija formato y codec antes de aplicarlo.
-- Un `CustomName` vacío invalida todo el payload (`render_for` siempre lo rellena).
-- Render a una carpeta fuera de las raíces permitidas en Free: error claro y la solución en el mensaje.
+- `SetRenderSettings` inherits the preset loaded in Deliver; `render_for` sets format and codec before applying it.
+- An empty `CustomName` invalidates the whole payload (`render_for` always fills it in).
+- Rendering to a folder outside the allowed roots in Free: a clear error with the fix in the message.
