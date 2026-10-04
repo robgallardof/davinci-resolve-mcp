@@ -1,5 +1,203 @@
 # davinci-agents
 
+**[English](#english)** · **[Español](#español)**
+
+<a id="english"></a>
+
+Edit video in **DaVinci Resolve** by talking to an AI agent. There are two specialised editors:
+
+- **vertical-editor**: TikTok, Instagram Reels, Facebook Reels, YouTube Shorts, Stories, Snapchat and 4:5 feed.
+- **horizontal-editor**: YouTube 1080p/4K, Facebook, LinkedIn, X, web/Vimeo, courses and podcasts.
+
+Both know how to **bring people on camera to life** (punch-ins, smooth zooms, emphasis bumps, handheld feel),
+convert between vertical and horizontal without losing the face, and export with each platform's specs.
+
+It works the same on **Resolve Free and Studio** (verified live on Free 21.0.4) and with any agent:
+Claude Code, Codex, Cursor, Gemini CLI and VS Code.
+
+> First time? Go straight to **[docs/FIRST-STEPS.md](docs/FIRST-STEPS.md)** (Spanish): your first edited video in 10 minutes.
+
+## Contents
+
+1. [What's inside](#whats-inside)
+2. [Requirements](#requirements)
+3. [Installation](#installation)
+4. [Connecting Resolve (Free or Studio)](#connecting-resolve-free-or-studio)
+5. [Daily use](#daily-use)
+6. [Agents and skills](#agents-and-skills)
+7. [resolve-forge tools](#resolve-forge-tools)
+8. [Motion styles](#motion-styles)
+9. [Platforms](#platforms)
+10. [Tests](#testing)
+11. [Troubleshooting](#troubleshooting)
+12. [Repository layout](#repository-layout)
+
+## What's inside
+
+| Piece | What it does |
+|---|---|
+| **`resolve-forge`** (our MCP) | Intent-level editing: motion for talking heads, platform versions (vertical ↔ horizontal), spec-correct renders. 11 tools |
+| **`davinci-resolve`** (upstream MCP, [samuelgursky](https://github.com/samuelgursky/davinci-resolve-mcp)) | The whole Resolve API: media pool, markers, color, Fairlight, Fusion, transcription, analysis. 37 tools |
+| **Agents** | `vertical-editor`, `horizontal-editor` and `video-director` (coordinates both) |
+| **Skills** | `vertical-video`, `horizontal-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp` |
+| **Doctor** | `resolve-forge-doctor`: checks the whole chain and tells you the next step |
+
+Why there are two MCPs, and how they compare with the other five that exist: [docs/mcp-landscape.md](docs/mcp-landscape.md).
+
+## Requirements
+
+- Windows 10/11 (macOS/Linux should work but are untested)
+- DaVinci Resolve **20 or 21**, Free or Studio
+  - Free **21.1+**: Blackmagic moved Python scripting to Studio, so the Python bridge no longer shows up in the menu
+- [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 by itself)
+- git
+- Optional: ffmpeg (silence detection and loudness in the upstream MCP)
+
+## Installation
+
+```powershell
+git clone https://github.com/robgallardof/davinci-resolve-mcp.git davinci-agents
+cd davinci-agents
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1   # upstream + venv + bridge + forge + configs
+```
+
+`bootstrap.ps1` does all of this, and is idempotent (safe to re-run):
+
+1. Clones the upstream MCP into `vendor/` and creates its venv with Python 3.12.
+2. Installs the **bridge** inside Resolve (Workspace → Scripts → `resolve_bridge`). This is what makes the Free edition work.
+3. Installs `resolve-forge` with face detection (opencv) and runs the tests.
+4. Runs `scripts/sync.py`, which generates every agent's MCP config and the skill/agent links.
+
+Check:
+
+```powershell
+cd mcp/resolve-forge
+uv run resolve-forge-doctor
+```
+
+## Connecting Resolve (Free or Studio)
+
+| | Free | Studio |
+|---|---|---|
+| Once | Nothing extra (bootstrap installed the bridge). Restart Resolve after installing | Preferences → System → General → *External scripting using* = **Local** |
+| Every time you open Resolve | Open a project → **Workspace → Scripts → resolve_bridge** | Nothing |
+| Transport | `bridge` | `direct` (or `bridge` if you start it) |
+
+The doctor tells you exactly what is missing.
+
+## Daily use
+
+1. Open Resolve with your project (on Free, start the bridge).
+2. Open your agent **inside the `davinci-agents` folder**:
+   - Claude Code: `claude` (approve the `.mcp.json` servers the first time)
+   - Codex: `codex` · Cursor / VS Code: open the folder · Gemini CLI: `gemini`
+3. Ask in plain language (English or Spanish):
+
+```text
+This podcast looks static. Give it subtle YouTube-style motion with emphasis at 0:42, 1:15 and 2:03.
+Make a Reels version of the current timeline with punch-ins at the start of every sentence and export it.
+From the master, make versions for TikTok, Shorts and LinkedIn 16:9.
+I have a vertical TikTok: turn it into 16:9 for YouTube with the face centered.
+```
+
+Files are written to `~/Movies/resolve-forge/` (on Free, the bridge only writes inside `~/Movies`).
+
+## Agents and skills
+
+They are portable: `.agents/` is the single source ([AGENTS.md](https://agents.md) + [Agent Skills](https://agentskills.io) standards).
+Claude Code sees them through `.claude/` (links); Codex, Cursor and Gemini read `AGENTS.md` and `.agents/skills`.
+
+| Agent | When | Skills |
+|---|---|---|
+| `vertical-editor` | 9:16 / 4:5: TikTok, Reels, FB Reels, Shorts, Stories, Snapchat, feed | `vertical-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp` |
+| `horizontal-editor` | 16:9: YouTube, Facebook, LinkedIn, X, web, courses, podcasts | `horizontal-video`, `dynamic-zoom-talking-head`, `resolve-delivery`, `davinci-resolve-mcp` |
+| `video-director` | Requests that mix orientations or several deliverables | Delegates to the two above |
+
+The agent and skill files are written in Spanish; agents follow them in any language.
+
+## resolve-forge tools
+
+| Tool | What it does |
+|---|---|
+| `forge_status` | Edition (Free/Studio), transport, version, project, timeline, fps, resolution and backends |
+| `list_clips` | Clips on a track with index, start, duration and zoom |
+| `list_styles` / `preview_motion` | Style catalogue and dry run without touching Resolve |
+| `apply_motion` | Animates clips: style, cuts/emphasis in seconds, intensity, anchor (face/center/point) |
+| `clear_motion` | Removes forge's animation |
+| `make_platform_version` | Duplicates the timeline into any format (vertical ↔ horizontal), keeping the subject in frame |
+| `locate_subject` | Where the face is in a clip |
+| `list_formats` | Per-platform specs, filterable by `orientation` |
+| `render_for` / `render_status` | Render with the platform's specs, and its progress |
+
+Technical details: [docs/architecture.md](docs/architecture.md).
+
+## Motion styles
+
+| Style | Effect | Best for |
+|---|---|---|
+| `tiktok_punch` | Hard 1.00↔1.15 jump-zooms every 2.5–3.5 s or on your cuts | Energetic vertical |
+| `tiktok_smooth` | Same, but each zoom eases in over 6 frames | Educational vertical, Stories |
+| `vlog_mix` | Push + punch-ins + handheld | Vertical vlogs |
+| `youtube_dynamic` | Subtle push + a punch every 6–9 s | Horizontal talking head |
+| `warm_push` / `warm_pull` | Slow, continuous eased push-in/out | Testimonials, emotional moments, endings |
+| `emphasis` | Zoom bump on key words (`hits_s`) | Numbers, punchlines |
+| `handheld` | Organic ±0.4° rotation with a safety zoom | Overly rigid tripod shots |
+
+`intensity` goes from 0.5 (subtle) to 1.5 (aggressive). Zooms are anchored to the face so the subject never "jumps".
+
+## Platforms
+
+14 formats: tiktok, reels, facebook_reels, shorts, stories, snapchat, feed_4x5, square, youtube_1080,
+youtube_4k, facebook_1080, linkedin_1080, x_1080 and web_1080. The full table with resolution, codec, bitrate,
+LUFS and safe zones is generated from code:
+[.agents/skills/resolve-delivery/references/platforms.md](.agents/skills/resolve-delivery/references/platforms.md).
+
+<a id="testing"></a>
+
+## Tests
+
+```powershell
+cd mcp/resolve-forge
+uv run pytest            # 132 tests without Resolve: domain, backends, every tool on Free/Studio/R19, stdio, workspace
+uv run pytest -m live    # end-to-end against your open Resolve (Free or Studio)
+```
+
+The `live` tests create a temporary `forge_live_*` project and generate synthetic clips. They apply motion through
+both backends, render, and **compare pixels** (large difference with motion, near zero after `clear_motion`).
+Then they build a 9:16 version, render it, check it is 1080×1920, delete the project and reopen yours.
+The upstream MCP is exercised live too.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `Cannot reach DaVinci Resolve` | Open a project. Free: Workspace → Scripts → resolve_bridge. Studio: Local scripting. Then run `resolve-forge-doctor` |
+| No *Scripts* under Workspace | You must be inside a project, not the Project Manager. If you just installed, restart Resolve |
+| Render refused on Free | Use a folder inside `~/Movies`, or add it to `allowed_output_roots` in the bridge's `bridge.json` |
+| Media import refused on Free | Media must live inside your user profile (not `AppData\Temp`) |
+| Motion uses `fusion`, not `keyframes` | Normal on Free 21.0.4: same result, verified at render time. The node is called `ForgeMotion` |
+| H.265 comes out as H.264 | Your edition or GPU lacks H.265; the fallback to H.264 is automatic |
+| The agent doesn't see the tools | Open the agent inside `davinci-agents/` and approve `.mcp.json`. If you moved the folder, run `uv run --no-project python scripts/sync.py` |
+
+## Repository layout
+
+```
+davinci-agents/
+├── AGENTS.md · CLAUDE.md · GEMINI.md   instructions for any agent
+├── .agents/skills/  .agents/agents/    skills and agents (single source)
+├── config/mcp.servers.json             single source for MCP servers → scripts/sync.py
+├── mcp/resolve-forge/                  our MCP (domain / services / tools / gateway) + tests
+├── vendor/                             upstream MCP (runs) + 6 reference MCPs (created by bootstrap)
+├── scripts/bootstrap.ps1 · sync.py     installation and config generation
+└── docs/                               first steps, install, architecture, landscape, playbook
+```
+
+---
+
+<a id="español"></a>
+
+# Español
+
 Edita video en **DaVinci Resolve** hablándole a un agente de IA. Hay dos editores especializados:
 
 - **vertical-editor**: TikTok, Instagram Reels, Facebook Reels, YouTube Shorts, Stories, Snapchat y feed 4:5.
@@ -26,7 +224,7 @@ Claude Code, Codex, Cursor, Gemini CLI y VS Code.
 7. [Tools de resolve-forge](#tools-de-resolve-forge)
 8. [Estilos de movimiento](#estilos-de-movimiento)
 9. [Plataformas](#plataformas)
-10. [Tests](#tests)
+10. [Tests](#tests-1)
 11. [Problemas comunes](#problemas-comunes)
 12. [Estructura del repo](#estructura-del-repo)
 
@@ -56,9 +254,9 @@ Por qué hay dos MCPs, y la comparación con los otros 5 que existen: [docs/mcp-
 ## Instalación
 
 ```powershell
-git clone <este repo> davinci-agents      # o copia la carpeta
+git clone https://github.com/robgallardof/davinci-resolve-mcp.git davinci-agents
 cd davinci-agents
-pwsh scripts/bootstrap.ps1                # upstream + venv + bridge en Resolve + forge + configs
+powershell -NoProfile -ExecutionPolicy Bypass -File scriptsootstrap.ps1   # upstream + venv + bridge + forge + configs
 ```
 
 `bootstrap.ps1` hace todo esto (es idempotente: puedes repetirlo):
@@ -173,7 +371,7 @@ Además se prueba el MCP upstream en vivo.
 | Import de media rechazado en Free | La media tiene que estar dentro de tu perfil de usuario (no en `AppData\Temp`) |
 | Motion usa `fusion` y no `keyframes` | Normal en Free 21.0.4: el resultado es el mismo y está verificado al render. El nodo se llama `ForgeMotion` |
 | H.265 sale como H.264 | Tu edición o GPU no soporta H.265; la caída a H.264 es automática |
-| El agente no ve las tools | Abre el agente dentro de `davinci-agents/` y aprueba `.mcp.json`. Si moviste la carpeta, ejecuta `python scripts/sync.py` |
+| El agente no ve las tools | Abre el agente dentro de `davinci-agents/` y aprueba `.mcp.json`. Si moviste la carpeta, ejecuta `uv run --no-project python scripts/sync.py` |
 
 ## Estructura del repo
 
