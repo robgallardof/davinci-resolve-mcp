@@ -71,5 +71,25 @@ def test_claude_code_sees_the_same_files():
 
 
 def test_entry_docs_exist():
-    for doc in ("AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "docs/FIRST-STEPS.md"):
+    for doc in ("AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "docs/FIRST-STEPS.md", "docs/mcp-reviews.md"):
         assert (ROOT / doc).is_file(), doc
+
+
+def test_third_party_patches_are_consistent():
+    """Every patch belongs to a pinned, licensed repo; none to an unlicensed one; no AI co-author trailers."""
+    import json
+
+    repos = {r["dir"]: r for r in json.loads((ROOT / "config" / "references.json").read_text(encoding="utf-8"))["repos"]}
+    assert len(repos) == 7
+    for name, repo in repos.items():
+        assert re.fullmatch(r"[0-9a-f]{40}", repo["base"]), f"{name}: base must be a full commit hash"
+    patch_dirs = {p.name for p in (ROOT / "patches").iterdir() if p.is_dir()}
+    assert patch_dirs <= set(repos), f"patches for unknown repos: {patch_dirs - set(repos)}"
+    for name in patch_dirs:
+        assert repos[name]["license"] == "MIT", f"{name}: only patch licensed code"
+        for patch in (ROOT / "patches" / name).glob("*.patch"):
+            text = patch.read_text(encoding="utf-8")
+            assert text.startswith("From 0000000000000000000000000000000000000000"), "export with --zero-commit"
+            assert "co-authored-by" not in text.lower()
+            assert re.search(r"^diff --git ", text, re.M), f"{patch.name} has no diff"
+    assert "ref-tooflex" not in patch_dirs  # no license: review only

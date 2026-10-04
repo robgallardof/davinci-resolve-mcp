@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: robgallardof <robgallardof@gmail.com>
+Date: Sat, 3 Oct 2026 23:07:29 -0600
+Subject: [PATCH] Make the project installable with uv; plain `pytest` works;
+ fix undefined ToolSchema
+
+- pyproject [tool.uv] conflicts: the `audio` extra (demucs 4.1.0, numpy<2 on
+  Intel macOS) and the `background-removal` extra (rembg 2.0.76, numpy>=2.3) can
+  never share an environment. uv refused to lock the project, so every
+  `uv sync` / `uv run` failed with "requirements are unsatisfiable". Declaring
+  the conflict lets uv resolve both extras separately.
+- pytest pythonpath = ["."]: the tests import `src.davinci_mcp`, so only
+  `python -m pytest` worked; plain `pytest` failed to collect all 5 files.
+- tools/__init__.py: import ToolSchema. It was used in an annotation without
+  being imported (ruff F821), and anything that resolves the type hints raised
+  NameError.
+
+78/78 tests pass with `uv run pytest`.
+---
+ pyproject.toml                    | 10 ++++++++++
+ src/davinci_mcp/tools/__init__.py |  1 +
+ 2 files changed, 11 insertions(+)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index 983bfd4..39aa8b5 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -29,8 +29,18 @@ background-removal = [
+ Repository = "https://github.com/kerwilgil/davinci-resolve-mcp"
+ Issues = "https://github.com/kerwilgil/davinci-resolve-mcp/issues"
+ 
++[tool.uv]
++# demucs 4.1.0 needs numpy<2 on Intel macOS while rembg 2.0.76 needs numpy>=2.3: the two
++# extras can never share an environment. Declaring the conflict lets uv lock and run the
++# project (before this, every `uv sync` / `uv run` failed with "requirements are unsatisfiable").
++conflicts = [
++    [{ extra = "audio" }, { extra = "background-removal" }],
++]
++
+ [tool.pytest.ini_options]
+ testpaths = ["tests"]
++# tests import `src.davinci_mcp...`: without this only `python -m pytest` worked, plain `pytest` failed
++pythonpath = ["."]
+ 
+ [tool.ruff]
+ target-version = "py311"
+diff --git a/src/davinci_mcp/tools/__init__.py b/src/davinci_mcp/tools/__init__.py
+index 65b19d2..4ed96be 100644
+--- a/src/davinci_mcp/tools/__init__.py
++++ b/src/davinci_mcp/tools/__init__.py
+@@ -9,6 +9,7 @@ from collections.abc import Callable
+ from ..schemas import (
+     ToolCategory,
+     ToolMode,
++    ToolSchema,
+     VERIFIED_TOOLS,
+     get_schema,
+     is_verified,

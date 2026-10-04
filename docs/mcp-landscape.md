@@ -12,12 +12,15 @@ Se revisaron los siete servidores públicos relevantes. Están clonados en `vend
 | [Tooflex/davinci-resolve-mcp](https://github.com/Tooflex/davinci-resolve-mcp) | 32 tools + 6 resources | Probe protegido del módulo nativo | Básico | Comprobar el proceso antes de cargar `fusionscript` (evita el segfault) |
 | [apvlv/davinci-resolve-mcp](https://github.com/apvlv/davinci-resolve-mcp) | ~1.3k líneas | Cadenas de nodos Fusion, `execute_python/lua` | Mínimo | — |
 
+> Además de estudiarlos, les arreglamos bugs reales (segfaults en Windows, tiempos de transcripción, rutas solo de
+> macOS, ejecución de código sin protección, mcp 2.x). Ver [mcp-reviews.md](mcp-reviews.md) y `patches/`.
+
 ## Hueco que cubre `resolve-forge`
 
 Ninguno ofrece **intención editorial**: "haz que esta persona no se vea estática", "versión TikTok de este master",
 "render para Reels". Todos exponen la API y dejan al agente la matemática (zoom de cobertura, compensar Pan/Tilt
 para que la cara no se mueva, easing, safe zones, offsets de comp de Fusion). `resolve-forge` encapsula eso en
-11 tools, con backends intercambiables y tests sin Resolve.
+16 tools, con backends intercambiables y tests sin Resolve.
 
 ## Decisión: componer en vez de forkear
 

@@ -30,8 +30,9 @@ Claude Code, Codex, Cursor, Gemini CLI and VS Code.
 9. [Platforms](#platforms)
 10. [Tests](#testing)
 11. [Troubleshooting](#troubleshooting)
-12. [Credits and what we improved](#credits-and-what-we-improved)
-13. [Repository layout](#repository-layout)
+12. [Improving the other MCPs](#improving-the-other-mcps)
+13. [Credits and what we improved](#credits-and-what-we-improved)
+14. [Repository layout](#repository-layout)
 
 ## What's inside
 
@@ -64,7 +65,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1   # up
 
 `bootstrap.ps1` does all of this, and is idempotent (safe to re-run):
 
-1. Clones the upstream MCP into `vendor/` and creates its venv with Python 3.12.
+1. Fetches the upstream MCP at its pinned commit into `vendor/`, applies our patch (`scripts/references.py`) and
+   creates its venv with Python 3.12.
 2. Installs the **bridge** inside Resolve (Workspace → Scripts → `resolve_bridge`). This is what makes the Free edition work.
 3. Installs `resolve-forge` with face detection (opencv) and runs the tests.
 4. Runs `scripts/sync.py`, which generates every agent's MCP config and the skill/agent links.
@@ -188,6 +190,31 @@ The upstream MCP is exercised live too.
 | H.265 comes out as H.264 | Your edition or GPU lacks H.265; the fallback to H.264 is automatic |
 | The agent doesn't see the tools | Open the agent inside `davinci-agents/` and approve `.mcp.json`. If you moved the folder, run `uv run --no-project python scripts/sync.py` |
 
+## Improving the other MCPs
+
+We didn't only borrow ideas. We downloaded the seven public Resolve MCPs, reviewed them and **fixed real bugs in
+their code**. Each bug was reproduced first and verified after, on Windows 11 + Resolve 21.0.4. The fixes are
+`git format-patch` files in [`patches/`](patches), ready to send upstream as pull requests:
+
+| Repo | What we fixed |
+|---|---|
+| samuelgursky | Bridge installer crashed on cp1252 Windows consoles (the step Free users run) |
+| hiteshK03 | `transcribe_timeline` returned the first clip's source times; transcription crashed on recent PyAV; breaks with mcp 2.x |
+| DigitalWorkflowCompany | macOS-only paths (now Windows/Linux too), Windows venv segfault, misleading errors, mcp 2.x |
+| apvlv | Segfault on start on Windows, unrestricted `execute_python`/`execute_lua` (now opt-in, isolated), mcp 2.x |
+| kerwilgil | Could not be installed with uv (conflicting extras), plain `pytest` broken, undefined name |
+| lordhoell | Segfault on connect on Windows, `comp_lock` render trap documented, mcp 2.x |
+
+From a clean clone, all 6 patches apply on the pinned commits and **97 tests pass** (theirs plus the ones we added):
+
+```powershell
+python scripts/references.py fetch   # vendor/<repo> at the pinned commit + our patches
+python scripts/references.py test
+```
+
+Full review with evidence: [docs/mcp-reviews.md](docs/mcp-reviews.md). Tooflex has no license, so it gets a
+written review only.
+
 ## Credits and what we improved
 
 `resolve-forge` is original code. It runs next to
@@ -211,7 +238,9 @@ davinci-agents/
 ├── .agents/skills/  .agents/agents/    skills and agents (single source)
 ├── config/mcp.servers.json             single source for MCP servers → scripts/sync.py
 ├── mcp/resolve-forge/                  our MCP (domain / services / tools / gateway) + tests
-├── vendor/                             upstream MCP (runs) + 6 reference MCPs (created by bootstrap)
+├── config/references.json             the 7 third-party MCPs: url, pinned commit, license, tests
+├── patches/<repo>/                     our fixes to them (git format-patch) → scripts/references.py
+├── vendor/                             those MCPs, fetched + patched (not versioned)
 ├── scripts/bootstrap.ps1 · sync.py     installation and config generation
 └── docs/                               first steps, install, architecture, landscape, playbook
 ```
@@ -250,8 +279,9 @@ Claude Code, Codex, Cursor, Gemini CLI y VS Code.
 9. [Plataformas](#plataformas)
 10. [Tests](#tests-1)
 11. [Problemas comunes](#problemas-comunes)
-12. [Créditos y qué mejoramos](#créditos-y-qué-mejoramos)
-13. [Estructura del repo](#estructura-del-repo)
+12. [Mejoras a los otros MCPs](#mejoras-a-los-otros-mcps)
+13. [Créditos y qué mejoramos](#créditos-y-qué-mejoramos)
+14. [Estructura del repo](#estructura-del-repo)
 
 ---
 
@@ -286,7 +316,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scriptsootstrap.ps1   # ups
 
 `bootstrap.ps1` hace todo esto (es idempotente: puedes repetirlo):
 
-1. Clona el MCP upstream en `vendor/` y crea su venv con Python 3.12.
+1. Descarga el MCP upstream en su commit fijado dentro de `vendor/`, aplica nuestro patch (`scripts/references.py`)
+   y crea su venv con Python 3.12.
 2. Instala el **bridge** dentro de Resolve (Workspace → Scripts → `resolve_bridge`). Es lo que permite usar la versión Free.
 3. Instala `resolve-forge` con detección de caras (opencv) y corre los tests.
 4. Ejecuta `scripts/sync.py`, que genera los configs MCP de cada agente y los links de skills y agentes.
@@ -406,6 +437,32 @@ Además se prueba el MCP upstream en vivo.
 | H.265 sale como H.264 | Tu edición o GPU no soporta H.265; la caída a H.264 es automática |
 | El agente no ve las tools | Abre el agente dentro de `davinci-agents/` y aprueba `.mcp.json`. Si moviste la carpeta, ejecuta `uv run --no-project python scripts/sync.py` |
 
+## Mejoras a los otros MCPs
+
+No solo tomamos ideas. Descargamos los siete MCPs públicos de Resolve, los revisamos y **arreglamos bugs reales en
+su código**. Cada bug se reprodujo primero y se verificó después, en Windows 11 con Resolve 21.0.4. Los arreglos son
+archivos `git format-patch` en [`patches/`](patches), listos para enviar upstream como pull requests:
+
+| Repo | Qué arreglamos |
+|---|---|
+| samuelgursky | El instalador del bridge crasheaba en consolas Windows cp1252 (el paso que corren los usuarios de Free) |
+| hiteshK03 | `transcribe_timeline` devolvía tiempos de la fuente del primer clip; la transcripción crasheaba con PyAV reciente; se rompe con mcp 2.x |
+| DigitalWorkflowCompany | Rutas solo de macOS (ahora también Windows/Linux), segfault en venv de Windows, errores engañosos, mcp 2.x |
+| apvlv | Segfault al arrancar en Windows, `execute_python`/`execute_lua` sin restricción (ahora opt-in y aislados), mcp 2.x |
+| kerwilgil | No se podía instalar con uv (extras en conflicto), `pytest` a secas no funcionaba, nombre indefinido |
+| lordhoell | Segfault al conectar en Windows, trampa de render de `comp_lock` documentada, mcp 2.x |
+
+Desde un clon limpio, los 6 patches aplican sobre los commits fijados y **pasan 97 tests** (los suyos más los que
+agregamos):
+
+```powershell
+python scripts/references.py fetch   # vendor/<repo> en el commit fijado + nuestros patches
+python scripts/references.py test
+```
+
+Revisión completa con evidencia: [docs/mcp-reviews.md](docs/mcp-reviews.md). Tooflex no tiene licencia, así que
+solo recibe una revisión escrita.
+
 ## Créditos y qué mejoramos
 
 `resolve-forge` es código propio. Corre junto a
@@ -429,7 +486,9 @@ davinci-agents/
 ├── .agents/skills/  .agents/agents/    skills y agentes (fuente única)
 ├── config/mcp.servers.json             fuente única de MCPs → scripts/sync.py
 ├── mcp/resolve-forge/                  MCP propio (domain / services / tools / gateway) + tests
-├── vendor/                             upstream MCP (se ejecuta) + 6 MCPs de referencia
+├── config/references.json             los 7 MCPs de terceros: url, commit fijado, licencia, tests
+├── patches/<repo>/                     nuestros arreglos a ellos (git format-patch) → scripts/references.py
+├── vendor/                             esos MCPs, descargados y parchados (no se versiona)
 ├── scripts/bootstrap.ps1 · sync.py     instalación y generación de configs
 └── docs/                               first steps, instalación, arquitectura, panorama, playbook
 ```

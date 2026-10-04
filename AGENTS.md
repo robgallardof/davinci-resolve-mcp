@@ -40,3 +40,6 @@ compatible con `AGENTS.md`, Agent Skills (`SKILL.md`) y MCP: Claude Code, Codex,
 - Las specs de plataformas viven en `domain/formats.py`; `references/platforms.md` se genera desde ahí.
 - Antes de "descubrir" un comportamiento raro de la API, búscalo en `vendor/davinci-resolve-mcp/src/utils/api_truth.py`.
 - Tras editar `config/` o `.agents/`, ejecuta `python scripts/sync.py`.
+- MCPs de terceros: `config/references.json` (commit fijado) + `patches/<repo>/`. Para mejorar uno: commitea en
+  `vendor/<repo>`, `python scripts/references.py export <repo>` y `test <repo>`. Nunca modifiques un repo sin
+  licencia (Tooflex): solo revisión escrita en `docs/mcp-reviews.md`.

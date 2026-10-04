@@ -1,3 +1,5 @@
 * text=auto eol=lf
 *.ps1 text eol=crlf
 *.png binary
+# third-party patches are applied byte-for-byte with `git am --keep-cr`
+patches/** -text

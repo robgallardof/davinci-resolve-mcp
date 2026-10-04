@@ -1,0 +1,198 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: robgallardof <robgallardof@gmail.com>
+Date: Sat, 3 Oct 2026 23:05:51 -0600
+Subject: [PATCH] Fix Windows segfault on start; make code execution opt-in and
+ isolated; pin mcp<2
+
+- resolve_api: on Windows inside a virtualenv (the uv setup this project uses),
+  importing DaVinciResolveScript crashed the process with a segfault. The server
+  connects at import time, so it never started. Now sets RESOLVE_SCRIPT_API,
+  RESOLVE_SCRIPT_LIB and PYTHONHOME (the base interpreter) before the import.
+  Verified on Windows 11 + Resolve 21.0.4: exit 139 before, clean start after.
+- execute_python / execute_lua ran arbitrary code from any prompt with full
+  access to the machine. They now refuse unless DAVINCI_MCP_ALLOW_CODE_EXECUTION=1
+  and explain why.
+- execute_python ran the snippet against the server module's globals, so code
+  could overwrite the server itself (mcp, resolve_api). It now gets its own
+  namespace.
+- pyproject: mcp<2. mcp 2.x renamed FastMCP; a fresh pip install would not start.
+- tests/test_code_execution.py: disabled by default, enabled by env, globals intact.
+---
+ pyproject.toml                         |  2 +-
+ src/davinci_resolve_mcp/resolve_api.py | 15 +++++++
+ src/davinci_resolve_mcp/server.py      | 24 +++++++++++-
+ tests/test_code_execution.py           | 54 ++++++++++++++++++++++++++
+ 4 files changed, 92 insertions(+), 3 deletions(-)
+ create mode 100644 tests/test_code_execution.py
+
+diff --git a/pyproject.toml b/pyproject.toml
+index bad9fd1..982b8fe 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -9,7 +9,7 @@ authors = [
+     { name = "Sage Choi", email = "sage.choi@gmail.com" }
+ ]
+ dependencies = [
+-  "mcp>=0.3.0",
++  "mcp>=0.3.0,<2",  # 2.x renamed FastMCP; this server targets the 1.x API
+   "pydantic>=2.0.0",
+   "typing-extensions>=4.0.0",
+ ]
+diff --git a/src/davinci_resolve_mcp/resolve_api.py b/src/davinci_resolve_mcp/resolve_api.py
+index a09153d..7676572 100644
+--- a/src/davinci_resolve_mcp/resolve_api.py
++++ b/src/davinci_resolve_mcp/resolve_api.py
+@@ -51,6 +51,21 @@ class ResolveAPI:
+             if script_api_path not in sys.path:
+                 sys.path.append(script_api_path)
+ 
++            # fusionscript.dll embeds Python: inside a virtualenv it crashes the whole
++            # process (segfault on import) unless PYTHONHOME names the base interpreter.
++            os.environ.setdefault("RESOLVE_SCRIPT_API", resolve_script_dir)
++            os.environ.setdefault(
++                "RESOLVE_SCRIPT_LIB",
++                os.path.join(
++                    os.environ.get("PROGRAMFILES", "C:\\Program Files"),
++                    "Blackmagic Design",
++                    "DaVinci Resolve",
++                    "fusionscript.dll",
++                ),
++            )
++            if sys.prefix != sys.base_prefix:
++                os.environ.setdefault("PYTHONHOME", sys.base_prefix)
++
+             # Import the DaVinciResolveScript module
+             try:
+                 import DaVinciResolveScript as dvr_script
+diff --git a/src/davinci_resolve_mcp/server.py b/src/davinci_resolve_mcp/server.py
+index 9edb8c5..0068979 100644
+--- a/src/davinci_resolve_mcp/server.py
++++ b/src/davinci_resolve_mcp/server.py
+@@ -655,11 +655,24 @@ def open_page(page_name: str) -> str:
+ 
+ # Tools for Advanced Operations
+ 
++CODE_EXECUTION_ENV = "DAVINCI_MCP_ALLOW_CODE_EXECUTION"
++CODE_EXECUTION_DISABLED = (
++    "Code execution is disabled. execute_python / execute_lua run arbitrary code with full access "
++    "to this computer (files, network, other apps), so any prompt the agent reads could use them. "
++    f"Enable them only if you trust every input: set {CODE_EXECUTION_ENV}=1 in the server's environment."
++)
++
++
++def code_execution_allowed() -> bool:
++    """Arbitrary code execution is opt-in."""
++    return os.environ.get(CODE_EXECUTION_ENV, "").strip().lower() in ("1", "true", "yes")
++
+ 
+ @mcp.tool()
+ def execute_python(code: str) -> str:
+     """
+     Execute arbitrary Python code in DaVinci Resolve.
++    Disabled unless DAVINCI_MCP_ALLOW_CODE_EXECUTION=1 is set (it has full access to this computer).
+ 
+     Args:
+         code: The Python code to execute
+@@ -667,11 +680,15 @@ def execute_python(code: str) -> str:
+     Returns:
+         The result of the code execution
+     """
++    if not code_execution_allowed():
++        return CODE_EXECUTION_DISABLED
+     if not resolve_api.is_connected():
+         return "Error: Not connected to DaVinci Resolve."
+ 
+-    # Create a local namespace with access to the Resolve API
++    # The code gets its own namespace: running it against this module's globals let
++    # a snippet overwrite the server itself (e.g. `mcp`, `resolve_api`).
+     local_namespace = {
++        "__builtins__": __builtins__,
+         "resolve_api": resolve_api,
+         "resolve": resolve_api.resolve,
+         "fusion": resolve_api.fusion,
+@@ -683,7 +700,7 @@ def execute_python(code: str) -> str:
+ 
+     try:
+         # Execute the code in the local namespace
+-        exec(code, globals(), local_namespace)
++        exec(code, local_namespace)
+ 
+         # Update the Resolve API objects with any changes made in the code
+         resolve_api.resolve = local_namespace.get("resolve", resolve_api.resolve)
+@@ -711,6 +728,7 @@ def execute_python(code: str) -> str:
+ def execute_lua(script: str) -> str:
+     """
+     Execute a Lua script in DaVinci Resolve's Fusion.
++    Disabled unless DAVINCI_MCP_ALLOW_CODE_EXECUTION=1 is set (it has full access to this computer).
+ 
+     Args:
+         script: The Lua script to execute
+@@ -718,6 +736,8 @@ def execute_lua(script: str) -> str:
+     Returns:
+         The result of the script execution
+     """
++    if not code_execution_allowed():
++        return CODE_EXECUTION_DISABLED
+     if not resolve_api.is_connected():
+         return "Error: Not connected to DaVinci Resolve."
+ 
+diff --git a/tests/test_code_execution.py b/tests/test_code_execution.py
+new file mode 100644
+index 0000000..a699bb6
+--- /dev/null
++++ b/tests/test_code_execution.py
+@@ -0,0 +1,54 @@
++"""execute_python / execute_lua are opt-in and cannot overwrite the server's own globals."""
++
++import importlib
++
++import pytest
++
++server = importlib.import_module("davinci_resolve_mcp.server")
++
++
++class FakeAPI:
++    def __init__(self):
++        self.resolve = self.fusion = self.project_manager = object()
++        self.current_project = self.media_storage = self.media_pool = None
++        self.lua = []
++
++    def is_connected(self):
++        return True
++
++    def execute_lua(self, script):
++        self.lua.append(script)
++        return "lua ran"
++
++
++def _tool(name):
++    fn = getattr(server, name)
++    return getattr(fn, "fn", fn)  # FastMCP may wrap the function
++
++
++@pytest.fixture
++def api(monkeypatch):
++    fake = FakeAPI()
++    monkeypatch.setattr(server, "resolve_api", fake)
++    return fake
++
++
++def test_disabled_by_default(api, monkeypatch):
++    monkeypatch.delenv(server.CODE_EXECUTION_ENV, raising=False)
++    assert _tool("execute_python")("result = 1") == server.CODE_EXECUTION_DISABLED
++    assert _tool("execute_lua")("print(1)") == server.CODE_EXECUTION_DISABLED
++    assert api.lua == []
++
++
++@pytest.mark.parametrize("value", ["1", "true", "YES"])
++def test_enabled_by_env(api, monkeypatch, value):
++    monkeypatch.setenv(server.CODE_EXECUTION_ENV, value)
++    assert _tool("execute_python")("result = 6 * 7") == "42"
++    assert _tool("execute_lua")("print(1)") == "lua ran"
++
++
++def test_code_cannot_clobber_server_globals(api, monkeypatch):
++    monkeypatch.setenv(server.CODE_EXECUTION_ENV, "1")
++    original = server.mcp
++    _tool("execute_python")("mcp = None\nresult = 'ok'")
++    assert server.mcp is original
