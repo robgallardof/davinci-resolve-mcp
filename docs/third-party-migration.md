@@ -20,7 +20,7 @@ finishing, project authoring, media, timeline, color, Fusion and QC. It neither 
 | 9. Docs, skills and roles (English, agent replies in the user's language) | ✅ Done | README (table verified by test), 10 skills, 8 roles |
 | 10. Live re-run of the extended version | ⏳ Pending | `tests/live/`; needs the current Resolve bridge |
 
-In numbers: 65 tools, 658 tests without Resolve passing on 2026-10-04. The live suite has 13 cases. First connected
+In numbers: 65 tools, 677 tests without Resolve passing on 2026-10-04. The live suite has 13 cases. First connected
 pass: 10 passed and one SFX failure; after the fix, the isolated SFX test passed, as did the vertical framing/zoom pixel
 test. A second pass hit an orphaned bridge bound to a previous Resolve: not counted as passed. That helper was retired
 after verifying executable, script, port and dead parent.
@@ -114,7 +114,7 @@ the leftovers in resolve_forge/api/ stay local and ignored by Git; they are not 
 Read this before continuing. Last update: 2026-10-04. Reply to the user in Spanish (their language).
 
 ### Done
-- Forge of our own (65 tools), own bridge, no third-party code or servers; 658 tests without Resolve passing.
+- Forge of our own (65 tools), own bridge, no third-party code or servers; 677 tests without Resolve passing.
 - Designed text: `creator`, `studio`, `editorial`, `impact` styles with active word, brand accent, `fade/lift/pop/karaoke`,
   `reduced_motion`, PNG/WebP preview. Legacy `box/outline/yellow/dark` only on request.
 - Production by genre: `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`,
@@ -126,6 +126,9 @@ Read this before continuing. Last update: 2026-10-04. Reply to the user in Spani
   specialist roles in `.agents/agents/` and `editorial-direction/references/producer-coordination.md`.
 - Finishing: `preflight_render`, `apply_grade_preset`, `enhance_audio`, `repair_bridge_connection`; skill `color-audio-finishing`.
 - Everything portable is in English; new skill `captions-and-titles`.
+- Windows, macOS and Linux: OS differences only in `native_paths.py` (SDK, Scripts folders, process name);
+  installer, doctor and `pgrep -x` process check use it; macOS/Linux font folders; `scripts/bootstrap.sh`.
+  `test_cross_platform.py` simulates each OS end to end; GitHub Actions runs the suite on all three.
 
 ### Pending (by priority)
 1. **Live verification**: `uv run pytest -m live` with Resolve open and the bridge started (Free: Workspace → Scripts →
@@ -137,7 +140,10 @@ Read this before continuing. Last update: 2026-10-04. Reply to the user in Spani
    (Demucs/torch) was not added: heavy dependency, needs user confirmation.
 4. **Mix**: SFX gain and ducking are baked into new WAVs (no verified per-clip volume API). If Resolve exposes verifiable
    audio volume/keyframes, migrate so it stays editable in Fairlight.
-5. Local leftovers ignored by Git (`vendor/`, `mcp/resolve-forge/src/resolve_forge/api/`): delete only if the user asks.
+5. **macOS/Linux with a real Resolve**: offline suite runs in CI on the three OSes; Resolve itself was only simulated. Run `sh scripts/bootstrap.sh`,
+   `uv run resolve-forge-doctor` and `uv run pytest -m live` on a Mac and a Linux box; check whether `fusionscript.so`
+   needs `PYTHONHOME` inside the venv like Windows does, and whether the Free bridge works in the Mac App Store build.
+6. Local leftovers ignored by Git (`vendor/`, `mcp/resolve-forge/src/resolve_forge/api/`): delete only if the user asks.
 
 Verified outside Resolve with real audio and real Whisper: `align_text` (100 % of words) and `find_story_moments`
 (punchline after a 2.2 s pause and a question detected in a TTS joke).

@@ -3,19 +3,35 @@
 A single server: resolve-forge, with 65 tools of its own and the integrated Free bridge.
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
+```
+
+```sh
+sh scripts/bootstrap.sh                                                     # macOS / Linux
 ```
 
 The bootstrap installs Python 3.12, the Forge environment with vision/speech, the bundled bridge, runs the tests and syncs the agent configs. It does not download external MCPs.
 
 Open Resolve with a project. Free 21.0.x: Workspace → Scripts → resolve_bridge. Studio: enable External scripting using = Local. Then ask for `forge_status`.
 
-```powershell
+```sh
 cd mcp/resolve-forge
 uv run resolve-forge-doctor
 uv run pytest -q
 uv run python -m resolve_forge.bridge_install.install_resolve_bridge
 ```
+
+Where things go on each OS (`uv run resolve-forge-doctor` checks all of them):
+
+| | Windows | macOS | Linux |
+|---|---|---|---|
+| Scripting API | `%PROGRAMDATA%\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting` | `/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting` | `/opt/resolve/Developer/Scripting` |
+| Bridge script (per user) | `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility` | `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility` | `~/.local/share/DaVinciResolve/Fusion/Scripts/Utility` |
+| Bridge runtime + `bridge.json` | `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\.davinci_mcp_runtime` | `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/.davinci_mcp_runtime` | `~/.local/share/DaVinciResolve/Fusion/.davinci_mcp_runtime` |
+| Default output | `~/Movies` | `~/Movies` | `~/Movies` |
+
+A non-standard install (e.g. Resolve outside `/opt/resolve`) is handled with `RESOLVE_SCRIPT_API` and
+`RESOLVE_SCRIPT_LIB`. `repair_bridge_connection` is Windows-only; on macOS/Linux quit and reopen Resolve instead.
 
 Restart Resolve when it needs to detect newly installed scripts. An existing bridge configuration is preserved. ffmpeg comes with the imageio-ffmpeg dependency. Optional models depend on the tools used; not every Studio capability is available in Free.
 

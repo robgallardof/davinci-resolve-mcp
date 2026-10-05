@@ -32,7 +32,7 @@ def ffmpeg_executable():
         return get_ffmpeg_exe()
     except (ImportError, RuntimeError) as exc:
         raise ForgeError("Audio processing requires the bundled ffmpeg dependency.", code="MISSING_DEPENDENCY",
-                         hint="Run scripts/bootstrap.ps1.") from exc
+                         hint="Run scripts/bootstrap.ps1 (Windows) or scripts/bootstrap.sh (macOS/Linux).") from exc
 
 
 def _measure(executable, path, filter_base):

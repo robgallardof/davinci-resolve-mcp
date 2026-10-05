@@ -1,3 +1,4 @@
+import subprocess
 import sys
 
 import pytest
@@ -17,6 +18,46 @@ def test_resolve_paths_follow_the_os_and_honour_env_overrides(monkeypatch):
     monkeypatch.setenv("RESOLVE_SCRIPT_LIB", "/custom/lib.so")
     assert native_paths.get_resolve_paths() == {"api_path": "/custom/api", "lib_path": "/custom/lib.so"}
 
+
+
+@pytest.mark.parametrize("platform,user,shared,process", [
+    ("win32", "Support/Fusion/Scripts/Utility", "ProgramData", "Resolve.exe"),
+    ("darwin", "Library/Application Support/Blackmagic Design", "/Library/Application Support", "Resolve"),
+    ("linux", ".local/share/DaVinciResolve/Fusion/Scripts/Utility", "/opt/resolve/Fusion/Scripts/Utility", "resolve"),
+])
+def test_scripts_folders_and_process_name_per_os(monkeypatch, platform, user, shared, process):
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setenv("PROGRAMDATA", "C:/ProgramData")
+    user_dir, shared_dir = native_paths.script_dirs()
+    assert user in user_dir.as_posix() and shared in shared_dir.as_posix()
+    assert native_paths.process_name() == process
+
+
+@pytest.mark.parametrize("platform,name", [("darwin", "Resolve"), ("linux", "resolve")])
+def test_posix_process_check_matches_the_exact_name_not_this_server(monkeypatch, platform, name):
+    from resolve_forge import gateway
+    seen = []
+
+    def run(cmd, **_):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 1)
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(gateway.subprocess, "run", run)
+    assert gateway.resolve_process_running() is False
+    assert seen == [["pgrep", "-x", name]]
+
+
+def test_doctor_finds_the_bridge_and_api_on_any_os(monkeypatch, tmp_path):
+    user, shared = tmp_path / "user", tmp_path / "shared"
+    user.mkdir()
+    (user / "resolve_bridge.py").write_text("")
+    monkeypatch.setattr(doctor, "script_dirs", lambda: (user, shared))
+    monkeypatch.setattr(doctor, "get_resolve_paths", lambda: {"api_path": str(tmp_path), "lib_path": ""})
+    monkeypatch.setattr(doctor, "resolve_process_running", lambda: False)
+    checks = {c.name: c for c in doctor.run()}
+    assert checks["Bridge installed in Resolve (Free)"].ok and checks["Resolve scripting API"].ok
+    monkeypatch.setattr(doctor, "get_resolve_paths", lambda: {"api_path": str(tmp_path / "missing"), "lib_path": ""})
+    assert not {c.name: c for c in doctor.run()}["Resolve scripting API"].ok
 
 class _Named:
     def __init__(self, name): self.name = name

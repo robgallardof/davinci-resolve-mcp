@@ -106,7 +106,9 @@ if ($same -and !$parentAlive -and $resolveNow.Count -gt 0 -and $ownsPort.Count -
 
 def repair(dry_run=True, *, runner=None, platform=None, argv=None):
     if (platform or sys.platform) != "win32":
-        return {"supported": False, "applied": False, "reason": "Windows-only orphaned bridge recovery."}
+        return {"supported": False, "applied": False, "reason": "Windows-only orphaned bridge recovery.",
+                "next": "On macOS/Linux quit and reopen Resolve to free the bridge port, then run "
+                        "Workspace > Scripts > resolve_bridge."}
     runner = runner or _run
     try:
         config = json.loads(config_path().read_text(encoding="utf-8-sig"))

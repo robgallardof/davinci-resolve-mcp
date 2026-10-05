@@ -28,7 +28,7 @@ There is a single server with intent-based editing and API tools:
 3. `list_clips` before mutating anything.
 
 If after restarting Resolve the bridge keeps the port and does not respond: `repair_bridge_connection()`
-inspects orphaned helpers on Windows. Only with a verified candidate use `dry_run=false`; then launch
+inspects orphaned helpers on Windows (on macOS/Linux: quit and reopen Resolve). Only with a verified candidate use `dry_run=false`; then launch
 Workspace → Scripts → resolve_bridge again in the current Resolve. It never stops Resolve or a bridge whose parent is alive.
 Forge tries an available bridge first; if it is busy it avoids also launching a native SDK probe.
 
@@ -74,7 +74,7 @@ To read state without tools: resources `resolve://status`, `resolve://timeline`,
 - `SetRenderSettings` inherits the loaded preset; an empty `CustomName` invalidates everything.
 - Fusion: values written inside `comp.Lock()` are ignored at render.
 - Bridge (Free): everything travels as JSON (numeric dict keys arrive as strings) and there is no `tool["X"]` indexing. Use methods.
-- Media and import in Free: only from paths inside the bridge roots (user profile; `AppData\Temp` is rejected).
+- Media and import in Free: only from paths inside the bridge roots (user profile; temp folders such as `AppData\Temp` or `/tmp` are rejected).
 - More quirks, with evidence: `docs/api-behavior.md`.
 
 ## Which skill next

@@ -13,8 +13,12 @@ from pathlib import Path
 from ..domain.formats import SafeZone
 from ..domain.text_design import DESIGNS, accent_rgba, resolve_style
 
-_FONT_DIRS = [Path(r"C:\Windows\Fonts"), Path("/System/Library/Fonts"), Path("/Library/Fonts"),
-              Path("/usr/share/fonts/truetype/dejavu"), Path("/usr/share/fonts/TTF")]
+_FONT_DIRS = [Path(r"C:\Windows\Fonts"),                                                   # Windows
+              Path("/System/Library/Fonts/Supplemental"), Path("/System/Library/Fonts"),    # macOS
+              Path("/Library/Fonts"), Path.home() / "Library/Fonts",
+              Path("/usr/share/fonts/truetype/msttcorefonts"), Path("/usr/share/fonts/truetype/dejavu"),  # Linux
+              Path("/usr/share/fonts/dejavu-sans-fonts"), Path("/usr/share/fonts/dejavu-serif-fonts"),
+              Path("/usr/share/fonts/TTF"), Path.home() / ".local/share/fonts"]
 _HEAVY = ["seguibl.ttf", "arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"]
 _EMOJI = ["seguiemj.ttf"]  # colour emoji on Windows; elsewhere emoji are dropped rather than drawn as boxes
 _FACES = {"studio": ("seguisb.ttf", "Arial.ttf", "DejaVuSans.ttf"),

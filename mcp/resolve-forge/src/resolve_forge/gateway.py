@@ -19,8 +19,6 @@ from typing import Any, Callable, Protocol
 
 log = logging.getLogger("resolve_forge.gateway")
 
-WIN_API = r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting"
-WIN_LIB = r"C:\Program Files\Blackmagic Design\DaVinci Resolve\fusionscript.dll"
 BRIDGE_RUNTIME = Path(__file__).resolve().parent / "bridge"
 
 
@@ -46,7 +44,9 @@ def resolve_process_running() -> bool:
                                  stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10,
                                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
             return "resolve.exe" in out.lower()
-        return subprocess.run(["pgrep", "-if", "resolve"], stdin=subprocess.DEVNULL, capture_output=True,
+        # exact process name: a loose match would also find this server (resolve_forge) and lie
+        from .native_paths import process_name
+        return subprocess.run(["pgrep", "-x", process_name()], stdin=subprocess.DEVNULL, capture_output=True,
                               timeout=10).returncode == 0
     except (OSError, subprocess.SubprocessError):
         return True  # cannot tell: let the connection attempt decide

@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  resolve-forge:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: mcp/resolve-forge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install (no Resolve needed; speech models are not downloaded)
+        run: uv sync --python 3.12 --extra vision
+      - name: Agent configs and skill links (per machine, as bootstrap does)
+        run: uv run python ../../scripts/sync.py
+      - name: Tests (Free/bridge, Studio, Resolve 19, real stdio, Windows/macOS/Linux simulation)
+        run: uv run --extra vision --with "av>=12" pytest -q
+      - name: Generated docs are committed
+        run: git diff --exit-code
+      - name: bootstrap.sh is valid POSIX sh
+        if: runner.os != 'Windows'
+        working-directory: .
+        run: sh -n scripts/bootstrap.sh

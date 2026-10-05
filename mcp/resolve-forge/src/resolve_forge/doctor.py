@@ -1,20 +1,17 @@
 """`resolve-forge-doctor`: check every link of the chain and say exactly what to do next.
 
-Works the same for Free and Studio; it only reads (never edits a project).
+Works the same for Free and Studio on Windows, macOS and Linux; it only reads (never edits a project).
 """
 
 from __future__ import annotations
 
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from .analysis import faces
-from .gateway import WIN_API, ResolveUnavailable, Session, call, resolve_process_running
-
-APPDATA_SCRIPTS = Path(os.environ.get("APPDATA", "")) / "Blackmagic Design/DaVinci Resolve/Support/Fusion/Scripts/Utility"
-PROGRAMDATA_SCRIPTS = Path(os.environ.get("PROGRAMDATA", r"C:\ProgramData")) / "Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility"
+from .gateway import ResolveUnavailable, Session, call, resolve_process_running
+from .native_paths import get_resolve_paths, process_name, script_dirs
 
 
 @dataclass
@@ -31,20 +28,21 @@ def edition(resolve) -> str:
 
 
 def run() -> list[Check]:
+    api = get_resolve_paths()["api_path"]
     checks = [
         Check("Python", sys.version_info[:2] <= (3, 13), sys.version.split()[0],
               "Use Python 3.10–3.13 (uv sync --python 3.12)."),
-        Check("Resolve scripting API", Path(WIN_API).is_dir() or sys.platform != "win32", WIN_API,
-              "Install DaVinci Resolve 20+ (Free or Studio)."),
+        Check("Resolve scripting API", Path(api).is_dir(), api,
+              "Install DaVinci Resolve 20+ (Free or Studio), or set RESOLVE_SCRIPT_API to its Developer/Scripting folder."),
         Check("Bridge installed in Resolve (Free)",
-              any((d / "resolve_bridge.py").exists() for d in (APPDATA_SCRIPTS, PROGRAMDATA_SCRIPTS)),
+              any((d / "resolve_bridge.py").exists() for d in script_dirs()),
               "Workspace > Scripts > resolve_bridge",
               "uv run resolve-forge-install-bridge, then restart Resolve."),
         Check("Face detection (optional)", faces.available(), "opencv" if faces.available() else "no opencv",
               "uv sync --extra vision"),
     ]
     running = resolve_process_running()
-    checks.append(Check("Resolve running", running, "Resolve.exe" if running else "not running",
+    checks.append(Check("Resolve running", running, process_name() if running else "not running",
                         "Open DaVinci Resolve and a project."))
     if running:
         session = Session()

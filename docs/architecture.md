@@ -101,6 +101,9 @@ The frames are hardlinks to a single PNG, so they take almost no disk space.
 
 ## Windows robustness (learned in live tests)
 
+macOS and Linux share the same code paths; OS differences (SDK, Scripts folders, process name) live only in
+`native_paths.py`.
+
 - **Native probe in a subprocess**: `fusionscript.dll` segfaults inside a venv if `PYTHONHOME` does not point to the
   base Python, and Free rejects external scripting. `gateway.direct_scripting_available()` probes it in a child
   process, so a native crash never takes down the MCP server. It then falls back to the bridge.

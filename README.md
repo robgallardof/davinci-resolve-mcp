@@ -1,5 +1,8 @@
 # davinci-agents
 
+[![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
+**Windows · macOS · Linux** — Resolve Free and Studio
+
 **[English](#english)** · **[Español](#español)**
 
 ## English
@@ -15,10 +18,14 @@ services → thin MCP tools). No competing implementation is imported or package
 ### Install
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
 ```
 
-Requires Resolve and uv. The bootstrap installs Python 3.12, Forge, speech/vision dependencies, bundled ffmpeg, the
+```sh
+sh scripts/bootstrap.sh                                                     # macOS / Linux
+```
+
+Works on Windows, macOS and Linux. Requires Resolve and uv. The bootstrap installs Python 3.12, Forge, speech/vision dependencies, bundled ffmpeg, the
 Forge bridge and the agent configs. Free 21.0.x: open a project, then Workspace → Scripts → resolve_bridge (every time
 Resolve starts). Studio: Preferences → System → General → External scripting using = Local. Then ask for `forge_status`.
 New here? Start with [First steps](docs/FIRST-STEPS.md).
@@ -110,12 +117,16 @@ Skills (`.agents/skills/`): `davinci-resolve-mcp`, `editorial-direction`, `enter
 
 ### Verification
 
-```powershell
+```sh
 cd mcp/resolve-forge
 uv run pytest -q          # no Resolve needed
 uv run pytest -m live     # Resolve open + bridge running; preserves its scratch projects
 uv run resolve-forge-doctor
 ```
+
+CI runs the offline suite on Windows, macOS and Linux on every push (`.github/workflows/tests.yml`).
+`tests/integration/test_cross_platform.py` also simulates each OS on any host: installer folders, the bridge
+launched "inside Resolve", doctor, MCP tools over the bridge and the Studio direct path.
 
 The live suite keeps its projects and synthetic files for inspection and reopens your project at the end.
 
@@ -128,10 +139,12 @@ Edita video en DaVinci Resolve hablando con un agente que trabaja como productor
 propio (**resolve-forge**, **65 herramientas**), bridge propio para Free, roles y skills portables. Las skills y los roles
 están en inglés para que sirvan a cualquier usuario, pero el agente te responde en español.
 
-1. Ejecuta `scripts/bootstrap.ps1` y abre Resolve con un proyecto.
+1. Ejecuta `scripts/bootstrap.ps1` (Windows) o `sh scripts/bootstrap.sh` (macOS/Linux) y abre Resolve con un proyecto.
 2. Free 21.0.x: Workspace → Scripts → resolve_bridge (cada vez que abres Resolve). Studio: External scripting using = Local.
 3. Abre tu agente en esta carpeta y pide `forge_status`.
 4. Pide como a un editor: el agente propone mejoras, revisa los momentos que detectan las tools y trabaja sobre copias.
+
+Funciona en Windows, macOS y Linux (Free y Studio). Las rutas de cada sistema están en [docs/install.md](docs/install.md).
 
 Ejemplos: "Haz una versión Reels con movimiento y subtítulos bonitos con mi color de marca", "Es un stand-up:
 encuentra los remates y arma un TikTok sin cortar las pausas", "Del podcast horizontal haz un Reel que siga a quien habla",

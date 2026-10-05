@@ -17,7 +17,8 @@ It is also available live via `list_formats`.
 3. `preflight_render(format)` and a visual review/listen: fix errors and review warnings. Save the project.
 4. `render_for(format, name=...)`. Without `target_dir` it writes to `~/Movies/resolve-forge`.
    - **Free**: the bridge only writes inside `allowed_output_roots` (by default `~/Movies`). Use subfolders of `~/Movies`
-     or add the path in `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\.davinci_mcp_runtime\bridge.json`.
+     or add the path to `allowed_output_roots` in the runtime `bridge.json` (`…/Fusion/.davinci_mcp_runtime/bridge.json`;
+     per-OS location in `docs/install.md`) and restart the bridge.
    - H.265 automatically falls back to H.264 if your edition or GPU does not support it.
 5. `render_status(job_id)` until `Complete`.
 6. Verify the file: exists, size > 0, resolution and duration. With ffprobe:

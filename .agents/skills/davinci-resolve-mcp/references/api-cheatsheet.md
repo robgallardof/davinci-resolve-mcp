@@ -1,15 +1,23 @@
 # Resolve scripting API — cheatsheet (without MCP)
 
-Official installed reference: `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting\README.txt`.
+Official installed reference: `README.txt` inside the scripting API folder below.
 
-## Connect (Windows)
+| OS | `RESOLVE_SCRIPT_API` | `RESOLVE_SCRIPT_LIB` |
+|---|---|---|
+| Windows | `%PROGRAMDATA%\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting` | `%PROGRAMFILES%\Blackmagic Design\DaVinci Resolve\fusionscript.dll` |
+| macOS | `/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting` | `/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/fusionscript.so` |
+| Linux | `/opt/resolve/Developer/Scripting` | `/opt/resolve/libs/Fusion/fusionscript.so` |
+
+## Connect
 
 ```python
 import os, sys
-os.environ.setdefault("RESOLVE_SCRIPT_API", r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\Developer\Scripting")
-os.environ.setdefault("RESOLVE_SCRIPT_LIB", r"C:\Program Files\Blackmagic Design\DaVinci Resolve\fusionscript.dll")
-sys.path.append(os.environ["RESOLVE_SCRIPT_API"] + r"\Modules")
-import DaVinciResolveScript as dvr      # ⚠ segfaults if Resolve.exe is not running: check first
+from resolve_forge.native_paths import get_resolve_paths   # the table above; env overrides win
+paths = get_resolve_paths()
+os.environ.setdefault("RESOLVE_SCRIPT_API", paths["api_path"])
+os.environ.setdefault("RESOLVE_SCRIPT_LIB", paths["lib_path"])
+sys.path.append(os.path.join(os.environ["RESOLVE_SCRIPT_API"], "Modules"))
+import DaVinciResolveScript as dvr      # ⚠ segfaults if Resolve is not running: check first
 resolve = dvr.scriptapp("Resolve")
 project = resolve.GetProjectManager().GetCurrentProject()
 tl = project.GetCurrentTimeline()

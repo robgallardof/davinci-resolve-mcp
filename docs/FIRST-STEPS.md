@@ -1,13 +1,14 @@
 # First steps (10 minutes)
 
-Step-by-step guide to your first video edited by an agent. Same for Resolve **Free** and **Studio**.
+Step-by-step guide to your first video edited by an agent. Same for Resolve **Free** and **Studio**, on Windows, macOS and Linux.
 The agent replies in your language: you can ask in English, Spanish or anything else.
 
 ## 1. Install (once)
 
-```powershell
-cd C:\Users\<you>\Documents\Projects\davinci-agents
-pwsh scripts/bootstrap.ps1
+```sh
+cd ~/Documents/Projects/davinci-agents   # wherever you cloned it
+pwsh scripts/bootstrap.ps1                # Windows
+sh scripts/bootstrap.sh                   # macOS / Linux
 ```
 
 When it finishes you should see `Done.` If DaVinci Resolve was open, **close it and open it again**
@@ -23,7 +24,7 @@ so it loads the bridge script.
    **Studio**: Preferences → System → General → *External scripting using* = **Local** (once).
 4. Check the connection:
 
-```powershell
+```sh
 cd mcp/resolve-forge
 uv run resolve-forge-doctor
 ```
@@ -37,8 +38,8 @@ into a new timeline. A 20–60 s clip is enough.
 
 ## 4. Open your agent in this folder
 
-```powershell
-cd C:\Users\<you>\Documents\Projects\davinci-agents
+```sh
+cd ~/Documents/Projects/davinci-agents
 claude          # or codex / gemini, or open the folder in Cursor / VS Code
 ```
 
@@ -101,7 +102,7 @@ treats them as inspiration for this piece, not as fixed rules.
 
 ## 8. Check everything works on your machine
 
-```powershell
+```sh
 cd mcp/resolve-forge
 uv run pytest            # no Resolve needed
 uv run pytest -m live    # Resolve open + bridge running; creates forge_* projects kept for inspection

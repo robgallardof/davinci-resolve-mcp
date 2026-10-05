@@ -1,6 +1,6 @@
 # davinci-agents — instructions for any agent
 
-AI video-editing workspace on **DaVinci Resolve 21** (Windows; Free and Studio). Works with any agent that supports
+AI video-editing workspace on **DaVinci Resolve 21** (Windows, macOS and Linux; Free and Studio). Works with any agent that supports
 `AGENTS.md`, Agent Skills (`SKILL.md`) and MCP: Claude Code, Codex, Cursor, Gemini CLI, VS Code, etc.
 Skills and roles are written in English; always reply to the user in the user's language.
 
@@ -50,7 +50,9 @@ Skills and roles are written in English; always reply to the user in the user's 
 - New motion style: register a function with `@style(...)` in `domain/styles.py`. Nothing else to touch.
 - New animation backend: implement `apply`/`clear` in `services/appliers.py` and register it in `APPLIERS`.
 - Tests: `cd mcp/resolve-forge && uv run pytest` (no Resolve: Free/bridge, Studio and Resolve 19 fakes, real
-  stdio, workspace consistency) and `uv run pytest -m live` (end-to-end with render and pixel comparison).
+  stdio, Windows/macOS/Linux simulation, workspace consistency; CI runs it on the three OSes) and `uv run pytest -m live` (end-to-end with render and pixel comparison).
+- OS differences (SDK, Scripts folders, process name) live only in `native_paths.py`; never hard-code a
+  Windows path elsewhere.
 - Platform specs live in `domain/formats.py`; `references/platforms.md` is generated from there.
 - Before "discovering" odd API behaviour, look it up in `docs/api-behavior.md`.
 - After editing `config/` or `.agents/`, run `python scripts/sync.py`.

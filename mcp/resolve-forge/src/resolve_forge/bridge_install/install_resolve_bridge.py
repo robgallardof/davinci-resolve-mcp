@@ -9,18 +9,13 @@ from pathlib import Path
 
 from resolve_forge.bridge.client import config_path
 from resolve_forge.bridge.resolve_bridge import load_config
+from resolve_forge.native_paths import script_dirs
 
 
 def script_targets():
-    if sys.platform == "win32":
-        targets = [Path(os.environ["APPDATA"]) / "Blackmagic Design/DaVinci Resolve/Support/Fusion/Scripts/Utility"]
-        shared = Path(os.environ.get("PROGRAMDATA", "C:/ProgramData")) / "Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility"
-        if shared.exists():
-            targets.append(shared)
-        return targets
-    if sys.platform == "darwin":
-        return [Path.home() / "Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility"]
-    return [Path.home() / ".local/share/DaVinciResolve/Fusion/Scripts/Utility"]
+    """Per-user Scripts folder always; the shared one only when it exists and we may write there (no sudo)."""
+    user, shared = script_dirs()
+    return [user, shared] if shared.is_dir() and os.access(shared, os.W_OK) else [user]
 
 
 def install(targets=None, path=None):

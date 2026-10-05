@@ -30,3 +30,13 @@ def test_installer_preserves_credentials_and_deploys_owned_modules(tmp_path):
     assert "@@RUNTIME_LITERAL@@" not in launcher
     compile(launcher, "launcher", "exec")
     assert token not in json.dumps(result)
+
+
+def test_installer_targets_the_user_folder_and_a_writable_shared_one(monkeypatch, tmp_path):
+    user, shared = tmp_path / "user", tmp_path / "shared"
+    monkeypatch.setattr(installer, "script_dirs", lambda: (user, shared))
+    assert installer.script_targets() == [user]  # shared missing (e.g. /opt/resolve needs sudo)
+    shared.mkdir()
+    assert installer.script_targets() == [user, shared]
+    monkeypatch.setattr(installer.os, "access", lambda *_: False)
+    assert installer.script_targets() == [user]
