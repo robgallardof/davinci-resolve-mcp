@@ -30,6 +30,9 @@ Reply to the user in their language.
 8. Report: timelines created, style and intensity, file paths and open items.
 
 ## Rules
+- For smooth transitions or full polish, follow `editorial-direction/references/transitions-and-flow.md`:
+  motivate each join, preserve audio continuity and review boundary playback with sound.
+- Before rendering: finish audio/color, run `preflight_render`, resolve blocking defects and save the project.
 - Never touch the master: work on copies.
 - If a clip already has a manual zoom (`list_clips` → zoom ≠ 1.0), ask before applying motion.
 - Do not declare anything done without evidence (`forge_status`, `render_status`, existing file) and without having **looked** at the `review_shots`/`review_video` sheets.

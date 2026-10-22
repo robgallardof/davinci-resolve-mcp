@@ -33,6 +33,14 @@ No audio peak is a joke or a drop until you have seen or heard it.
 
 ## By genre
 
+For professional creator polish, stronger camera changes or a MrBeast-inspired reference, read
+[creator polish](references/creator-polish.md). Adapt intensity to the brief; the research supports
+storytelling and reference analysis, not compulsory zooms or promises of audience retention.
+
+For transitions, smooth joins or a complete polish pass, read
+[transitions and flow](references/transitions-and-flow.md). Plan visual and audio continuity together,
+then verify the actual supported execution path before promising an effect.
+
 | Genre | Protect | Pacing | Text / motion |
 |---|---|---|---|
 | **Comedy** | setup → pause → punchline → reaction. The pause IS the joke | Cut *after* the laugh, not during the punchline. Reaction only if it adds | `creator` or `impact` only on the punchline; `emphasis` with `hits_s` = confirmed punchlines. Never give the joke away in a title. No SFX on every gag |

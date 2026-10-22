@@ -76,6 +76,40 @@ def test_entry_docs_exist():
         assert (ROOT / doc).is_file(), doc
 
 
+def test_client_configs_share_one_resolved_launch_spec():
+    """Every client launches the canonical server, including Antigravity's workspace config."""
+    import importlib.util
+    import json
+
+    spec = importlib.util.spec_from_file_location("workspace_sync", ROOT / "scripts/sync.py")
+    sync = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sync)
+    servers = sync.load_servers()
+    generated = sync.render(servers)
+    for path in (".mcp.json", ".cursor/mcp.json", ".gemini/settings.json", ".agents/mcp_config.json"):
+        assert json.loads(generated[ROOT / path])["mcpServers"] == servers
+    vscode = json.loads(generated[ROOT / ".vscode/mcp.json"])["servers"]
+    assert vscode == {name: {"type": "stdio", **entry} for name, entry in servers.items()}
+    # TOML output must encode exactly the same command/args, not a second launcher definition.
+    codex = generated[ROOT / ".codex/config.toml"]
+    for name, entry in servers.items():
+        assert f"[mcp_servers.{name}]" in codex
+        for field in ("command", "args"):
+            assert f"{field} = {sync.toml_value(entry[field])}\n" in codex
+        assert "{ROOT}" not in str(entry)
+        assert str(ROOT.as_posix()) in " ".join(entry["args"])
+
+
+def test_skill_reference_links_resolve():
+    """New portable workflow references must also be usable from another checkout."""
+    for source in SKILLS.rglob("*.md"):
+        for target in re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8")):
+            if "://" in target or target.startswith("#"):
+                continue
+            path = target.split("#", 1)[0]
+            assert (source.parent / path).is_file(), f"{source}: missing reference {target}"
+
+
 def test_native_tools_have_no_external_runtime():
     import json
     repos = json.loads((ROOT / "config" / "mcp.servers.json").read_text(encoding="utf-8"))["servers"]

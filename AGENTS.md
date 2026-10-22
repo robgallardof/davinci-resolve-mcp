@@ -1,7 +1,7 @@
 # davinci-agents — instructions for any agent
 
 AI video-editing workspace on **DaVinci Resolve 21** (Windows, macOS and Linux; Free and Studio). Works with any agent that supports
-`AGENTS.md`, Agent Skills (`SKILL.md`) and MCP: Claude Code, Codex, Cursor, Gemini CLI, VS Code, etc.
+`AGENTS.md`, Agent Skills (`SKILL.md`) and MCP: Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, etc.
 Skills and roles are written in English; always reply to the user in the user's language.
 
 ## What is here
@@ -13,6 +13,8 @@ Skills and roles are written in English; always reply to the user in the user's 
 | `.agents/agents/` | Portable roles/subagents (canonical source) |
 | `config/mcp.servers.json` | Single source of MCP servers → `python scripts/sync.py` generates each client's config |
 | `docs/` | First steps, install, architecture, editing playbook, API behaviour and migration status |
+
+Client configuration and connection checks: [docs/clients.md](docs/clients.md).
 
 ## How to work
 
@@ -30,7 +32,7 @@ Skills and roles are written in English; always reply to the user in the user's 
    |---|---|
    | `davinci-resolve-mcp` | Connection, Free vs Studio, error codes, API pitfalls |
    | `editorial-direction` | Producer judgement by genre (comedy, music, interview…), several people, multi-source composition |
-   | `entertainment-pacing` | Entertainment pacing: never >3 s without a change, zooms with a reason, cut dead time |
+   | `entertainment-pacing` | Entertainment pacing: review static stretches, preserve meaningful pauses/action, motivated zooms and cuts |
    | `vertical-video` / `horizontal-video` | Orientation method and checklist |
    | `dynamic-zoom-talking-head` | Motion for people talking to camera |
    | `captions-and-titles` | Exact words, caption/title design, karaoke, placement off faces |

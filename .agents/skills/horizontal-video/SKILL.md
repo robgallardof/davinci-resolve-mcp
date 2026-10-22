@@ -16,7 +16,7 @@ One method for every 16:9 destination. Per-platform specs come from
    blurred background (Fusion or `resolve-forge`) with the vertical on top.
 3. **Assembly** (with `resolve-forge`): order takes, remove retakes and silences, and mark chapters with markers.
    Depending on the genre (podcast, comedy, music video, film), apply the `editorial-direction` skill (`plan_edit`).
-4. **Pacing**: a visual change every **3–7 s**. From most to least valuable: B-roll that *shows* what is said,
+4. **Pacing**: review stretches around **3–7 s** for useful changes; preserve sustained action and meaning. From most to least valuable: B-roll that *shows* what is said,
    graphic or text, punch-in, camera change.
 5. **Movement** (skill `dynamic-zoom-talking-head`):
    - First `transcribe_timeline()`: it gives you `cuts_s` (sentence starts) and `hits_s` (data and punchlines) in timeline seconds.
@@ -44,7 +44,7 @@ One method for every 16:9 destination. Per-platform specs come from
 ## Checklist
 
 - [ ] Correct resolution and master intact
-- [ ] Visual change every 3–7 s, with B-roll wherever something can be shown
+- [ ] Motivated visual changes, with relevant B-roll and enough time to understand each idea
 - [ ] Captions if the destination autoplays muted
 - [ ] Audio at −14 LUFS
 - [ ] Render complete and verified

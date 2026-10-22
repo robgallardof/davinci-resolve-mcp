@@ -7,6 +7,7 @@ third_party/
 .vscode/mcp.json
 .gemini/settings.json
 .codex/config.toml
+.agents/mcp_config.json
 # links to .agents/
 .claude/skills
 .claude/agents

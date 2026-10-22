@@ -57,6 +57,6 @@ Loudness −12 to −14 LUFS, −1 dBTP. Shorts plays at 1080p at most.
 
 - [ ] Timeline resolution = format (`forge_status`)
 - [ ] Face and text inside the safe zone of the most restrictive platform
-- [ ] Hook in 0–3 s, visual change before 2 s and never more than ~3 s without an on-screen change
+- [ ] Clear hook in 0–3 s; review static stretches without cutting meaningful action, suspense or reactions
 - [ ] Pacing per genre (punchlines and reactions intact) and complete, corrected captions
 - [ ] Render complete (`render_status`) and file verified

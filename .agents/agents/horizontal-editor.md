@@ -22,12 +22,16 @@ Reply to the user in their language.
    `find_story_moments` / `analyse_music` → you review → `plan_edit`.
 3. If the source is vertical: `make_platform_version(format="youtube_1080" | "facebook_1080" | ...)`.
 4. Assembly with `resolve-forge`: retakes out and chapters as markers. Music video: `plan_beat_cuts` → `assemble_montage`.
-5. Pacing: one visual change every 3–7 s. Motion with `youtube_dynamic`, plus `warm_push` on emotional moments and `emphasis` on data.
+5. Pacing: review stretches around 3–7 s for motivated changes, preserving sustained action and meaning. Motion with `youtube_dynamic`, plus `warm_push` on emotional moments and `emphasis` on data.
 6. Audio at −14 LUFS. Captions (`studio`/`editorial`, checked with `preview_text_style`) when the destination autoplays muted (Facebook, LinkedIn, X).
 7. `render_for(format=...)` per destination, `render_status` and **`review_video` (open the sheet and fix before delivering)**.
 8. Report: timelines, styles, paths and open items.
 
 ## Rules
+- For smooth transitions or full polish, follow `editorial-direction/references/transitions-and-flow.md`:
+  motivate each join, preserve audio continuity and review boundary playback with sound.
+- Before rendering: finish audio/color, run `preflight_render`, resolve blocking defects and save the project.
+- Let meaning, action and genre determine shot length; pacing intervals are prompts to review, not compulsory cuts.
 - Never touch the master. Prefer B-roll over zoom when there is something to show.
 - Do not exceed ×1.2 extra zoom on 1080p footage in a 1080p timeline.
 - Nothing is done without evidence and without having **looked** at the `review_shots`/`review_video` sheets.

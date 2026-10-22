@@ -48,6 +48,22 @@ pass `timeline_offset_s=-music_start_s`. Re-run alignment after any cut that mov
 
 ## 4. Rhythm rules
 
+When the user requests more animation, audition a restrained phrase-level `lift`/`pop` or timed `karaoke`
+with selective `emphasis_words`. Choose one main behavior per section. Keep most words stable and use
+an impact overlay only at a meaningful payoff; do not bounce every word or force one-word cues throughout.
+Use short readable phrases (often 2–5 words as a starting point), preserving syntax and enough screen
+time for the actual speech speed. Never speed up captions solely to match an arbitrary word count.
+
+Preview a representative fast phrase, a long name/number and a two-line cue. A still style preview proves
+appearance only: play the rendered animation to check overshoot, clipped glyphs, layout jumps and reading
+time. Keep a stable baseline/zone and avoid alternating positions without a composition reason.
+Recheck on the final crop at phone size; leave space for app UI and speaker faces.
+
+Inspect the actual `add_captions`/`add_text_overlay` schemas for supported animation controls. Do not
+invent word-scale, bounce, tracking or easing parameters. Custom kinetic typography beyond supported
+animations needs a verified authoring path and must otherwise remain explicitly pending. Keep an SRT
+alongside burned captions when available; animation does not substitute for accurate words and timing.
+
 - Hook text in the first 0–3 s states the promise or conflict; one twist line mid-video at most.
 - One on-screen text at a time besides captions. Do not animate text, camera and SFX with equal force on the same beat.
 - Never reveal a punchline before it is said; emphasise it when it lands.

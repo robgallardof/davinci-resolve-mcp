@@ -21,6 +21,10 @@ comparison evidence. Use `davinci-resolve-mcp` and `forge_status`; modify copies
 
 ## Color, presets and LUTs
 
+For iPhone/iOS, Sony or DJI sources, camera matching, HDR/Log or requested LUTs, read
+[camera-aware color](references/camera-aware-color.md). Identify the recording profile, avoid double
+transforms and distinguish technical normalization from an optional creative look.
+
 - Before any look, check color management and input space. A creative preset does not convert Log/HDR to SDR.
   If you do not know the camera/space, inspect metadata and the reference before applying a conversion.
 - `review_shots`/`review_video` guide exposure and cast; confirm skin, whites and highlights visually.

@@ -36,9 +36,22 @@ For audio/color/LUTs use `color-audio-finishing`, with a before/after comparison
    duration and resolution (`render_status` + `review_video`).
 3. If something fails, fix it in the timeline and render again. Tell the user what you reviewed.
 
+## Temporal and audio continuity
+
+For creator polish, also check camera sync, crop sharpness and subject placement across angle changes;
+caption animation must remain readable in motion. For mixed camera/HDR/Log work, compare skin and
+highlights across cuts and verify the rendered output against the intended color pipeline.
+
+For designed transitions and repaired cuts, follow
+[transition review](../editorial-direction/references/transitions-and-flow.md#watch-and-listen-across-the-boundaries).
+Play each boundary with sound before and after rendering; sampled sheets cannot establish smoothness.
+Check cut-off words, ambience/level jumps, unintended black gaps, ghosting and framing snaps.
+Document intentional black/silence so it is distinguishable from defects. If playback or listening is
+unavailable, report temporal/audio review as pending rather than passing it from static frames.
+
 ## What the user always notices
 
 - Zooms on meaningless things or badly positioned.
 - Text covering faces; captions with invented words.
 - Wrong gender/number in text; spelling mistakes.
-- Long dead stretches; the screen still for more than ~3 s in entertainment content.
+- Long dead stretches with no story/action purpose; a held shot is not automatically a defect.

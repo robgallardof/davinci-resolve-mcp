@@ -25,6 +25,10 @@ and without the viewer noticing an "effect". The face rules: every zoom is ancho
 
 ## Choosing a style
 
+For alternate camera angles, stronger but controlled reframes, subject placement and the distinction
+between framing and optical focus, read [creator polish](../editorial-direction/references/creator-polish.md).
+The style/intensity values below are audition starting points, subordinate to effective resolution and intent.
+
 | Situation | Style | intensity |
 |---|---|---|
 | Energetic vertical (TikTok, Reels, Shorts, FB Reels) | `tiktok_punch` (hard cuts 1.00↔1.15) | 1.0–1.3 |
@@ -45,7 +49,7 @@ Craft rules:
 
 ## QC before delivery
 
-- Play the first 5 s: the hook must have a visual change before 2 s.
+- Play the first 5 s: the hook should establish the subject/promise clearly; add a visual change only if useful.
 - The face never leaves the safe area (see `list_formats` → `safe_rect_px`).
 - No black borders on rotations (`handheld` already adds the safety zoom).
 - The tight level never cuts the forehead or the chin.

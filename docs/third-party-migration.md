@@ -5,6 +5,24 @@ finishing, project authoring, media, timeline, color, Fusion and QC. It neither 
 
 ## How far along? (2026-10-04)
 
+Client integration update (2026-10-22): sync now generates Antigravity's workspace MCP configuration
+from the canonical launch spec. Added `docs/clients.md`, README/installation links, configuration parity
+and portable-reference tests. Validation: the offline suite passed (677 cases before adding the two
+new checks), then all 10 workspace checks passed. Client-specific live connections remain unverified;
+the guide requires `forge_status` in each client. Global client settings are not modified by sync.
+
+Further editorial update (2026-10-22): researched creator storytelling/retention using Colin & Samir
+and YouTube primary sources; added camera/subject polish and iPhone/Sony/DJI color references using
+manufacturer documentation. Expanded caption animation guidance and removed compulsory effect timing
+from entertainment QA. These are optional, brief-driven agent workflows, not new execution capabilities
+or measured retention gains. No live edit/render was performed for this update.
+
+Editorial workflow update (2026-10-22): added a transitions/flow reference to editorial direction,
+routed director and orientation editors to it, and added temporal/audio boundary review to QA.
+Includes source handles, motivated joins, sound bridges, motion continuity and finishing order.
+This updates agent guidance only; native transition insertion and arbitrary J/L trimming are not
+new server capabilities, and no live Resolve verification is claimed for this documentation change.
+
 **Own implementation complete; the final live verification in Resolve is pending a bridge reconnect. Read the evidence below before assuming coverage.**
 
 | Phase | Status | Evidence |

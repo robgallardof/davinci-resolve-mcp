@@ -39,6 +39,15 @@ The number of people does not dictate a layout.
 
 ## Coordination and acceptance
 
+For requested creator polish, read `editorial-direction/references/creator-polish.md`; set restrained,
+dynamic or high-energy intent from the brief. Route camera/profile questions to composition and color,
+and caption animation to titles. Camera brands and references do not imply automatic LUTs or effects.
+
+For a full polish request, read `editorial-direction/references/transitions-and-flow.md` and own
+continuity across shots as well as individual shot quality. Plan the joins, sound bridges and motion
+landings before final titles. Include applied/pending transitions and playback evidence in acceptance;
+verify current capabilities rather than promising unsupported effects.
+
 A reference with four frames may show four takes of the same person; interview + photo + B-roll
 does not imply several simultaneous speakers. Translate references as observation → option → reason → condition.
 Use new references to refine this piece, without turning them into global rules.

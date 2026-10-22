@@ -1,7 +1,8 @@
 """Make this folder usable from any coding agent. Idempotent; re-run after editing config/ or .agents/.
 
   * MCP: config/mcp.servers.json -> .mcp.json (Claude Code), .cursor/mcp.json,
-         .vscode/mcp.json, .gemini/settings.json, .codex/config.toml
+         .vscode/mcp.json, .gemini/settings.json, .codex/config.toml,
+         .agents/mcp_config.json (Antigravity workspace)
   * Docs: .agents/skills/resolve-delivery/references/platforms.md is generated from
     resolve_forge.domain.formats, so specs live in one place (the code).
   * Skills/agents: .agents/ is canonical; .claude/{skills,agents} are links to it
@@ -56,6 +57,7 @@ def render(servers: dict[str, dict]) -> dict[Path, str]:
         f"\n[mcp_servers.{name}]\n" + "".join(f"{k} = {toml_value(v)}\n" for k, v in spec.items() if v != {})
         for name, spec in servers.items())
     return {ROOT / ".mcp.json": std, ROOT / ".cursor" / "mcp.json": std,
+            ROOT / ".agents" / "mcp_config.json": std,
             ROOT / ".gemini" / "settings.json": std, ROOT / ".vscode" / "mcp.json": vscode,
             ROOT / ".codex" / "config.toml": codex,
             ROOT / ".agents" / "skills" / "resolve-delivery" / "references" / "platforms.md": platforms_doc()}

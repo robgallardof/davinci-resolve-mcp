@@ -9,7 +9,8 @@
 
 Edit DaVinci Resolve by talking to an AI agent that works like a producer and a professional editor. One MCP of our own
 (**resolve-forge**, 65 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
-Cursor, Gemini CLI and VS Code. Skills and roles are written in English; the agent answers in your language.
+Antigravity, Cursor, Gemini CLI and VS Code. Other local stdio MCP clients can import the launch definition.
+Skills and roles are written in English; the agent answers in your language.
 
 We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way (pure domain rules →
 services → thin MCP tools). No competing implementation is imported or packaged. See
@@ -30,13 +31,21 @@ Forge bridge and the agent configs. Free 21.0.x: open a project, then Workspace 
 Resolve starts). Studio: Preferences → System → General → External scripting using = Local. Then ask for `forge_status`.
 New here? Start with [First steps](docs/FIRST-STEPS.md).
 
+### Connect your client
+
+`python scripts/sync.py` generates project configurations for Claude Code, Codex, Antigravity, Cursor,
+Gemini CLI and VS Code from one launch definition. Open this repository, enable the MCP connection,
+then call `forge_status`. See [client setup and troubleshooting](docs/clients.md) for configuration paths,
+manual imports and version limits. A generated file does not establish a live connection by itself.
+
 ### What it does
 
 - **Editorial**: motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
   local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke) and text overlays, delivery.
 - **Entertainment pacing**: detects where the action is (pets, hands, jumps), faces and dead time, and rebuilds
   long shots as 1.2–2.8 s shots with alternating wide / x1.25 / x1.5 / crash-zoom framings that keep the subject
-  centred. Confirmed ranges with no people or animals are cut.
+  centred. Review suggested shot lengths and protect meaningful pauses, action and useful B-roll.
+  Only confirmed ranges with no narrative purpose should be removed.
 - **Self-review**: before building, a contact sheet of what each shot really shows (crop, faces, subject, text
   boxes) with flagged problems, text positions that avoid faces and an exposure/colour check with a gentle CDL;
   after rendering, a sheet of the delivered file with black/frozen detection. Bad zooms are downgraded automatically.
@@ -51,6 +60,10 @@ New here? Start with [First steps](docs/FIRST-STEPS.md).
   and QA specialists; they propose, and only the producer writes to Resolve, serially.
 - **Finishing**: color presets (natural/warm/crisp/muted) and LUTs on copies, dialogue enhancement to new WAVs with
   LUFS/true-peak measurement, pre-render checks.
+- **Professional polish guidance**: motivated angle/reframing changes, audio bridges and transition review;
+  optional animated caption accents and camera-aware iPhone/Sony/DJI color workflows. These are agent
+  instructions, not additional automatic effects: no dedicated native transition-insertion tool is provided.
+  Unknown recording profiles must be identified before Log/HDR conversion or technical LUT selection.
 - **Authoring**: projects/backups, bins and metadata, versioned clip/track edits, markers, interchange, CDL/LUT,
   gallery stills, Fusion graphs, silence/scene/sync/loudness, native AI capabilities and QC.
 - **Safety**: edits run on new working copies, previews default to `dry_run=true`, render saves first, original media
@@ -131,6 +144,7 @@ launched "inside Resolve", doctor, MCP tools over the bridge and the Studio dire
 The live suite keeps its projects and synthetic files for inspection and reopens your project at the end.
 
 [First steps](docs/FIRST-STEPS.md) · [Install](docs/install.md) · [Architecture](docs/architecture.md) ·
+[Client compatibility](docs/clients.md) ·
 [Editing playbook](docs/editing-playbook.md) · [Migration status](docs/third-party-migration.md)
 
 ## Español
@@ -145,6 +159,16 @@ están en inglés para que sirvan a cualquier usuario, pero el agente te respond
 4. Pide como a un editor: el agente propone mejoras, revisa los momentos que detectan las tools y trabaja sobre copias.
 
 Funciona en Windows, macOS y Linux (Free y Studio). Las rutas de cada sistema están en [docs/install.md](docs/install.md).
+
+**Clientes:** Claude Code, Codex, Antigravity, Cursor, Gemini CLI y VS Code tienen configuración de proyecto
+generada por `python scripts/sync.py`. Claude Desktop y otros clientes MCP locales pueden importar la entrada
+del servidor. Consulta [conexión, compatibilidad y diagnóstico](docs/clients.md); cada cliente debe habilitar
+el servidor y comprobar `forge_status`. La configuración no garantiza una conexión activa.
+
+**Acabado profesional:** el agente contempla reencuadres y cambios de plano con intención, continuidad de audio,
+subtítulos animados y color para iPhone, Sony y DJI según el perfil grabado. Se adapta al encargo sin imponer
+efectos ni LUTs. La inserción nativa de transiciones aún no tiene una herramienta dedicada; las limitaciones
+y revisiones pendientes se reportan explícitamente.
 
 Ejemplos: "Haz una versión Reels con movimiento y subtítulos bonitos con mi color de marca", "Es un stand-up:
 encuentra los remates y arma un TikTok sin cortar las pausas", "Del podcast horizontal haz un Reel que siga a quien habla",

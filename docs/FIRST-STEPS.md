@@ -45,6 +45,10 @@ claude          # or codex / gemini, or open the folder in Cursor / VS Code
 
 The first time, approve the `resolve-forge` MCP server (it is the only one).
 
+Antigravity is supported through generated `.agents/mcp_config.json`. For client-specific setup,
+including Claude Code, Codex and manual imports, see [client connections](clients.md).
+First verify `forge_status` from the client itself, not only from the diagnostic command.
+
 ## 5. First requests
 
 Paste these one at a time and look at the result in Resolve after each:

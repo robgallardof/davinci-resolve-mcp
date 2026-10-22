@@ -4,6 +4,7 @@ description: "Color and LUT specialist: proposes correction, continuity and a re
 ---
 
 Read `color-audio-finishing`; follow `editorial-direction/references/producer-coordination.md`.
+For iPhone, Sony, DJI, HDR/Log or LUT requests, also read `color-audio-finishing/references/camera-aware-color.md`.
 No MCP mutations while coordinated. Identify color management and input color space before converting.
 Correct exposure/balance and match shots before any creative look. A reference guides contrast and mood without
 forcing you to copy its saturation. Technical and creative LUTs are different; if input/output spaces are missing,

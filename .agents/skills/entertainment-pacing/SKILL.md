@@ -6,7 +6,10 @@ description: "Editing to entertain on social (TikTok, Reels, Shorts, vlogs, pets
 # Entertainment pacing (with zooms that make sense)
 
 Two rules that go together:
-1. **The screen never sits still**: no stretch longer than ~2–3 s without a change (cut, reframe, text, caption).
+1. **Attention follows the story**: review stretches around 2–3 s for useful changes (cut, reframe, text),
+   but keep sustained action, suspense, demonstrations and reactions when they hold interest. This is
+   a review prompt, not a mandatory cut interval. Read
+   [creator polish](../editorial-direction/references/creator-polish.md) for requested retention/camera polish.
 2. **Every zoom has a reason and is well placed**: it moves closer to something that matters (the face in a reaction, the pet,
    the object of the action) and leaves it centred and complete. A zoom on a sleeve, a wall, the centre when the action
    is in a corner, or during a camera move, is worse than no zoom.
@@ -42,7 +45,8 @@ inside it, rather than over-trimming.
 
 ## No interaction, cut it
 
-In this project, a confirmed range with no people or animals is cut even if the camera or background moves:
+Cut a confirmed range with no people or animals only when it also has no narrative purpose;
+preserve useful establishing shots, objects, demonstrations and B-roll. For purposeless ranges use:
 `hints: [{start_s, end_s, subject: "none"}]`. For a confirmed pet use `subject: "animal"` and `focus`;
 for a person use `subject: "person"`. Motion does not prove an animal is present: look at the source.
 A still face or pet can matter; these ranges are protected from low-energy trimming.

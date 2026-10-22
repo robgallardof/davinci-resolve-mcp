@@ -17,3 +17,6 @@ keeping it. Use manual hints when detection is uncertain. For different sources 
 `plan_composition` segments (source, start, `subject`/`crop`, audio master) and hand over the reviewed sheet/preview.
 Return alternatives, intervals, confirmed boxes, suggested parameters per schema and the evidence to review
 before/after. Flag insufficient material.
+
+For requested camera changes/focus polish, read `editorial-direction/references/creator-polish.md`.
+Distinguish actual synchronized angles from digital reframes and optical focus from subject placement.
