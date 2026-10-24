@@ -139,3 +139,17 @@ def test_docs_list_every_registered_tool_and_the_real_count():
                 ".agents/skills/davinci-resolve-mcp/SKILL.md"):
         counts = {int(n) for n in re.findall(r"(\d+) (?:tools|herramientas)\b", (ROOT / doc).read_text(encoding="utf-8"))}
         assert counts <= {len(names)}, f"{doc} mentions {counts}, server has {len(names)}"
+
+
+def test_server_exposes_skills_and_roles_over_mcp():
+    """Any MCP client (not only those reading .agents/) gets the playbooks as resources and prompts."""
+    import asyncio
+
+    from mcp.server.fastmcp import FastMCP
+    from resolve_forge.server import register_playbooks
+    mcp = FastMCP("playbooks")
+    register_playbooks(mcp, ROOT)
+    skills = {p.parent.name for p in (ROOT / ".agents/skills").glob("*/SKILL.md")}
+    roles = {p.stem for p in (ROOT / ".agents/agents").glob("*.md")}
+    assert {str(r.uri) for r in asyncio.run(mcp.list_resources())} == {f"skill://{s}" for s in skills}
+    assert {p.name for p in asyncio.run(mcp.list_prompts())} == roles

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Removes AI attribution from commit messages: "Co-Authored-By: Claude/Anthropic/…" trailers and
+# "Generated with Claude Code" lines. Enable once per clone: git config core.hooksPath .githooks
+msg_file="$1"
+tmp="$msg_file.tmp"
+grep -viE '^[[:space:]]*(co-authored-by:.*(claude|anthropic|openai|chatgpt|codex|gemini|copilot|cursor)|.*generated with \[?claude code)' "$msg_file" > "$tmp"
+# drop the blank lines left at the end
+awk '{a[NR]=$0} END {n=NR; while (n>0 && a[n] ~ /^[[:space:]]*$/) n--; for (i=1;i<=n;i++) print a[i]}' "$tmp" > "$msg_file"
+rm -f "$tmp"

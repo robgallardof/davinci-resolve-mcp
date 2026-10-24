@@ -9,4 +9,6 @@ uv sync --python 3.12 --extra vision --extra speech
 uv run python -m resolve_forge.bridge_install.install_resolve_bridge
 uv run pytest -q
 uv run python "$task_root/scripts/sync.py"
+git -C "$task_root" config core.hooksPath .githooks
+uv run python "$task_root/scripts/install-mcp.py" --with-skills   # user-wide in every detected client
 echo "Done. Free: Workspace > Scripts > resolve_bridge. Then ask your agent for forge_status."

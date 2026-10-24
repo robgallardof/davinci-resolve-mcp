@@ -13,5 +13,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Forge tests failed" }
     uv run python (Join-Path $taskRoot "scripts/sync.py")
     if ($LASTEXITCODE -ne 0) { throw "Config sync failed" }
+    git -C $taskRoot config core.hooksPath .githooks
+    uv run python (Join-Path $taskRoot "scripts/install-mcp.py") --with-skills   # user-wide in every detected client
 } finally { Pop-Location }
 Write-Host "Done. Free: Workspace > Scripts > resolve_bridge. Then ask your agent for forge_status."

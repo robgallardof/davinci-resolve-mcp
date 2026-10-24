@@ -1,75 +1,88 @@
-# davinci-agents
+<div align="center">
+
+# 🎬 davinci-agents
+
+**Edit in DaVinci Resolve by talking to an AI that works like a producer and a professional editor.**<br>
+Vertical and horizontal cuts, motion that keeps faces whole, designed captions, music on the beat,<br>
+color and audio finishing — reviewed before and after every render.
 
 [![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
-**Windows · macOS · Linux** — Resolve Free and Studio
+![python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-65%20tools-8A2BE2)
+![Resolve](https://img.shields.io/badge/DaVinci%20Resolve-Free%20%26%20Studio-233A51)
+![OS](https://img.shields.io/badge/Windows%20·%20macOS%20·%20Linux-555)
 
-**[English](#english)** · **[Español](#español)**
+**English** · [Español](README.es.md)
 
-## English
+</div>
 
-Edit DaVinci Resolve by talking to an AI agent that works like a producer and a professional editor. One MCP of our own
-(**resolve-forge**, 65 tools), a Free-edition bridge, portable editor roles and skills. Works with Claude Code, Codex,
-Antigravity, Cursor, Gemini CLI and VS Code. Other local stdio MCP clients can import the launch definition.
-Skills and roles are written in English; the agent answers in your language.
+---
 
-We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way (pure domain rules →
-services → thin MCP tools). No competing implementation is imported or packaged. See
-[selection, improvements and status](docs/third-party-migration.md).
+## ✨ Why it's different
 
-### Install
+| | |
+|---|---|
+| 🎯 **Intent, not buttons** | "Make a Reels version with movement and captions in my brand colour" → reframe, motion, captions, export. |
+| 👀 **It looks before it cuts** | Contact sheets of what each shot really shows (faces, subject, text boxes) before building, and of the rendered file after. Bad zooms are downgraded automatically. |
+| 🎭 **Producer judgement by genre** | Comedy keeps the pause before the punchline; music cuts on the phrase; interviews follow whoever speaks. |
+| 🆓 **Works on Resolve Free** | Our own bridge (HMAC, anti-replay, explicit method list) for the Free edition; direct scripting on Studio. |
+| 🛡️ **Safe by default** | Works on copies, previews with `dry_run=true`, saves before rendering, never deletes media or projects. |
+| 🧩 **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
+
+## 🚀 Quick start
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
 ```
-
 ```sh
 sh scripts/bootstrap.sh                                                     # macOS / Linux
 ```
 
-Works on Windows, macOS and Linux. Requires Resolve and uv. The bootstrap installs Python 3.12, Forge, speech/vision dependencies, bundled ffmpeg, the
-Forge bridge and the agent configs. Free 21.0.x: open a project, then Workspace → Scripts → resolve_bridge (every time
-Resolve starts). Studio: Preferences → System → General → External scripting using = Local. Then ask for `forge_status`.
-New here? Start with [First steps](docs/FIRST-STEPS.md).
+The bootstrap installs Python 3.12, **resolve-forge**, speech/vision extras, bundled ffmpeg, the Free-edition bridge,
+every client's config, and registers the MCP for your user in each installed client.
 
-### Connect your client
+1. **Resolve Free 21.0.x**: open a project → *Workspace → Scripts → resolve_bridge* (every time Resolve starts).
+   **Studio**: *Preferences → System → General → External scripting using = Local*.
+2. Ask your agent for `forge_status`.
+3. Talk like you would to an editor. New here? → [First steps](docs/FIRST-STEPS.md).
 
-`python scripts/sync.py` generates project configurations for Claude Code, Codex, Antigravity, Cursor,
-Gemini CLI and VS Code from one launch definition. Open this repository, enable the MCP connection,
-then call `forge_status`. See [client setup and troubleshooting](docs/clients.md) for configuration paths,
-manual imports and version limits. A generated file does not establish a live connection by itself.
+### Install the MCP for your user (any client)
 
-### What it does
+```powershell
+python scripts/install-mcp.py --list         # which clients are installed
+python scripts/install-mcp.py --with-skills  # Claude Code, Codex, Antigravity, Cursor, VS Code, Gemini, Windsurf, Claude Desktop
+python scripts/install-mcp.py --remove       # undo (each edited file is backed up as .bak)
+```
 
-- **Editorial**: motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
-  local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke) and text overlays, delivery.
-- **Entertainment pacing**: detects where the action is (pets, hands, jumps), faces and dead time, and rebuilds
-  long shots as 1.2–2.8 s shots with alternating wide / x1.25 / x1.5 / crash-zoom framings that keep the subject
-  centred. Review suggested shot lengths and protect meaningful pauses, action and useful B-roll.
-  Only confirmed ranges with no narrative purpose should be removed.
-- **Self-review**: before building, a contact sheet of what each shot really shows (crop, faces, subject, text
-  boxes) with flagged problems, text positions that avoid faces and an exposure/colour check with a gentle CDL;
-  after rendering, a sheet of the delivered file with black/frozen detection. Bad zooms are downgraded automatically.
-- **Several people**: frame whoever is speaking (faces + mouth motion + voice) or split the screen for 2–5+
-  participants with complete faces. A producer's choice, never an automatic rule.
-- **Multi-source composition**: mosaics (1–5 panels) or hero + support from different videos and photos — several takes
-  of one person, interview + photo + B-roll — with one explicit audio master, preview first.
-- **Production by genre**: an editorial brief per genre (comedy, music, electronic, interview, cinematic, education,
-  product, gaming, vlog); candidate punchlines, reactions and questions; beat grid and phrase-aligned music cuts;
-  music videos and visualizers; exact lyrics/script timing; motivated sound effects; music beds ducked under the voice.
-- **Producer and specialists**: `plan_production` turns a brief into work orders for composition, audio, color, titles
-  and QA specialists; they propose, and only the producer writes to Resolve, serially.
-- **Finishing**: color presets (natural/warm/crisp/muted) and LUTs on copies, dialogue enhancement to new WAVs with
-  LUFS/true-peak measurement, pre-render checks.
-- **Professional polish guidance**: motivated angle/reframing changes, audio bridges and transition review;
-  optional animated caption accents and camera-aware iPhone/Sony/DJI color workflows. These are agent
-  instructions, not additional automatic effects: no dedicated native transition-insertion tool is provided.
-  Unknown recording profiles must be identified before Log/HDR conversion or technical LUT selection.
-- **Authoring**: projects/backups, bins and metadata, versioned clip/track edits, markers, interchange, CDL/LUT,
-  gallery stills, Fusion graphs, silence/scene/sync/loudness, native AI capabilities and QC.
-- **Safety**: edits run on new working copies, previews default to `dry_run=true`, render saves first, original media
-  is never overwritten. No project/media deletion and no arbitrary Python/Lua execution.
+Inside this folder, `python scripts/sync.py` writes the project configs from one launch definition
+(`config/mcp.servers.json`). Paths, manual imports and troubleshooting: [client setup](docs/clients.md).
 
-### Tools
+## 🎞️ What it does
+
+- **Editorial** — motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
+  local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke), text overlays, delivery.
+- **Entertainment pacing** — finds the action (pets, hands, jumps), faces and dead time; rebuilds long shots as
+  1.2–2.8 s shots with wide / x1.25 / x1.5 / crash-zoom framings that keep the subject centred, while protecting
+  meaningful pauses, action and useful B-roll.
+- **Self-review** — before building: what each shot shows, flagged problems, text positions off faces, exposure/colour
+  check with a gentle CDL. After rendering: a sheet of the delivered file with black/frozen-frame detection.
+- **Several people** — frame whoever is speaking (faces + mouth motion + voice) or split the screen for 2–5+ people.
+- **Multi-source composition** — mosaics (1–5 panels) or hero + support from different videos and photos, one explicit
+  audio master, preview first.
+- **Production by genre** — briefs for comedy, music, electronic, interview, cinematic, education, product, gaming,
+  vlog; punchlines and reactions; beat grid and phrase-aligned cuts; music videos and visualizers; exact lyrics timing;
+  motivated sound effects; music beds ducked under the voice.
+- **Producer and specialists** — `plan_production` turns a brief into work orders for composition, audio, color,
+  titles and QA; they propose, only the producer writes to Resolve, serially.
+- **Finishing** — color presets (natural/warm/crisp/muted) and LUTs on copies; dialogue enhancement to new WAVs with
+  LUFS/true-peak measurement; pre-render checks.
+- **Authoring** — projects/backups, bins and metadata, versioned clip/track edits, markers, interchange, CDL/LUT,
+  gallery stills, Fusion graphs, silence/scene/sync/loudness, native AI and QC.
+
+> Polish guidance (motivated reframes, audio bridges, camera-aware iPhone/Sony/DJI color) lives in the skills as agent
+> instructions — not as extra automatic effects. There is no dedicated native transition-insertion tool yet.
+
+## 🛠️ Tools (65 tools)
 
 | Job | Tools |
 |---|---|
@@ -89,15 +102,18 @@ manual imports and version limits. A generated file does not establish a live co
 | Connection recovery | repair_bridge_connection |
 | Analysis and native AI | analyse_scenes, native_ai |
 
-Notes:
-- `preflight_render` checks sources, enabled tracks, gaps and properties before rendering; a visual review is still required.
+<details>
+<summary>Notes on a few tools</summary>
+
+- `preflight_render` checks sources, enabled tracks, gaps and properties; a visual review is still required.
 - `apply_grade_preset` previews by default and applies CDL on a copy. `enhance_audio` writes a new WAV (gentle filter,
-  compression, limiter) and measures LUFS/true peak; it does not separate voices or replace final-mix normalisation.
+  compression, limiter) and measures LUFS/true peak; it does not separate voices.
 - Speaker detection uses mouth motion + audio energy: candidates, not diarization. Review the switches.
 - `build_composition` requires `reviewed=true` after looking at the `plan_composition` sheet and preview.
 - `repair_bridge_connection` (Windows) only retires an orphaned bridge helper whose identity, port and dead parent were verified.
+</details>
 
-### Roles and skills
+## 👥 Roles and skills
 
 | Role (`.agents/agents/`) | Job |
 |---|---|
@@ -105,71 +121,50 @@ Notes:
 | `vertical-editor` / `horizontal-editor` | End-to-end editors for 9:16–4:5 and 16:9 |
 | `composition-editor`, `audio-editor`, `colorist`, `titles-editor`, `qa-editor` | Specialists that analyse and propose to the producer |
 
-Skills (`.agents/skills/`): `davinci-resolve-mcp`, `editorial-direction`, `entertainment-pacing`, `vertical-video`,
-`horizontal-video`, `dynamic-zoom-talking-head`, `captions-and-titles`, `color-audio-finishing`, `video-qa`, `resolve-delivery`.
+**Skills** (`.agents/skills/`): `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` ·
+`horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
 
-### Example requests
+## 💬 Ask it like an editor
 
-- "Make a Reels version with movement and nice captions in my brand colour."
-- "It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."
-- "Make a music video for my electronic track with cuts on the beat, faster on the drop, and the exact lyrics."
-- "Two people in a horizontal podcast → a Reel that follows whoever is speaking."
-- "Combine the interview with these photos like this reference: interview on top, photo below."
-- "Put background music under the podcast voice and a whoosh at each topic change."
+> *"Make a Reels version with movement and nice captions in my brand colour."*
+> *"It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."*
+> *"Music video for my electronic track — cuts on the beat, faster on the drop, exact lyrics."*
+> *"Two people in a horizontal podcast → a Reel that follows whoever is speaking."*
+> *"Interview on top, photo below, like this reference."*
+> *"Background music under the podcast voice and a whoosh at each topic change."*
 
-### Structure
+Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
 
-- `mcp/resolve-forge/src/resolve_forge/domain`: pure rules (framing, cuts, pacing, composition, ducking, alignment, text design).
-- `analysis` and `services`: signals and use cases, one per responsibility.
-- `gateway`, `native_paths`, `bridge`: connection and our own protocol (HMAC, anti-replay, explicit method list).
-- `tools.py`, `authoring_tools.py`, `production_tools.py`, `qa_tools.py`, `producer_tools.py`, `composition_tools.py`:
-  thin MCP schemas over the same serial executor.
-- `config/mcp.servers.json` → `python scripts/sync.py`: one server in every client.
-- `.agents/skills` and `.agents/agents`: canonical skills and roles.
-- `config/provenance.json`: studied commits. `docs/api-behavior.md`: verified API pitfalls.
+## 🏗️ Architecture
 
-### Verification
+```
+mcp/resolve-forge/src/resolve_forge/
+  domain/      pure rules: framing, cuts, pacing, composition, ducking, alignment, text design, formats
+  analysis/    signals (faces, motion, audio)          services/  use cases, one per responsibility
+  gateway · native_paths · bridge                      connection + our own Free-edition protocol
+  tools.py · authoring_tools.py · production_tools.py · qa_tools.py · producer_tools.py · composition_tools.py
+               thin MCP schemas over one serial executor           server.py  composition root
+```
+
+We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way — no competing
+implementation is imported. [Selection, improvements and status](docs/third-party-migration.md) ·
+[Verified API pitfalls](docs/api-behavior.md).
+
+## 🧪 Verification
 
 ```sh
 cd mcp/resolve-forge
-uv run pytest -q          # no Resolve needed
-uv run pytest -m live     # Resolve open + bridge running; preserves its scratch projects
+uv run pytest -q          # offline: Free/bridge, Studio and Resolve 19 fakes, real stdio, OS simulation
+uv run pytest -m live     # Resolve open + bridge running: end-to-end render with pixel comparison
 uv run resolve-forge-doctor
 ```
 
-CI runs the offline suite on Windows, macOS and Linux on every push (`.github/workflows/tests.yml`).
-`tests/integration/test_cross_platform.py` also simulates each OS on any host: installer folders, the bridge
-launched "inside Resolve", doctor, MCP tools over the bridge and the Studio direct path.
+CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `git config core.hooksPath .githooks`
+(strips AI co-author trailers).
 
-The live suite keeps its projects and synthetic files for inspection and reopens your project at the end.
+<div align="center">
 
 [First steps](docs/FIRST-STEPS.md) · [Install](docs/install.md) · [Architecture](docs/architecture.md) ·
-[Client compatibility](docs/clients.md) ·
-[Editing playbook](docs/editing-playbook.md) · [Migration status](docs/third-party-migration.md)
+[Clients](docs/clients.md) · [Editing playbook](docs/editing-playbook.md) · [Migration status](docs/third-party-migration.md)
 
-## Español
-
-Edita video en DaVinci Resolve hablando con un agente que trabaja como productor y editor profesional. Un solo MCP
-propio (**resolve-forge**, **65 herramientas**), bridge propio para Free, roles y skills portables. Las skills y los roles
-están en inglés para que sirvan a cualquier usuario, pero el agente te responde en español.
-
-1. Ejecuta `scripts/bootstrap.ps1` (Windows) o `sh scripts/bootstrap.sh` (macOS/Linux) y abre Resolve con un proyecto.
-2. Free 21.0.x: Workspace → Scripts → resolve_bridge (cada vez que abres Resolve). Studio: External scripting using = Local.
-3. Abre tu agente en esta carpeta y pide `forge_status`.
-4. Pide como a un editor: el agente propone mejoras, revisa los momentos que detectan las tools y trabaja sobre copias.
-
-Funciona en Windows, macOS y Linux (Free y Studio). Las rutas de cada sistema están en [docs/install.md](docs/install.md).
-
-**Clientes:** Claude Code, Codex, Antigravity, Cursor, Gemini CLI y VS Code tienen configuración de proyecto
-generada por `python scripts/sync.py`. Claude Desktop y otros clientes MCP locales pueden importar la entrada
-del servidor. Consulta [conexión, compatibilidad y diagnóstico](docs/clients.md); cada cliente debe habilitar
-el servidor y comprobar `forge_status`. La configuración no garantiza una conexión activa.
-
-**Acabado profesional:** el agente contempla reencuadres y cambios de plano con intención, continuidad de audio,
-subtítulos animados y color para iPhone, Sony y DJI según el perfil grabado. Se adapta al encargo sin imponer
-efectos ni LUTs. La inserción nativa de transiciones aún no tiene una herramienta dedicada; las limitaciones
-y revisiones pendientes se reportan explícitamente.
-
-Ejemplos: "Haz una versión Reels con movimiento y subtítulos bonitos con mi color de marca", "Es un stand-up:
-encuentra los remates y arma un TikTok sin cortar las pausas", "Del podcast horizontal haz un Reel que siga a quien habla",
-"Combina la entrevista con estas fotos como en esta referencia". Guía completa en [Primeros pasos](docs/FIRST-STEPS.md).
+</div>

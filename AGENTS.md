@@ -15,6 +15,9 @@ Skills and roles are written in English; always reply to the user in the user's 
 | `docs/` | First steps, install, architecture, editing playbook, API behaviour and migration status |
 
 Client configuration and connection checks: [docs/clients.md](docs/clients.md).
+User-wide install in every detected client (Claude Code, Codex, Antigravity, Cursor, VS Code, Gemini CLI, Windsurf,
+Claude Desktop): `python scripts/install-mcp.py --with-skills`. The server also exposes every skill as an MCP resource
+(`skill://<name>`) and every role as an MCP prompt.
 
 ## How to work
 
@@ -62,3 +65,4 @@ Client configuration and connection checks: [docs/clients.md](docs/clients.md).
   mention it in the matching skill and log progress in the status section of `docs/third-party-migration.md`.
 - Own implementations only: do not copy competitors' servers or modules. Keep domain → services → tools and isolated transports.
   Provenance and improvements log: `docs/third-party-migration.md`.
+- Commits: `git config core.hooksPath .githooks` once per clone; the `commit-msg` hook strips AI co-author trailers.

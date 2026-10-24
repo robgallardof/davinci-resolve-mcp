@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib
 import logging
 import os
+import re
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
@@ -19,16 +21,42 @@ Design: list_text_styles -> preview_text_style -> add_captions(style='auto', wor
 Default captions and overlays use coherent modern art direction, short entry animation and safe-zone layout.
 Respect tone and brand colors; do not stack camera punches, titles and caption pops on every word.
 Errors carry a stable `code` and a `hint`.
-Resources: resolve://status, resolve://timeline, forge://formats, forge://styles.
+Resources: resolve://status, resolve://timeline, forge://formats, forge://styles, skill://<name> (playbooks).
+Prompts: one per editor role (video-director, vertical-editor, ...).
 For granular work (media pool, color nodes, Fairlight, markers, transcription, Fusion graphs)
 use Forge-owned authoring tools: project_workflow, ingest_media, edit_clips, grade_clips, apply_fusion_graph."""
+
+
+WORKSPACE = Path(os.environ.get("DAVINCI_AGENTS_ROOT") or Path(__file__).resolve().parents[3])
+_FRONTMATTER = re.compile(r"^---\n(.*?)\n---\n", re.S)
+
+
+def _description(text: str) -> str:
+    m = _FRONTMATTER.match(text)
+    found = re.search(r'description:\s*"?(.*?)"?\s*$', m[1], re.M) if m else None
+    return found[1] if found else ""
+
+
+def _constant(text: str):
+    return lambda: text  # no parameters, or FastMCP would expose them as arguments
+
+
+def register_playbooks(mcp: FastMCP, root: Path = WORKSPACE) -> None:
+    """Skills become resources (skill://<name>) and roles become prompts, so any MCP client gets the playbooks."""
+    for skill in sorted(root.glob(".agents/skills/*/SKILL.md")):
+        text = skill.read_text(encoding="utf-8")
+        mcp.resource(f"skill://{skill.parent.name}", name=skill.parent.name, description=_description(text),
+                     mime_type="text/markdown")(_constant(text))
+    for role in sorted(root.glob(".agents/agents/*.md")):
+        text = role.read_text(encoding="utf-8")
+        mcp.prompt(name=role.stem, description=_description(text))(_constant(_FRONTMATTER.sub("", text, count=1)))
 
 
 def build() -> FastMCP:
     mcp = FastMCP("resolve-forge", instructions=INSTRUCTIONS)
     session = Session()
     tools.register(mcp, session)
-
+    register_playbooks(mcp)
     return mcp
 
 

@@ -30,3 +30,7 @@ mcp/resolve-forge/src/resolve_forge/api/
 
 # local agent tooling state
 .serena/
+
+# personal backups unrelated to this project
+artifacts/
+*.bak
