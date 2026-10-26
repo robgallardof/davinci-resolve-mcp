@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="72" viewBox="0 0 900 72" role="img" aria-label="Qué lo hace distinto">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+    <linearGradient id="t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+    <linearGradient id="l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b5cf6" stop-opacity="0.75"/><stop offset="1" stop-color="#0ea5e9" stop-opacity="0"/></linearGradient>
+    <style>text { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }</style>
+  </defs>
+  <rect x="4" y="14" width="44" height="44" rx="13" fill="url(#g)"/>
+  <text x="26" y="43" text-anchor="middle" style="font-size:18px;font-weight:800;fill:#ffffff">01</text>
+  <text x="64" y="47" style="font-size:28px;font-weight:800;letter-spacing:-0.4px" fill="url(#t)">Qué lo hace distinto</text>
+  <rect x="408" y="35" width="486" height="2" rx="1" fill="url(#l)"/>
+</svg>

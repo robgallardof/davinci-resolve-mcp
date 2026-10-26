@@ -1,10 +1,11 @@
 <div align="center">
 
-# 🎬 davinci-agents
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner-es-dark.svg">
+  <img src="assets/readme/banner-es-light.svg" alt="davinci-resolve-mcp — Edita en DaVinci Resolve hablando con un productor de IA" width="100%">
+</picture>
 
-**Edita en DaVinci Resolve hablando con una IA que trabaja como productor y editor profesional.**<br>
-Cortes verticales y horizontales, movimiento sin cortar caras, subtítulos con diseño, música al beat,<br>
-color y audio terminados — revisado antes y después de cada render.
+<br/>
 
 [![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
@@ -16,9 +17,21 @@ color y audio terminados — revisado antes y después de cada render.
 
 </div>
 
----
+<p align="center">
+<a href="#-qué-lo-hace-distinto"><img src="https://img.shields.io/badge/Qu%C3%A9%20lo%20hace%20distinto-6D28D9?style=for-the-badge" alt="Qué lo hace distinto" /></a>
+<a href="#-inicio-rápido"><img src="https://img.shields.io/badge/Inicio%20r%C3%A1pido-5B21B6?style=for-the-badge" alt="Inicio rápido" /></a>
+<a href="#️-qué-hace"><img src="https://img.shields.io/badge/Qu%C3%A9%20hace-4F46E5?style=for-the-badge" alt="Qué hace" /></a>
+<a href="#️-herramientas-65"><img src="https://img.shields.io/badge/Herramientas%20%2865%29-4338CA?style=for-the-badge" alt="Herramientas (65)" /></a>
+<a href="#-roles-y-skills"><img src="https://img.shields.io/badge/Roles%20y%20skills-2563EB?style=for-the-badge" alt="Roles y skills" /></a>
+<a href="#-pídelo-como-a-un-editor"><img src="https://img.shields.io/badge/P%C3%ADdelo%20como%20a%20un%20editor-0284C7?style=for-the-badge" alt="Pídelo como a un editor" /></a>
+<a href="#️-arquitectura"><img src="https://img.shields.io/badge/Arquitectura-0EA5E9?style=for-the-badge" alt="Arquitectura" /></a>
+<a href="#-verificación"><img src="https://img.shields.io/badge/Verificaci%C3%B3n-0891B2?style=for-the-badge" alt="Verificación" /></a>
+</p>
 
-## ✨ Qué lo hace distinto
+<p align="center"><img src="assets/readme/divider.svg" alt="" width="80%" /></p>
+
+<a id="-qué-lo-hace-distinto"></a>
+<p align="center"><img src="assets/readme/sections/es-01.svg" alt="01 · Qué lo hace distinto" width="100%" /></p>
 
 | | |
 |---|---|
@@ -29,7 +42,8 @@ color y audio terminados — revisado antes y después de cada render.
 | 🛡️ **Seguro por defecto** | Trabaja en copias, previsualiza con `dry_run=true`, guarda antes de renderizar y nunca borra medios ni proyectos. |
 | 🧩 **Cualquier agente** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop; el servidor incluye sus skills (`skill://…`) y roles de editor (prompts). |
 
-## 🚀 Inicio rápido
+<a id="-inicio-rápido"></a>
+<p align="center"><img src="assets/readme/sections/es-02.svg" alt="02 · Inicio rápido" width="100%" /></p>
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -54,7 +68,8 @@ python scripts/install-mcp.py --with-skills  # Claude Code, Codex, Antigravity, 
 python scripts/install-mcp.py --remove       # deshacer (cada archivo editado se respalda como .bak)
 ```
 
-## 🎞️ Qué hace
+<a id="️-qué-hace"></a>
+<p align="center"><img src="assets/readme/sections/es-03.svg" alt="03 · Qué hace" width="100%" /></p>
 
 - **Edición**: movimiento para gente hablando a cámara, versiones verticales/horizontales, mejores momentos,
   transcripción local, subtítulos animados con diseño (Creator / Studio / Editorial / Impact, karaoke), textos y entrega.
@@ -76,7 +91,41 @@ python scripts/install-mcp.py --remove       # deshacer (cada archivo editado se
 
 La lista completa de las **65 herramientas** está en el [README en inglés](README.md#️-tools-65-tools).
 
-## 👥 Roles y skills
+<a id="️-herramientas-65"></a>
+<p align="center"><img src="assets/readme/sections/es-04.svg" alt="04 · Herramientas (65)" width="100%" /></p>
+
+| Trabajo | Herramientas |
+|---|---|
+| Estado y planeación | forge_status, list_clips, list_styles, list_formats, preview_motion, list_capabilities, audit_timeline, open_resolve_page |
+| Edición | apply_motion, clear_motion, make_platform_version, locate_subject, find_highlights, assemble_timeline |
+| Voz, texto y entrega | transcribe_timeline, align_text, list_text_styles, preview_text_style, add_captions, add_text_overlay, render_for, render_status |
+| Ritmo y foco (entretenimiento) | plan_energized_edit, energize_timeline |
+| Autorrevisión (antes y después del render) | review_shots, review_video |
+| Varias personas (podcast, entrevista) | plan_speaker_layout, build_speaker_layout |
+| Composición multifuente y órdenes del productor | plan_composition, build_composition, plan_production |
+| Producción por género | plan_edit, find_story_moments, analyse_music, plan_beat_cuts, assemble_montage, create_music_visualizer |
+| Sonido | add_music_bed, place_sound_effects, analyse_audio, normalise_audio, sync_audio |
+| Proyectos y medios | project_workflow, configure_project, list_media, ingest_media, organise_media, media_metadata |
+| Timeline | timeline_versions, edit_clips, timeline_markers, configure_track, export_interchange |
+| Color y Fusion | grade_clips, inspect_grade, prepare_lut, gallery_stills, apply_fusion_graph, inspect_fusion |
+| Acabado y revisiones antes del render | preflight_render, apply_grade_preset, enhance_audio |
+| Recuperar la conexión | repair_bridge_connection |
+| Análisis e IA nativa | analyse_scenes, native_ai |
+
+<details>
+<summary>Notas sobre algunas herramientas</summary>
+
+- `preflight_render` revisa fuentes, pistas activas, huecos y propiedades; igual hace falta una revisión visual.
+- `apply_grade_preset` muestra una vista previa por defecto y aplica CDL sobre una copia. `enhance_audio` escribe un WAV
+  nuevo (filtro suave, compresión y limitador) y mide LUFS/true peak; no separa voces.
+- La detección de quién habla usa movimiento de boca + energía del audio: son candidatos, no diarización. Revisa los cambios.
+- `build_composition` exige `reviewed=true` después de ver la hoja y la vista previa de `plan_composition`.
+- `repair_bridge_connection` (Windows) solo retira un helper del bridge huérfano cuya identidad, puerto y proceso padre
+  muerto se verificaron.
+</details>
+
+<a id="-roles-y-skills"></a>
+<p align="center"><img src="assets/readme/sections/es-05.svg" alt="05 · Roles y skills" width="100%" /></p>
 
 | Rol | Trabajo |
 |---|---|
@@ -88,7 +137,8 @@ La lista completa de las **65 herramientas** está en el [README en inglés](REA
 `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`.
 Están en inglés para servir a cualquiera; el agente te responde en español.
 
-## 💬 Pídelo como a un editor
+<a id="-pídelo-como-a-un-editor"></a>
+<p align="center"><img src="assets/readme/sections/es-06.svg" alt="06 · Pídelo como a un editor" width="100%" /></p>
 
 > *"Haz una versión Reels con movimiento y subtítulos bonitos con mi color de marca."*
 > *"Es un stand-up: encuentra los remates y arma un TikTok sin cortar las pausas."*
@@ -97,7 +147,24 @@ Están en inglés para servir a cualquiera; el agente te responde en español.
 
 Combínalo con [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): renderiza aquí, programa allá.
 
-## 🧪 Verificación
+<a id="️-arquitectura"></a>
+<p align="center"><img src="assets/readme/sections/es-07.svg" alt="07 · Arquitectura" width="100%" /></p>
+
+```
+mcp/resolve-forge/src/resolve_forge/
+  domain/      reglas puras: encuadre, cortes, ritmo, composición, ducking, alineación, diseño de texto, formatos
+  analysis/    señales (caras, movimiento, audio)       services/  casos de uso, uno por responsabilidad
+  gateway · native_paths · bridge                      conexión + nuestro protocolo propio para la edición Free
+  tools.py · authoring_tools.py · production_tools.py · qa_tools.py · producer_tools.py · composition_tools.py
+               esquemas MCP delgados sobre un solo ejecutor en serie       server.py  raíz de composición
+```
+
+Estudiamos los MCP públicos de DaVinci Resolve y reconstruimos a nuestra manera las capacidades útiles — no se importa
+ninguna implementación de la competencia. [Selección, mejoras y estado](docs/third-party-migration.md) ·
+[Problemas de la API verificados](docs/api-behavior.md).
+
+<a id="-verificación"></a>
+<p align="center"><img src="assets/readme/sections/es-08.svg" alt="08 · Verificación" width="100%" /></p>
 
 ```sh
 cd mcp/resolve-forge
@@ -112,3 +179,7 @@ uv run resolve-forge-doctor
 [Clientes](docs/clients.md) · [Manual de edición](docs/editing-playbook.md) · [Estado de migración](docs/third-party-migration.md)
 
 </div>
+
+<br/>
+
+<img src="assets/readme/footer-es.svg" alt="davinci-resolve-mcp" width="100%" />

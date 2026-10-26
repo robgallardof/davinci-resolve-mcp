@@ -1,10 +1,11 @@
 <div align="center">
 
-# 🎬 davinci-agents
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner-en-dark.svg">
+  <img src="assets/readme/banner-en-light.svg" alt="davinci-resolve-mcp — Edit in DaVinci Resolve by talking to an AI producer" width="100%">
+</picture>
 
-**Edit in DaVinci Resolve by talking to an AI that works like a producer and a professional editor.**<br>
-Vertical and horizontal cuts, motion that keeps faces whole, designed captions, music on the beat,<br>
-color and audio finishing — reviewed before and after every render.
+<br/>
 
 [![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
@@ -16,9 +17,21 @@ color and audio finishing — reviewed before and after every render.
 
 </div>
 
----
+<p align="center">
+<a href="#-why-its-different"><img src="https://img.shields.io/badge/Why%20it%27s%20different-6D28D9?style=for-the-badge" alt="Why it&#x27;s different" /></a>
+<a href="#-quick-start"><img src="https://img.shields.io/badge/Quick%20start-5B21B6?style=for-the-badge" alt="Quick start" /></a>
+<a href="#️-what-it-does"><img src="https://img.shields.io/badge/What%20it%20does-4F46E5?style=for-the-badge" alt="What it does" /></a>
+<a href="#️-tools-65-tools"><img src="https://img.shields.io/badge/Tools%20%2865%20tools%29-4338CA?style=for-the-badge" alt="Tools (65 tools)" /></a>
+<a href="#-roles-and-skills"><img src="https://img.shields.io/badge/Roles%20and%20skills-2563EB?style=for-the-badge" alt="Roles and skills" /></a>
+<a href="#-ask-it-like-an-editor"><img src="https://img.shields.io/badge/Ask%20it%20like%20an%20editor-0284C7?style=for-the-badge" alt="Ask it like an editor" /></a>
+<a href="#️-architecture"><img src="https://img.shields.io/badge/Architecture-0EA5E9?style=for-the-badge" alt="Architecture" /></a>
+<a href="#-verification"><img src="https://img.shields.io/badge/Verification-0891B2?style=for-the-badge" alt="Verification" /></a>
+</p>
 
-## ✨ Why it's different
+<p align="center"><img src="assets/readme/divider.svg" alt="" width="80%" /></p>
+
+<a id="-why-its-different"></a>
+<p align="center"><img src="assets/readme/sections/en-01.svg" alt="01 · Why it&#x27;s different" width="100%" /></p>
 
 | | |
 |---|---|
@@ -29,7 +42,8 @@ color and audio finishing — reviewed before and after every render.
 | 🛡️ **Safe by default** | Works on copies, previews with `dry_run=true`, saves before rendering, never deletes media or projects. |
 | 🧩 **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
 
-## 🚀 Quick start
+<a id="-quick-start"></a>
+<p align="center"><img src="assets/readme/sections/en-02.svg" alt="02 · Quick start" width="100%" /></p>
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -57,7 +71,8 @@ python scripts/install-mcp.py --remove       # undo (each edited file is backed 
 Inside this folder, `python scripts/sync.py` writes the project configs from one launch definition
 (`config/mcp.servers.json`). Paths, manual imports and troubleshooting: [client setup](docs/clients.md).
 
-## 🎞️ What it does
+<a id="️-what-it-does"></a>
+<p align="center"><img src="assets/readme/sections/en-03.svg" alt="03 · What it does" width="100%" /></p>
 
 - **Editorial** — motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
   local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke), text overlays, delivery.
@@ -82,7 +97,8 @@ Inside this folder, `python scripts/sync.py` writes the project configs from one
 > Polish guidance (motivated reframes, audio bridges, camera-aware iPhone/Sony/DJI color) lives in the skills as agent
 > instructions — not as extra automatic effects. There is no dedicated native transition-insertion tool yet.
 
-## 🛠️ Tools (65 tools)
+<a id="️-tools-65-tools"></a>
+<p align="center"><img src="assets/readme/sections/en-04.svg" alt="04 · Tools (65 tools)" width="100%" /></p>
 
 | Job | Tools |
 |---|---|
@@ -113,7 +129,8 @@ Inside this folder, `python scripts/sync.py` writes the project configs from one
 - `repair_bridge_connection` (Windows) only retires an orphaned bridge helper whose identity, port and dead parent were verified.
 </details>
 
-## 👥 Roles and skills
+<a id="-roles-and-skills"></a>
+<p align="center"><img src="assets/readme/sections/en-05.svg" alt="05 · Roles and skills" width="100%" /></p>
 
 | Role (`.agents/agents/`) | Job |
 |---|---|
@@ -124,7 +141,8 @@ Inside this folder, `python scripts/sync.py` writes the project configs from one
 **Skills** (`.agents/skills/`): `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` ·
 `horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
 
-## 💬 Ask it like an editor
+<a id="-ask-it-like-an-editor"></a>
+<p align="center"><img src="assets/readme/sections/en-06.svg" alt="06 · Ask it like an editor" width="100%" /></p>
 
 > *"Make a Reels version with movement and nice captions in my brand colour."*
 > *"It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."*
@@ -135,7 +153,8 @@ Inside this folder, `python scripts/sync.py` writes the project configs from one
 
 Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
 
-## 🏗️ Architecture
+<a id="️-architecture"></a>
+<p align="center"><img src="assets/readme/sections/en-07.svg" alt="07 · Architecture" width="100%" /></p>
 
 ```
 mcp/resolve-forge/src/resolve_forge/
@@ -150,7 +169,8 @@ We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities o
 implementation is imported. [Selection, improvements and status](docs/third-party-migration.md) ·
 [Verified API pitfalls](docs/api-behavior.md).
 
-## 🧪 Verification
+<a id="-verification"></a>
+<p align="center"><img src="assets/readme/sections/en-08.svg" alt="08 · Verification" width="100%" /></p>
 
 ```sh
 cd mcp/resolve-forge
@@ -168,3 +188,7 @@ CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `g
 [Clients](docs/clients.md) · [Editing playbook](docs/editing-playbook.md) · [Migration status](docs/third-party-migration.md)
 
 </div>
+
+<br/>
+
+<img src="assets/readme/footer-en.svg" alt="davinci-resolve-mcp" width="100%" />
