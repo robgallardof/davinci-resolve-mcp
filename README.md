@@ -71,6 +71,22 @@ python scripts/install-mcp.py --remove       # undo (each edited file is backed 
 Inside this folder, `python scripts/sync.py` writes the project configs from one launch definition
 (`config/mcp.servers.json`). Paths, manual imports and troubleshooting: [client setup](docs/clients.md).
 
+### Docker (optional)
+
+Prefer not to install Python? The image is only the MCP server; Resolve and its bridge keep running on your machine,
+and the container reaches the bridge through `host.docker.internal` (Linux: `--network host`). Media is mounted at
+`/media` and `FORGE_PATH_MAP` translates it to the host path Resolve uses.
+
+```bash
+docker build -t resolve-forge:local .
+export RESOLVE_FORGE_MCP_TOKEN="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+export FORGE_MEDIA='C:/Users/me/Movies'
+export RESOLVE_FORGE_PORT=8767
+docker compose up -d --build --wait   # HTTP; see the Linux override in docs/docker.md
+```
+
+stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
+
 <a id="️-what-it-does"></a>
 <p align="center"><img src="assets/readme/sections/en-03.svg" alt="03 · What it does" width="100%" /></p>
 
@@ -177,6 +193,7 @@ cd mcp/resolve-forge
 uv run pytest -q          # offline: Free/bridge, Studio and Resolve 19 fakes, real stdio, OS simulation
 uv run pytest -m live     # Resolve open + bridge running: end-to-end render with pixel comparison
 uv run resolve-forge-doctor
+python ../../scripts/test_docker.py   # optional image against a real bridge listener (no Resolve needed)
 ```
 
 CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `git config core.hooksPath .githooks`

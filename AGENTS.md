@@ -65,4 +65,7 @@ Claude Desktop): `python scripts/install-mcp.py --with-skills`. The server also 
   mention it in the matching skill and log progress in the status section of `docs/third-party-migration.md`.
 - Own implementations only: do not copy competitors' servers or modules. Keep domain → services → tools and isolated transports.
   Provenance and improvements log: `docs/third-party-migration.md`.
+- Docker (optional): `Dockerfile` + `compose.yaml`; the container is only the MCP and reaches the host bridge through
+  `FORGE_BRIDGE_HOST`, translating media paths with `FORGE_PATH_MAP` (`bridge/path_map.py`). Real test against a bridge
+  listener: `python scripts/test_docker.py`. Details: [docs/docker.md](docs/docker.md).
 - Commits: `git config core.hooksPath .githooks` once per clone; the `commit-msg` hook strips AI co-author trailers.

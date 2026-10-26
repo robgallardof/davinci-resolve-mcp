@@ -68,6 +68,22 @@ python scripts/install-mcp.py --with-skills  # Claude Code, Codex, Antigravity, 
 python scripts/install-mcp.py --remove       # deshacer (cada archivo editado se respalda como .bak)
 ```
 
+### Docker (opcional)
+
+¿Prefieres no instalar Python? La imagen es solo el servidor MCP; Resolve y su bridge siguen en tu PC y el contenedor
+llega al bridge por `host.docker.internal` (Linux: `--network host`). Los medios se montan en `/media` y
+`FORGE_PATH_MAP` los traduce a la ruta que usa Resolve.
+
+```bash
+docker build -t resolve-forge:local .
+export RESOLVE_FORGE_MCP_TOKEN="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+export FORGE_MEDIA='C:/Users/yo/Movies'
+export RESOLVE_FORGE_PORT=8767
+docker compose up -d --build --wait   # HTTP; Linux usa el override de docs/docker.md
+```
+
+Configuración stdio para tu cliente, variables y límites: [docs/docker.md](docs/docker.md) (en inglés).
+
 <a id="️-qué-hace"></a>
 <p align="center"><img src="assets/readme/sections/es-03.svg" alt="03 · Qué hace" width="100%" /></p>
 
@@ -171,6 +187,7 @@ cd mcp/resolve-forge
 uv run pytest -q          # sin Resolve
 uv run pytest -m live     # con Resolve abierto y el bridge corriendo
 uv run resolve-forge-doctor
+python ../../scripts/test_docker.py   # imagen opcional contra un bridge real (sin Resolve)
 ```
 
 <div align="center">

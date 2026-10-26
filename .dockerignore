@@ -1,0 +1,8 @@
+# Allowlist: only the MCP code enters the build context (no media, renders or logs).
+**
+!mcp/resolve-forge/pyproject.toml
+!mcp/resolve-forge/uv.lock
+!mcp/resolve-forge/src/
+!mcp/resolve-forge/src/**
+mcp/resolve-forge/src/**/__pycache__
+mcp/resolve-forge/src/**/logs

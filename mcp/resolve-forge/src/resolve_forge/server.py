@@ -1,10 +1,11 @@
-"""Composition root: build the session, register tools, serve over stdio."""
+"""Composition root: build the session, register tools, serve over stdio (default) or token-guarded HTTP."""
 
 from __future__ import annotations
 
 import importlib
 import logging
 import os
+import sys
 import re
 from pathlib import Path
 
@@ -60,7 +61,23 @@ def build() -> FastMCP:
     return mcp
 
 
-def main() -> None:
+TOKEN_ENV = "RESOLVE_FORGE_MCP_TOKEN"
+
+
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    from . import http_transport
+
+    parser = argparse.ArgumentParser(prog="resolve-forge", description="resolve-forge MCP server")
+    http_transport.add_arguments(parser)
+    args = parser.parse_args(argv)
+    if args.http:  # fail fast on a bad token/address, before loading native modules
+        try:
+            http_transport.read_token(TOKEN_ENV)
+            http_transport.parse_listen(args.listen)
+        except http_transport.HttpConfigError as error:
+            sys.exit(f"resolve-forge: {error}")
     logging.basicConfig(level=os.environ.get("FORGE_LOG", "WARNING"))
     # Import native-heavy modules BEFORE stdio starts: on Windows, loading the
     # numpy/opencv/Pillow/PyAV DLLs while another thread blocks reading the stdin
@@ -72,7 +89,10 @@ def main() -> None:
             importlib.import_module(module)
         except ImportError:
             pass
-    build().run()
+    if args.http:
+        http_transport.serve(build(), args.listen, args.allow_host, TOKEN_ENV)
+    else:
+        build().run()
 
 
 if __name__ == "__main__":

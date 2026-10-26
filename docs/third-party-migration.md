@@ -129,7 +129,13 @@ the leftovers in resolve_forge/api/ stay local and ignored by Git; they are not 
 
 ## Status for the next agent (Claude, Codex…)
 
-Read this before continuing. Last update: 2026-10-04. Reply to the user in Spanish (their language).
+Read this before continuing. Last update: 2026-10-26. Reply to the user in Spanish (their language).
+
+Docker checkpoint: optional stdio/HTTP image and Compose, token/Host/Origin controls,
+host bridge configuration, media path translation and a Linux host-network override
+are implemented. Native suite: 693 passed, 13 live tests deselected. Real Docker
+stdio and HTTP calls reached a real signed bridge listener backed by the Resolve
+simulation; live Resolve from Docker remains NOT EXECUTED. See [docker.md](docker.md).
 
 ### Done
 - Forge of our own (65 tools), own bridge, no third-party code or servers; 677 tests without Resolve passing.

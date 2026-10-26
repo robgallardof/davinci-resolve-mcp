@@ -30,3 +30,11 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: .
         run: sh -n scripts/bootstrap.sh
+
+  docker:
+    name: docker (image against a real bridge listener)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: python3 scripts/test_docker.py

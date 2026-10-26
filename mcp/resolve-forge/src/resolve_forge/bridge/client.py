@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 from ..errors import ForgeError
+from .path_map import PathMap
 from .resolve_bridge import MAX_BYTES, PROTOCOL_VERSION, load_config, sign_request
 
 
@@ -16,20 +17,29 @@ def config_path():
                 Path.home() / ".config/davinci-resolve-mcp/bridge.json").expanduser()
 
 
+def bridge_host():
+    """Where to reach the bridge. The bridge itself always binds to the host's loopback; from a
+    Docker Desktop container that loopback is reachable as host.docker.internal."""
+    return os.environ.get("FORGE_BRIDGE_HOST") or "127.0.0.1"
+
+
 class Client:
-    def __init__(self, config, timeout=30):
+    def __init__(self, config, timeout=30, host=None, path_map=None):
         self.config, self.timeout = config, timeout
+        self.host = host or bridge_host()
+        self.paths = path_map if path_map is not None else PathMap.from_env()
         self.lock = threading.RLock()
         self.methods = {}
 
     def request(self, operation, arguments):
         message = {"protocol": PROTOCOL_VERSION, "id": secrets.token_hex(16), "timestamp": int(time.time()),
-                   "nonce": secrets.token_urlsafe(24), "operation": operation, "arguments": arguments}
+                   "nonce": secrets.token_urlsafe(24), "operation": operation,
+                   "arguments": self.paths.to_host(arguments)}
         message["signature"] = sign_request(self.config["token"], message)
         raw = (json.dumps(message, allow_nan=False) + "\n").encode()
         if len(raw) > MAX_BYTES:
             raise ForgeError("Bridge request exceeds capacity.", code="REQUEST_TOO_LARGE")
-        with self.lock, socket.create_connection(("127.0.0.1", self.config["port"]), self.timeout) as connection:
+        with self.lock, socket.create_connection((self.host, self.config["port"]), self.timeout) as connection:
             connection.settimeout(self.timeout)
             connection.sendall(raw)
             response = connection.makefile("rb").readline(MAX_BYTES + 1)
@@ -46,7 +56,7 @@ class Client:
         if reply.get("ok") is not True:
             error = reply.get("error") or {}
             raise ForgeError(error.get("message", "Bridge refused request."), code=error.get("code", "BRIDGE_REFUSED"))
-        return reply.get("result")
+        return self.paths.to_container(reply.get("result"))
 
     def decode(self, value):
         if isinstance(value, dict):
