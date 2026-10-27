@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Editar con Resolve Forge",
+    "locale": "es",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/robgallardof/davinci-resolve-mcp.git",
+      "revision": "b97d58e929530d829eac5b0a0a89bef5ddcf736a"
+    },
+    "output": ".archify/editing-es-20261027-165810/diagram.html"
+  },
+  "lanes": [
+    {
+      "id": "you",
+      "label": "Tú y tu agente"
+    },
+    {
+      "id": "forge",
+      "label": "Resolve Forge con Resolve"
+    }
+  ],
+  "mainPath": [
+    "step0",
+    "step1",
+    "step2",
+    "step3",
+    "step4"
+  ],
+  "nodes": [
+    {
+      "id": "step0",
+      "lane": "you",
+      "col": 0,
+      "type": "external",
+      "label": "Abrir el bridge",
+      "sublabel": "Scripts → resolve_bridge",
+      "sources": [
+        {
+          "path": "mcp/resolve-forge/src/resolve_forge/bridge/resolve_bridge.py"
+        }
+      ]
+    },
+    {
+      "id": "step1",
+      "lane": "you",
+      "col": 1,
+      "type": "frontend",
+      "label": "Pedir como a un editor",
+      "sublabel": "forge_status y la intención",
+      "sources": [
+        {
+          "path": "mcp/resolve-forge/src/resolve_forge/server.py"
+        }
+      ]
+    },
+    {
+      "id": "step2",
+      "lane": "forge",
+      "col": 2,
+      "type": "backend",
+      "label": "Revisar el material",
+      "sublabel": "hojas de contacto",
+      "sources": [
+        {
+          "path": "mcp/resolve-forge/src/resolve_forge/qa_tools.py"
+        }
+      ]
+    },
+    {
+      "id": "step3",
+      "lane": "forge",
+      "col": 3,
+      "type": "backend",
+      "label": "Editar una copia",
+      "sublabel": "movimiento, texto, color",
+      "sources": [
+        {
+          "path": "mcp/resolve-forge/src/resolve_forge/production_tools.py"
+        }
+      ]
+    },
+    {
+      "id": "step4",
+      "lane": "forge",
+      "col": 4,
+      "type": "backend",
+      "label": "Renderizar y revisar",
+      "sublabel": "preflight + revisión",
+      "sources": [
+        {
+          "path": "mcp/resolve-forge/src/resolve_forge/tools.py"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge0",
+      "from": "step0",
+      "to": "step1"
+    },
+    {
+      "id": "edge1",
+      "from": "step1",
+      "to": "step2"
+    },
+    {
+      "id": "edge2",
+      "from": "step2",
+      "to": "step3"
+    },
+    {
+      "id": "edge3",
+      "from": "step3",
+      "to": "step4"
+    }
+  ]
+}

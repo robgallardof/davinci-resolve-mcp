@@ -38,3 +38,4 @@ artifacts/
 # Local opt-in agent connections
 /opencode.json
 /.dsh/
+.archify/

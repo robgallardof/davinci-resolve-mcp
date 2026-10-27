@@ -33,14 +33,11 @@
 <a id="-qué-lo-hace-distinto"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Qué lo hace distinto
 
-| | |
-|---|---|
-| <img src="assets/readme-builder/icons/target.svg" width="20" height="20" alt="" /> **Intención, no botones** | "Haz una versión Reels con movimiento y subtítulos con mi color de marca" → reencuadre, movimiento, subtítulos, exportación. |
-| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Mira antes de cortar** | Hojas de contacto de lo que muestra cada plano (caras, sujeto, textos) antes de armar, y del archivo final después. Los zooms malos se corrigen solos. |
-| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Criterio de productor por género** | En comedia respeta la pausa antes del remate; en música corta en la frase; en entrevistas sigue a quien habla. |
-| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Funciona en Resolve Free** | Bridge propio (HMAC, anti-replay, lista explícita de métodos) para la versión gratuita; scripting directo en Studio. |
-| <img src="assets/readme-builder/icons/shield.svg" width="20" height="20" alt="" /> **Seguro por defecto** | Trabaja en copias, previsualiza con `dry_run=true`, guarda antes de renderizar y nunca borra medios ni proyectos. |
-| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Cualquier agente** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop; el servidor incluye sus skills (`skill://…`) y roles de editor (prompts). |
+<!-- kit:why -->
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/why-es-dark.svg" /><img src="assets/readme-builder/kit/why-es-light.svg" alt="Intención, no botones: Pide una versión Reels con movimiento y subtítulos; reencuadra, anima y exporta. · Mira antes de cortar: Hojas de contacto de cada plano antes de armar y del render después. · Criterio de productor: Comedia respeta la pausa, música corta en la frase, entrevistas siguen a quien habla. · Funciona en Resolve Free: Bridge propio y firmado para la versión gratuita; scripting directo en Studio. · Seguro por defecto: Trabaja en copias, prueba en seco, guarda antes de renderizar, nunca borra medios. · Cualquier agente: Entrega sus skills como recursos y roles de editor como prompts a cualquier cliente MCP." width="100%" /></picture></p>
+<!-- /kit:why -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/diagrams/editing-es-dark.svg" /><img src="assets/readme/diagrams/editing-es-light.svg" alt="Flujo de Resolve Forge: abrir Resolve y el bridge, pedirle al agente, revisa el material, edita una copia, renderiza y revisa el resultado" width="100%" /></picture></p>
 
 <p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
@@ -62,37 +59,6 @@ configs de cada cliente y registra el MCP para tu usuario en cada cliente instal
 2. Pide a tu agente `forge_status`.
 3. Háblale como a un editor. ¿Primera vez? → [Primeros pasos](docs/FIRST-STEPS.md).
 
-### Instalar el MCP para tu usuario (cualquier cliente)
-
-```powershell
-python scripts/install-mcp.py --list         # qué clientes tienes
-python scripts/install-mcp.py --with-skills  # Claude Code, Codex, Antigravity, Cursor, VS Code, Gemini, Windsurf, Claude Desktop
-python scripts/install-mcp.py --remove       # deshacer (cada archivo editado se respalda como .bak)
-```
-
-### Conecta tu agente
-
-Elige OpenCode o DeepSeek Harness para trabajar con este servidor desde tu agente. Primero revisa los cambios; después aplica la configuración.
-
-```sh
-python scripts/install-mcp.py --clients opencode --dry-run
-python scripts/install-mcp.py --clients opencode
-opencode mcp list
-```
-
-<details>
-<summary>Usar DeepSeek Harness en su lugar</summary>
-
-```sh
-python scripts/install-mcp.py --clients deepseek --dry-run
-python scripts/install-mcp.py --clients deepseek
-dsh web --patch .dsh/mcp.cordis.yml
-```
-
-</details>
-
-[Configuración, retirada y versiones comprobadas](scripts/CLIENTS.md).
-
 ### Docker (opcional)
 
 ¿Prefieres no instalar Python? La imagen es solo el servidor MCP; Resolve y su bridge siguen en tu PC y el contenedor
@@ -108,6 +74,45 @@ docker compose up -d --build --wait   # HTTP; Linux usa el override de docs/dock
 ```
 
 Configuración stdio para tu cliente, variables y límites: [docs/docker.md](docs/docker.md) (en inglés).
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
+<a id="-instalación-retirada-y-compatibilidad"></a>
+## <img src="assets/readme-builder/icons/bot.svg" width="24" height="24" alt="" /> Instalación, retirada y compatibilidad
+
+Un solo instalador registra el servidor en todos los clientes que tengas, muestra el cambio antes y lo vuelve a
+quitar. Respalda cada archivo que toca como `.bak` y respeta los demás servidores del archivo.
+
+| Cliente | `--clients` | Archivo que edita | Alcance | Probado |
+|---|---|---|---|---|
+| Claude Code | `claude-code` | `claude mcp --scope user` (+ skills y roles en `~/.claude` con `--with-skills`) | usuario | Pruebas del instalador con archivos temporales |
+| Codex | `codex` | `~/.codex/config.toml` | usuario | Pruebas del instalador con archivos temporales |
+| OpenCode 1.x | `opencode` | `opencode.json` | proyecto | Prueba con el host real 1.19.4 (CI en Linux) |
+| DeepSeek Harness | `deepseek` | `.dsh/mcp.cordis.yml` | proyecto | Prueba con el runtime real 0.2.1-rc.2 (CI en Linux) |
+| Gemini CLI | `gemini-cli` | `~/.gemini/settings.json` | usuario | Pruebas del instalador con archivos temporales |
+| Antigravity | `antigravity` | `~/.gemini/antigravity/mcp_config.json` | usuario | Pruebas del instalador con archivos temporales |
+| Cursor | `cursor` | `~/.cursor/mcp.json` | usuario | Pruebas del instalador con archivos temporales |
+| VS Code | `vscode` | `Code/User/mcp.json` | usuario | Pruebas del instalador con archivos temporales |
+| Windsurf | `windsurf` | `~/.codeium/windsurf/mcp_config.json` | usuario | Pruebas del instalador con archivos temporales |
+| Claude Desktop | `claude-desktop` | `Claude/claude_desktop_config.json` | usuario | Pruebas del instalador con archivos temporales |
+
+```powershell
+python scripts/install-mcp.py --list                        # qué clientes tienes
+python scripts/install-mcp.py --dry-run                     # muestra cada cambio, no escribe nada
+python scripts/install-mcp.py --with-skills                 # lo registra para tu usuario en todos, con skills y roles
+python scripts/install-mcp.py --clients opencode,deepseek   # solo algunos clientes
+python scripts/install-mcp.py --remove                      # deshacer (o --clients … --remove)
+dsh web --patch .dsh/mcp.cordis.yml                         # DeepSeek Harness carga el overlay de forma explícita
+```
+
+Dentro de esta carpeta, `python scripts/sync.py` escribe las configs del proyecto desde una sola definición
+(`config/mcp.servers.json`). La inferencia del modelo dentro de cada host necesita su propio login y no forma
+parte de estas pruebas.
+
+<!-- kit:agent-links -->
+<p align="center"><a href="scripts/CLIENTS.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/agent-links-es-01-dark.svg" /><img src="assets/readme-builder/kit/agent-links-es-01-light.svg" alt="Instalación, retirada y versiones probadas" height="44" /></picture></a>&nbsp;
+<a href="docs/clients.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/agent-links-es-02-dark.svg" /><img src="assets/readme-builder/kit/agent-links-es-02-light.svg" alt="Configurar clientes" height="34" /></picture></a></p>
+<!-- /kit:agent-links -->
 
 <p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
@@ -227,12 +232,14 @@ uv run resolve-forge-doctor
 python ../../scripts/test_docker.py   # imagen opcional contra un bridge real (sin Resolve)
 ```
 
-<div align="center">
-
-[Primeros pasos](docs/FIRST-STEPS.md) · [Instalación](docs/install.md) · [Arquitectura](docs/architecture.md) ·
-[Clientes](docs/clients.md) · [Manual de edición](docs/editing-playbook.md) · [Estado de migración](docs/third-party-migration.md)
-
-</div>
+<!-- kit:docs -->
+<p align="center"><a href="docs/FIRST-STEPS.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-01-dark.svg" /><img src="assets/readme-builder/kit/docs-es-01-light.svg" alt="Primeros pasos" height="44" /></picture></a>&nbsp;
+<a href="docs/install.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-02-dark.svg" /><img src="assets/readme-builder/kit/docs-es-02-light.svg" alt="Instalación" height="34" /></picture></a>&nbsp;
+<a href="docs/architecture.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-03-dark.svg" /><img src="assets/readme-builder/kit/docs-es-03-light.svg" alt="Arquitectura" height="34" /></picture></a>&nbsp;
+<a href="docs/clients.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-04-dark.svg" /><img src="assets/readme-builder/kit/docs-es-04-light.svg" alt="Clientes" height="34" /></picture></a>&nbsp;
+<a href="docs/editing-playbook.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-05-dark.svg" /><img src="assets/readme-builder/kit/docs-es-05-light.svg" alt="Manual de edición" height="34" /></picture></a>&nbsp;
+<a href="docs/third-party-migration.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-06-dark.svg" /><img src="assets/readme-builder/kit/docs-es-06-light.svg" alt="Estado de migración" height="34" /></picture></a></p>
+<!-- /kit:docs -->
 
 <br/>
 

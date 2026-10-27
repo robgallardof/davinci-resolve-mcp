@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "theme": "nebula",
+  "assets": "assets/readme-builder/kit",
+  "documents": {"README.md": "en", "README.es.md": "es"},
+  "blocks": [
+    {"id": "why", "type": "bento", "columns": 3, "cells": [
+      {"icon": "target", "kicker": {"en": "Intent", "es": "Intención"}, "title": {"en": "Intent, not buttons", "es": "Intención, no botones"},
+       "text": {"en": "Ask for a Reels version with motion and captions; it reframes, animates and exports.", "es": "Pide una versión Reels con movimiento y subtítulos; reencuadra, anima y exporta."}},
+      {"icon": "search", "kicker": {"en": "Review", "es": "Revisión"}, "title": {"en": "Looks before it cuts", "es": "Mira antes de cortar"},
+       "text": {"en": "Contact sheets of every shot before building and of the render after.", "es": "Hojas de contacto de cada plano antes de armar y del render después."}},
+      {"icon": "palette", "kicker": {"en": "Genre", "es": "Género"}, "title": {"en": "Producer judgement", "es": "Criterio de productor"},
+       "text": {"en": "Comedy keeps the pause, music cuts on the phrase, interviews follow the speaker.", "es": "Comedia respeta la pausa, música corta en la frase, entrevistas siguen a quien habla."}},
+      {"icon": "lock", "kicker": "Free", "title": {"en": "Works on Resolve Free", "es": "Funciona en Resolve Free"},
+       "text": {"en": "Its own signed bridge for the Free edition; direct scripting on Studio.", "es": "Bridge propio y firmado para la versión gratuita; scripting directo en Studio."}},
+      {"icon": "shield", "kicker": {"en": "Safety", "es": "Seguridad"}, "title": {"en": "Safe by default", "es": "Seguro por defecto"},
+       "text": {"en": "Works on copies, dry runs first, saves before render, never deletes media.", "es": "Trabaja en copias, prueba en seco, guarda antes de renderizar, nunca borra medios."}},
+      {"icon": "bot", "kicker": "MCP", "title": {"en": "Any agent", "es": "Cualquier agente"},
+       "text": {"en": "Ships its skills as resources and editor roles as prompts to any MCP client.", "es": "Entrega sus skills como recursos y roles de editor como prompts a cualquier cliente MCP."}}
+    ]},
+    {"id": "agent-links", "type": "buttons", "items": [
+      {"label": {"en": "Setup, removal and tested versions", "es": "Instalación, retirada y versiones probadas"}, "href": "scripts/CLIENTS.md", "icon": "check", "variant": "primary", "trailing": true},
+      {"label": {"en": "Client setup", "es": "Configurar clientes"}, "href": "docs/clients.md", "icon": "settings", "small": true}
+    ]},
+    {"id": "docs", "type": "buttons", "items": [
+      {"label": {"en": "First steps", "es": "Primeros pasos"}, "href": "docs/FIRST-STEPS.md", "icon": "rocket", "variant": "primary"},
+      {"label": {"en": "Install", "es": "Instalación"}, "href": "docs/install.md", "icon": "download", "small": true},
+      {"label": {"en": "Architecture", "es": "Arquitectura"}, "href": "docs/architecture.md", "icon": "layers", "small": true},
+      {"label": {"en": "Clients", "es": "Clientes"}, "href": "docs/clients.md", "icon": "bot", "small": true},
+      {"label": {"en": "Editing playbook", "es": "Manual de edición"}, "href": "docs/editing-playbook.md", "icon": "book", "small": true},
+      {"label": {"en": "Migration status", "es": "Estado de migración"}, "href": "docs/third-party-migration.md", "icon": "check", "small": true}
+    ]}
+  ]
+}
