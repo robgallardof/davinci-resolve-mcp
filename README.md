@@ -20,14 +20,14 @@
 </div>
 
 <p align="center">
-<a href="#-why-its-different"><img src="https://img.shields.io/badge/Why%20it%27s%20different-6D28D9?style=for-the-badge" alt="Why it&#x27;s different" /></a>
-<a href="#-quick-start"><img src="https://img.shields.io/badge/Quick%20start-5B21B6?style=for-the-badge" alt="Quick start" /></a>
-<a href="#-what-it-does"><img src="https://img.shields.io/badge/What%20it%20does-4F46E5?style=for-the-badge" alt="What it does" /></a>
-<a href="#-tools-65-tools"><img src="https://img.shields.io/badge/Tools%20%2865%20tools%29-4338CA?style=for-the-badge" alt="Tools (65 tools)" /></a>
-<a href="#-roles-and-skills"><img src="https://img.shields.io/badge/Roles%20and%20skills-2563EB?style=for-the-badge" alt="Roles and skills" /></a>
-<a href="#-ask-it-like-an-editor"><img src="https://img.shields.io/badge/Ask%20it%20like%20an%20editor-0284C7?style=for-the-badge" alt="Ask it like an editor" /></a>
-<a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-0EA5E9?style=for-the-badge" alt="Architecture" /></a>
-<a href="#-verification"><img src="https://img.shields.io/badge/Verification-0891B2?style=for-the-badge" alt="Verification" /></a>
+<a href="#-why-its-different"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-why-it-s-different-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-why-it-s-different-outline-sm-light.svg" alt="Why it&#x27;s different" height="34" /></picture></a>
+<a href="#-quick-start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-quick-start-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-quick-start-outline-sm-light.svg" alt="Quick start" height="34" /></picture></a>
+<a href="#-what-it-does"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-what-it-does-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-what-it-does-outline-sm-light.svg" alt="What it does" height="34" /></picture></a>
+<a href="#-tools-65-tools"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-tools-65-tools-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-tools-65-tools-outline-sm-light.svg" alt="Tools (65 tools)" height="34" /></picture></a>
+<a href="#-roles-and-skills"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-roles-and-skills-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-roles-and-skills-outline-sm-light.svg" alt="Roles and skills" height="34" /></picture></a>
+<a href="#-ask-it-like-an-editor"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-ask-it-like-an-editor-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-ask-it-like-an-editor-outline-sm-light.svg" alt="Ask it like an editor" height="34" /></picture></a>
+<a href="#-architecture"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-architecture-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-architecture-outline-sm-light.svg" alt="Architecture" height="34" /></picture></a>
+<a href="#-verification"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-verification-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-verification-outline-sm-light.svg" alt="Verification" height="34" /></picture></a>
 </p>
 
 <a id="-why-its-different"></a>
@@ -41,6 +41,8 @@
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Works on Resolve Free** | Our own bridge (HMAC, anti-replay, explicit method list) for the Free edition; direct scripting on Studio. |
 | <img src="assets/readme-builder/icons/shield.svg" width="20" height="20" alt="" /> **Safe by default** | Works on copies, previews with `dry_run=true`, saves before rendering, never deletes media or projects. |
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-quick-start"></a>
 ## <img src="assets/readme-builder/icons/rocket.svg" width="24" height="24" alt="" /> Quick start
@@ -110,6 +112,8 @@ docker compose up -d --build --wait   # HTTP; see the Linux override in docs/doc
 
 stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-what-it-does"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> What it does
 
@@ -136,6 +140,8 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 > Polish guidance (motivated reframes, audio bridges, camera-aware iPhone/Sony/DJI color) lives in the skills as agent
 > instructions — not as extra automatic effects. There is no dedicated native transition-insertion tool yet.
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-ask-it-like-an-editor"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Ask it like an editor
 
@@ -148,6 +154,8 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 
 Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-roles-and-skills"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Roles and skills
 
@@ -159,6 +167,8 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 
 **Skills** (`.agents/skills/`): `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` ·
 `horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-tools-65-tools"></a>
 ## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Tools (65 tools)
@@ -192,6 +202,8 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 - `repair_bridge_connection` (Windows) only retires an orphaned bridge helper whose identity, port and dead parent were verified.
 </details>
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-architecture"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Architecture
 
@@ -207,6 +219,8 @@ mcp/resolve-forge/src/resolve_forge/
 We studied the public DaVinci Resolve MCPs and rebuilt the useful capabilities our own way — no competing
 implementation is imported. [Selection, improvements and status](docs/third-party-migration.md) ·
 [Verified API pitfalls](docs/api-behavior.md).
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-verification"></a>
 ## <img src="assets/readme-builder/icons/shield.svg" width="24" height="24" alt="" /> Verification
@@ -231,7 +245,7 @@ CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `g
 
 <br/>
 
-<p align="center"><a href="#top">Back to top</a></p>
+<p align="center"><a href="#top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-back-to-top-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-back-to-top-outline-sm-light.svg" alt="Back to top" height="34" /></picture></a></p>
 
 <!-- readme-builder:signature:start -->
 <p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-en-dark.svg" /><img src="assets/readme/brand/signature-en-light.svg" alt="Resolve Forge / Roberto Gallardo" width="100%" /></picture></a></p>

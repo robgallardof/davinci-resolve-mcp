@@ -20,14 +20,14 @@
 </div>
 
 <p align="center">
-<a href="#-qué-lo-hace-distinto"><img src="https://img.shields.io/badge/Qu%C3%A9%20lo%20hace%20distinto-6D28D9?style=for-the-badge" alt="Qué lo hace distinto" /></a>
-<a href="#-inicio-rápido"><img src="https://img.shields.io/badge/Inicio%20r%C3%A1pido-5B21B6?style=for-the-badge" alt="Inicio rápido" /></a>
-<a href="#-qué-hace"><img src="https://img.shields.io/badge/Qu%C3%A9%20hace-4F46E5?style=for-the-badge" alt="Qué hace" /></a>
-<a href="#-herramientas-65"><img src="https://img.shields.io/badge/Herramientas%20%2865%29-4338CA?style=for-the-badge" alt="Herramientas (65)" /></a>
-<a href="#-roles-y-skills"><img src="https://img.shields.io/badge/Roles%20y%20skills-2563EB?style=for-the-badge" alt="Roles y skills" /></a>
-<a href="#-pídelo-como-a-un-editor"><img src="https://img.shields.io/badge/P%C3%ADdelo%20como%20a%20un%20editor-0284C7?style=for-the-badge" alt="Pídelo como a un editor" /></a>
-<a href="#-arquitectura"><img src="https://img.shields.io/badge/Arquitectura-0EA5E9?style=for-the-badge" alt="Arquitectura" /></a>
-<a href="#-verificación"><img src="https://img.shields.io/badge/Verificaci%C3%B3n-0891B2?style=for-the-badge" alt="Verificación" /></a>
+<a href="#-qué-lo-hace-distinto"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-que-lo-hace-distinto-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-que-lo-hace-distinto-outline-sm-light.svg" alt="Qué lo hace distinto" height="34" /></picture></a>
+<a href="#-inicio-rápido"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-inicio-rapido-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-inicio-rapido-outline-sm-light.svg" alt="Inicio rápido" height="34" /></picture></a>
+<a href="#-qué-hace"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-que-hace-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-que-hace-outline-sm-light.svg" alt="Qué hace" height="34" /></picture></a>
+<a href="#-herramientas-65"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-herramientas-65-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-herramientas-65-outline-sm-light.svg" alt="Herramientas (65)" height="34" /></picture></a>
+<a href="#-roles-y-skills"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-roles-y-skills-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-roles-y-skills-outline-sm-light.svg" alt="Roles y skills" height="34" /></picture></a>
+<a href="#-pídelo-como-a-un-editor"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-pidelo-como-a-un-editor-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-pidelo-como-a-un-editor-outline-sm-light.svg" alt="Pídelo como a un editor" height="34" /></picture></a>
+<a href="#-arquitectura"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-arquitectura-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-arquitectura-outline-sm-light.svg" alt="Arquitectura" height="34" /></picture></a>
+<a href="#-verificación"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-verificacion-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-verificacion-outline-sm-light.svg" alt="Verificación" height="34" /></picture></a>
 </p>
 
 <a id="-qué-lo-hace-distinto"></a>
@@ -41,6 +41,8 @@
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Funciona en Resolve Free** | Bridge propio (HMAC, anti-replay, lista explícita de métodos) para la versión gratuita; scripting directo en Studio. |
 | <img src="assets/readme-builder/icons/shield.svg" width="20" height="20" alt="" /> **Seguro por defecto** | Trabaja en copias, previsualiza con `dry_run=true`, guarda antes de renderizar y nunca borra medios ni proyectos. |
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Cualquier agente** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop; el servidor incluye sus skills (`skill://…`) y roles de editor (prompts). |
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-inicio-rápido"></a>
 ## <img src="assets/readme-builder/icons/rocket.svg" width="24" height="24" alt="" /> Inicio rápido
@@ -107,6 +109,8 @@ docker compose up -d --build --wait   # HTTP; Linux usa el override de docs/dock
 
 Configuración stdio para tu cliente, variables y límites: [docs/docker.md](docs/docker.md) (en inglés).
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-qué-hace"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Qué hace
 
@@ -130,6 +134,8 @@ Configuración stdio para tu cliente, variables y límites: [docs/docker.md](doc
 
 La lista completa de las **65 herramientas** está en el [README en inglés](README.md#-tools-65-tools).
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-pídelo-como-a-un-editor"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Pídelo como a un editor
 
@@ -139,6 +145,8 @@ La lista completa de las **65 herramientas** está en el [README en inglés](REA
 > *"Combina la entrevista con estas fotos como en esta referencia."*
 
 Combínalo con [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): renderiza aquí, programa allá.
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-roles-y-skills"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Roles y skills
@@ -152,6 +160,8 @@ Combínalo con [social-publisher-mcp](https://github.com/robgallardof/social-pub
 **Skills:** `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` · `horizontal-video` ·
 `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`.
 Están en inglés para servir a cualquiera; el agente te responde en español.
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-herramientas-65"></a>
 ## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Herramientas (65)
@@ -186,6 +196,8 @@ Están en inglés para servir a cualquiera; el agente te responde en español.
   muerto se verificaron.
 </details>
 
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
+
 <a id="-arquitectura"></a>
 ## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Arquitectura
 
@@ -201,6 +213,8 @@ mcp/resolve-forge/src/resolve_forge/
 Estudiamos los MCP públicos de DaVinci Resolve y reconstruimos a nuestra manera las capacidades útiles — no se importa
 ninguna implementación de la competencia. [Selección, mejoras y estado](docs/third-party-migration.md) ·
 [Problemas de la API verificados](docs/api-behavior.md).
+
+<p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
 <a id="-verificación"></a>
 ## <img src="assets/readme-builder/icons/shield.svg" width="24" height="24" alt="" /> Verificación
@@ -222,7 +236,7 @@ python ../../scripts/test_docker.py   # imagen opcional contra un bridge real (s
 
 <br/>
 
-<p align="center"><a href="#top">Volver al inicio</a></p>
+<p align="center"><a href="#top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-volver-al-inicio-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-volver-al-inicio-outline-sm-light.svg" alt="Volver al inicio" height="34" /></picture></a></p>
 
 <!-- readme-builder:signature:start -->
 <p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-es-dark.svg" /><img src="assets/readme/brand/signature-es-light.svg" alt="Resolve Forge / Roberto Gallardo" width="100%" /></picture></a></p>
