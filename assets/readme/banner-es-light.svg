@@ -12,9 +12,9 @@
       .name { font-size: 54px; font-weight: 800; letter-spacing: -1.2px; }
       .tag { font-size: 22px; font-weight: 500; fill: #475569; }
       .pill { font-size: 13.5px; font-weight: 600; fill: #0f172a; }
-      .f1 { animation: f1 9s ease-in-out infinite; } .f2 { animation: f2 11s ease-in-out infinite; }
-      @keyframes f1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(40px,16px); } }
-      @keyframes f2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px,-12px); } }
+      .f1 { animation: f1 18s ease-in-out -4s infinite; } .f2 { animation: f2 24s ease-in-out -9s infinite; }
+      @keyframes f1 { 0%,100% { opacity: .5; } 50% { opacity: .8; } }
+      @keyframes f2 { 0%,100% { opacity: .4; } 50% { opacity: .7; } }
       @media (prefers-reduced-motion: reduce) { .f1, .f2 { animation: none; } }
     </style>
   </defs>
@@ -26,7 +26,7 @@
   </g>
   <rect x="0.5" y="0.5" width="1199" height="279" rx="24" fill="none" stroke="rgba(15,23,42,0.12)"/>
   <rect x="96" y="56" width="168" height="168" rx="42" fill="url(#brand)"/>
-  <text x="180" y="164" text-anchor="middle" style="font-size:86px">🎬</text>
+  <g transform="translate(138 96) scale(3.5)" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 10 5-10 5L2 8Zm-10 9 10 5 10-5M2 16l10 5 10-5"/></g>
   <text x="328" y="122" class="name" fill="url(#name)">davinci-resolve-mcp</text>
   <text x="330" y="164" class="tag">Edita en DaVinci Resolve hablando con un productor de IA</text>
   <rect x="330" y="200" rx="14" width="176" height="28" fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.12)"/><text x="418" y="218.5" text-anchor="middle" class="pill">65 herramientas MCP</text><rect x="515.9" y="200" rx="14" width="192" height="28" fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.12)"/><text x="612" y="218.5" text-anchor="middle" class="pill">Resolve Free y Studio</text><rect x="718.0" y="200" rx="14" width="249" height="28" fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.12)"/><text x="842" y="218.5" text-anchor="middle" class="pill">Movimiento · Subtítulos · QA</text><rect x="976.8" y="200" rx="14" width="184" height="28" fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.12)"/><text x="1069" y="218.5" text-anchor="middle" class="pill">Cualquier agente MCP</text>

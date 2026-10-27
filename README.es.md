@@ -30,10 +30,8 @@
 <a href="#-verificación"><img src="https://img.shields.io/badge/Verificaci%C3%B3n-0891B2?style=for-the-badge" alt="Verificación" /></a>
 </p>
 
-<p align="center"><img src="assets/readme/divider.svg" alt="" width="80%" /></p>
-
 <a id="-qué-lo-hace-distinto"></a>
-<h2 align="center"><img src="assets/readme/sections/es-01.svg" alt="01 · Qué lo hace distinto" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Qué lo hace distinto
 
 | | |
 |---|---|
@@ -45,7 +43,7 @@
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Cualquier agente** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop; el servidor incluye sus skills (`skill://…`) y roles de editor (prompts). |
 
 <a id="-inicio-rápido"></a>
-<h2 align="center"><img src="assets/readme/sections/es-02.svg" alt="02 · Inicio rápido" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/rocket.svg" width="24" height="24" alt="" /> Inicio rápido
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -110,7 +108,7 @@ docker compose up -d --build --wait   # HTTP; Linux usa el override de docs/dock
 Configuración stdio para tu cliente, variables y límites: [docs/docker.md](docs/docker.md) (en inglés).
 
 <a id="-qué-hace"></a>
-<h2 align="center"><img src="assets/readme/sections/es-03.svg" alt="03 · Qué hace" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Qué hace
 
 - **Edición**: movimiento para gente hablando a cámara, versiones verticales/horizontales, mejores momentos,
   transcripción local, subtítulos animados con diseño (Creator / Studio / Editorial / Impact, karaoke), textos y entrega.
@@ -133,7 +131,7 @@ Configuración stdio para tu cliente, variables y límites: [docs/docker.md](doc
 La lista completa de las **65 herramientas** está en el [README en inglés](README.md#-tools-65-tools).
 
 <a id="-pídelo-como-a-un-editor"></a>
-<h2 align="center"><img src="assets/readme/sections/es-06.svg" alt="04 · Pídelo como a un editor" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Pídelo como a un editor
 
 > *"Haz una versión Reels con movimiento y subtítulos bonitos con mi color de marca."*
 > *"Es un stand-up: encuentra los remates y arma un TikTok sin cortar las pausas."*
@@ -143,7 +141,7 @@ La lista completa de las **65 herramientas** está en el [README en inglés](REA
 Combínalo con [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): renderiza aquí, programa allá.
 
 <a id="-roles-y-skills"></a>
-<h2 align="center"><img src="assets/readme/sections/es-05.svg" alt="05 · Roles y skills" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Roles y skills
 
 | Rol | Trabajo |
 |---|---|
@@ -156,7 +154,7 @@ Combínalo con [social-publisher-mcp](https://github.com/robgallardof/social-pub
 Están en inglés para servir a cualquiera; el agente te responde en español.
 
 <a id="-herramientas-65"></a>
-<h2 align="center"><img src="assets/readme/sections/es-04.svg" alt="06 · Herramientas (65)" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Herramientas (65)
 
 | Trabajo | Herramientas |
 |---|---|
@@ -189,7 +187,7 @@ Están en inglés para servir a cualquiera; el agente te responde en español.
 </details>
 
 <a id="-arquitectura"></a>
-<h2 align="center"><img src="assets/readme/sections/es-07.svg" alt="07 · Arquitectura" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Arquitectura
 
 ```
 mcp/resolve-forge/src/resolve_forge/
@@ -205,7 +203,7 @@ ninguna implementación de la competencia. [Selección, mejoras y estado](docs/t
 [Problemas de la API verificados](docs/api-behavior.md).
 
 <a id="-verificación"></a>
-<h2 align="center"><img src="assets/readme/sections/es-08.svg" alt="08 · Verificación" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/shield.svg" width="24" height="24" alt="" /> Verificación
 
 ```sh
 cd mcp/resolve-forge
@@ -227,5 +225,5 @@ python ../../scripts/test_docker.py   # imagen opcional contra un bridge real (s
 <p align="center"><a href="#top">Volver al inicio</a></p>
 
 <!-- readme-builder:signature:start -->
-<p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-es-dark.svg" /><img src="assets/readme/brand/signature-es-light.svg" alt="Resolve Forge / Roberto Gallardo" width="100%" /></picture></a></p>
+<p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-es-dark.svg" /><img src="assets/readme/brand/signature-es-light.svg" alt="Resolve Forge / Roberto Gallardo" width="360" /></picture></a></p>
 <!-- readme-builder:signature:end -->

@@ -30,10 +30,8 @@
 <a href="#-verification"><img src="https://img.shields.io/badge/Verification-0891B2?style=for-the-badge" alt="Verification" /></a>
 </p>
 
-<p align="center"><img src="assets/readme/divider.svg" alt="" width="80%" /></p>
-
 <a id="-why-its-different"></a>
-<h2 align="center"><img src="assets/readme/sections/en-01.svg" alt="01 · Why it&#x27;s different" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Why it's different
 
 | | |
 |---|---|
@@ -45,7 +43,7 @@
 | <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
 
 <a id="-quick-start"></a>
-<h2 align="center"><img src="assets/readme/sections/en-02.svg" alt="02 · Quick start" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/rocket.svg" width="24" height="24" alt="" /> Quick start
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -113,7 +111,7 @@ docker compose up -d --build --wait   # HTTP; see the Linux override in docs/doc
 stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 
 <a id="-what-it-does"></a>
-<h2 align="center"><img src="assets/readme/sections/en-03.svg" alt="03 · What it does" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> What it does
 
 - **Editorial** — motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
   local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke), text overlays, delivery.
@@ -139,7 +137,7 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 > instructions — not as extra automatic effects. There is no dedicated native transition-insertion tool yet.
 
 <a id="-ask-it-like-an-editor"></a>
-<h2 align="center"><img src="assets/readme/sections/en-06.svg" alt="04 · Ask it like an editor" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Ask it like an editor
 
 > *"Make a Reels version with movement and nice captions in my brand colour."*
 > *"It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."*
@@ -151,7 +149,7 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
 
 <a id="-roles-and-skills"></a>
-<h2 align="center"><img src="assets/readme/sections/en-05.svg" alt="05 · Roles and skills" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Roles and skills
 
 | Role (`.agents/agents/`) | Job |
 |---|---|
@@ -163,7 +161,7 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 `horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
 
 <a id="-tools-65-tools"></a>
-<h2 align="center"><img src="assets/readme/sections/en-04.svg" alt="06 · Tools (65 tools)" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Tools (65 tools)
 
 | Job | Tools |
 |---|---|
@@ -195,7 +193,7 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 </details>
 
 <a id="-architecture"></a>
-<h2 align="center"><img src="assets/readme/sections/en-07.svg" alt="07 · Architecture" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/layers.svg" width="24" height="24" alt="" /> Architecture
 
 ```
 mcp/resolve-forge/src/resolve_forge/
@@ -211,7 +209,7 @@ implementation is imported. [Selection, improvements and status](docs/third-part
 [Verified API pitfalls](docs/api-behavior.md).
 
 <a id="-verification"></a>
-<h2 align="center"><img src="assets/readme/sections/en-08.svg" alt="08 · Verification" width="100%" /></h2>
+## <img src="assets/readme-builder/icons/shield.svg" width="24" height="24" alt="" /> Verification
 
 ```sh
 cd mcp/resolve-forge
@@ -236,5 +234,5 @@ CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `g
 <p align="center"><a href="#top">Back to top</a></p>
 
 <!-- readme-builder:signature:start -->
-<p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-en-dark.svg" /><img src="assets/readme/brand/signature-en-light.svg" alt="Resolve Forge / Roberto Gallardo" width="100%" /></picture></a></p>
+<p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-en-dark.svg" /><img src="assets/readme/brand/signature-en-light.svg" alt="Resolve Forge / Roberto Gallardo" width="360" /></picture></a></p>
 <!-- readme-builder:signature:end -->
