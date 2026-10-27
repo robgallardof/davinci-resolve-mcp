@@ -6,7 +6,7 @@
     <style>text { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }</style>
   </defs>
   <rect x="4" y="14" width="44" height="44" rx="13" fill="url(#g)"/>
-  <text x="26" y="43" text-anchor="middle" style="font-size:18px;font-weight:800;fill:#ffffff">04</text>
+  <text x="26" y="43" text-anchor="middle" style="font-size:18px;font-weight:800;fill:#ffffff">06</text>
   <text x="64" y="47" style="font-size:28px;font-weight:800;letter-spacing:-0.4px" fill="url(#t)">Tools (65 tools)</text>
   <rect x="346" y="35" width="548" height="2" rx="1" fill="url(#l)"/>
 <!-- readme-builder:motion:start --><style data-readme-builder-motion="1">

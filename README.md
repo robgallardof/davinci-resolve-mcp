@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 <div align="center">
 
 <picture>
@@ -20,30 +22,30 @@
 <p align="center">
 <a href="#-why-its-different"><img src="https://img.shields.io/badge/Why%20it%27s%20different-6D28D9?style=for-the-badge" alt="Why it&#x27;s different" /></a>
 <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick%20start-5B21B6?style=for-the-badge" alt="Quick start" /></a>
-<a href="#️-what-it-does"><img src="https://img.shields.io/badge/What%20it%20does-4F46E5?style=for-the-badge" alt="What it does" /></a>
-<a href="#️-tools-65-tools"><img src="https://img.shields.io/badge/Tools%20%2865%20tools%29-4338CA?style=for-the-badge" alt="Tools (65 tools)" /></a>
+<a href="#-what-it-does"><img src="https://img.shields.io/badge/What%20it%20does-4F46E5?style=for-the-badge" alt="What it does" /></a>
+<a href="#-tools-65-tools"><img src="https://img.shields.io/badge/Tools%20%2865%20tools%29-4338CA?style=for-the-badge" alt="Tools (65 tools)" /></a>
 <a href="#-roles-and-skills"><img src="https://img.shields.io/badge/Roles%20and%20skills-2563EB?style=for-the-badge" alt="Roles and skills" /></a>
 <a href="#-ask-it-like-an-editor"><img src="https://img.shields.io/badge/Ask%20it%20like%20an%20editor-0284C7?style=for-the-badge" alt="Ask it like an editor" /></a>
-<a href="#️-architecture"><img src="https://img.shields.io/badge/Architecture-0EA5E9?style=for-the-badge" alt="Architecture" /></a>
+<a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-0EA5E9?style=for-the-badge" alt="Architecture" /></a>
 <a href="#-verification"><img src="https://img.shields.io/badge/Verification-0891B2?style=for-the-badge" alt="Verification" /></a>
 </p>
 
 <p align="center"><img src="assets/readme/divider.svg" alt="" width="80%" /></p>
 
 <a id="-why-its-different"></a>
-<p align="center"><img src="assets/readme/sections/en-01.svg" alt="01 · Why it&#x27;s different" width="100%" /></p>
+<h2 align="center"><img src="assets/readme/sections/en-01.svg" alt="01 · Why it&#x27;s different" width="100%" /></h2>
 
 | | |
 |---|---|
-| 🎯 **Intent, not buttons** | "Make a Reels version with movement and captions in my brand colour" → reframe, motion, captions, export. |
-| 👀 **It looks before it cuts** | Contact sheets of what each shot really shows (faces, subject, text boxes) before building, and of the rendered file after. Bad zooms are downgraded automatically. |
-| 🎭 **Producer judgement by genre** | Comedy keeps the pause before the punchline; music cuts on the phrase; interviews follow whoever speaks. |
-| 🆓 **Works on Resolve Free** | Our own bridge (HMAC, anti-replay, explicit method list) for the Free edition; direct scripting on Studio. |
-| 🛡️ **Safe by default** | Works on copies, previews with `dry_run=true`, saves before rendering, never deletes media or projects. |
-| 🧩 **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
+| <img src="assets/readme-builder/icons/target.svg" width="20" height="20" alt="" /> **Intent, not buttons** | "Make a Reels version with movement and captions in my brand colour" → reframe, motion, captions, export. |
+| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **It looks before it cuts** | Contact sheets of what each shot really shows (faces, subject, text boxes) before building, and of the rendered file after. Bad zooms are downgraded automatically. |
+| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Producer judgement by genre** | Comedy keeps the pause before the punchline; music cuts on the phrase; interviews follow whoever speaks. |
+| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Works on Resolve Free** | Our own bridge (HMAC, anti-replay, explicit method list) for the Free edition; direct scripting on Studio. |
+| <img src="assets/readme-builder/icons/shield.svg" width="20" height="20" alt="" /> **Safe by default** | Works on copies, previews with `dry_run=true`, saves before rendering, never deletes media or projects. |
+| <img src="assets/readme-builder/icons/spark.svg" width="20" height="20" alt="" /> **Any agent** | Claude Code, Codex, Antigravity, Cursor, Gemini CLI, VS Code, Windsurf, Claude Desktop — the server also ships its skills (`skill://…`) and editor roles (prompts). |
 
 <a id="-quick-start"></a>
-<p align="center"><img src="assets/readme/sections/en-02.svg" alt="02 · Quick start" width="100%" /></p>
+<h2 align="center"><img src="assets/readme/sections/en-02.svg" alt="02 · Quick start" width="100%" /></h2>
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -71,6 +73,29 @@ python scripts/install-mcp.py --remove       # undo (each edited file is backed 
 Inside this folder, `python scripts/sync.py` writes the project configs from one launch definition
 (`config/mcp.servers.json`). Paths, manual imports and troubleshooting: [client setup](docs/clients.md).
 
+### Connect your agent
+
+Use this server from OpenCode or DeepSeek Harness. Preview the configuration first, then apply it.
+
+```sh
+python scripts/install-mcp.py --clients opencode --dry-run
+python scripts/install-mcp.py --clients opencode
+opencode mcp list
+```
+
+<details>
+<summary>Use DeepSeek Harness instead</summary>
+
+```sh
+python scripts/install-mcp.py --clients deepseek --dry-run
+python scripts/install-mcp.py --clients deepseek
+dsh web --patch .dsh/mcp.cordis.yml
+```
+
+</details>
+
+[Configuration, removal and tested versions](scripts/CLIENTS.md).
+
 ### Docker (optional)
 
 Prefer not to install Python? The image is only the MCP server; Resolve and its bridge keep running on your machine,
@@ -87,8 +112,8 @@ docker compose up -d --build --wait   # HTTP; see the Linux override in docs/doc
 
 stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 
-<a id="️-what-it-does"></a>
-<p align="center"><img src="assets/readme/sections/en-03.svg" alt="03 · What it does" width="100%" /></p>
+<a id="-what-it-does"></a>
+<h2 align="center"><img src="assets/readme/sections/en-03.svg" alt="03 · What it does" width="100%" /></h2>
 
 - **Editorial** — motion for talking heads, vertical/horizontal platform versions, highlights, source-range assembly,
   local transcription, designed animated captions (Creator / Studio / Editorial / Impact, karaoke), text overlays, delivery.
@@ -113,8 +138,32 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 > Polish guidance (motivated reframes, audio bridges, camera-aware iPhone/Sony/DJI color) lives in the skills as agent
 > instructions — not as extra automatic effects. There is no dedicated native transition-insertion tool yet.
 
-<a id="️-tools-65-tools"></a>
-<p align="center"><img src="assets/readme/sections/en-04.svg" alt="04 · Tools (65 tools)" width="100%" /></p>
+<a id="-ask-it-like-an-editor"></a>
+<h2 align="center"><img src="assets/readme/sections/en-06.svg" alt="04 · Ask it like an editor" width="100%" /></h2>
+
+> *"Make a Reels version with movement and nice captions in my brand colour."*
+> *"It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."*
+> *"Music video for my electronic track — cuts on the beat, faster on the drop, exact lyrics."*
+> *"Two people in a horizontal podcast → a Reel that follows whoever is speaking."*
+> *"Interview on top, photo below, like this reference."*
+> *"Background music under the podcast voice and a whoosh at each topic change."*
+
+Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
+
+<a id="-roles-and-skills"></a>
+<h2 align="center"><img src="assets/readme/sections/en-05.svg" alt="05 · Roles and skills" width="100%" /></h2>
+
+| Role (`.agents/agents/`) | Job |
+|---|---|
+| `video-director` | Producer: brief, references, delegation, serial execution, final QA |
+| `vertical-editor` / `horizontal-editor` | End-to-end editors for 9:16–4:5 and 16:9 |
+| `composition-editor`, `audio-editor`, `colorist`, `titles-editor`, `qa-editor` | Specialists that analyse and propose to the producer |
+
+**Skills** (`.agents/skills/`): `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` ·
+`horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
+
+<a id="-tools-65-tools"></a>
+<h2 align="center"><img src="assets/readme/sections/en-04.svg" alt="06 · Tools (65 tools)" width="100%" /></h2>
 
 | Job | Tools |
 |---|---|
@@ -145,32 +194,8 @@ stdio client config, variables and limits: [docs/docker.md](docs/docker.md).
 - `repair_bridge_connection` (Windows) only retires an orphaned bridge helper whose identity, port and dead parent were verified.
 </details>
 
-<a id="-roles-and-skills"></a>
-<p align="center"><img src="assets/readme/sections/en-05.svg" alt="05 · Roles and skills" width="100%" /></p>
-
-| Role (`.agents/agents/`) | Job |
-|---|---|
-| `video-director` | Producer: brief, references, delegation, serial execution, final QA |
-| `vertical-editor` / `horizontal-editor` | End-to-end editors for 9:16–4:5 and 16:9 |
-| `composition-editor`, `audio-editor`, `colorist`, `titles-editor`, `qa-editor` | Specialists that analyse and propose to the producer |
-
-**Skills** (`.agents/skills/`): `davinci-resolve-mcp` · `editorial-direction` · `entertainment-pacing` · `vertical-video` ·
-`horizontal-video` · `dynamic-zoom-talking-head` · `captions-and-titles` · `color-audio-finishing` · `video-qa` · `resolve-delivery`
-
-<a id="-ask-it-like-an-editor"></a>
-<p align="center"><img src="assets/readme/sections/en-06.svg" alt="06 · Ask it like an editor" width="100%" /></p>
-
-> *"Make a Reels version with movement and nice captions in my brand colour."*
-> *"It's stand-up: find the punchlines and build a TikTok without cutting the pauses or the laughs."*
-> *"Music video for my electronic track — cuts on the beat, faster on the drop, exact lyrics."*
-> *"Two people in a horizontal podcast → a Reel that follows whoever is speaking."*
-> *"Interview on top, photo below, like this reference."*
-> *"Background music under the podcast voice and a whoosh at each topic change."*
-
-Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publisher-mcp): render here, schedule there.
-
-<a id="️-architecture"></a>
-<p align="center"><img src="assets/readme/sections/en-07.svg" alt="07 · Architecture" width="100%" /></p>
+<a id="-architecture"></a>
+<h2 align="center"><img src="assets/readme/sections/en-07.svg" alt="07 · Architecture" width="100%" /></h2>
 
 ```
 mcp/resolve-forge/src/resolve_forge/
@@ -186,7 +211,7 @@ implementation is imported. [Selection, improvements and status](docs/third-part
 [Verified API pitfalls](docs/api-behavior.md).
 
 <a id="-verification"></a>
-<p align="center"><img src="assets/readme/sections/en-08.svg" alt="08 · Verification" width="100%" /></p>
+<h2 align="center"><img src="assets/readme/sections/en-08.svg" alt="08 · Verification" width="100%" /></h2>
 
 ```sh
 cd mcp/resolve-forge
@@ -208,44 +233,8 @@ CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `g
 
 <br/>
 
-<img src="assets/readme/footer-en.svg" alt="davinci-resolve-mcp" width="100%" />
+<p align="center"><a href="#top">Back to top</a></p>
 
-## OpenCode and DeepSeek
-
-Project-scoped, opt-in setup (run from this checkout):
-
-```sh
-python scripts/install-mcp.py --clients opencode,deepseek --dry-run
-python scripts/install-mcp.py --clients opencode,deepseek
-opencode mcp list
-dsh web --patch .dsh/mcp.cordis.yml
-# Remove only this workspace's servers:
-python scripts/install-mcp.py --clients opencode,deepseek --remove
-```
-
-OpenCode uses its **1.x** `opencode.json` MCP schema; 2.x configuration is rejected instead of rewritten.
-DeepSeek uses the official **Harness** (`@deepseek-ai/dsh`) MCP plugin through an explicit Cordis overlay;
-JSON output is valid YAML. Other entries survive installation and removal; the first original is retained in `.bak`.
-Malformed configuration is refused. No provider credentials are written. The DeepSeek API alone is not an MCP host;
-using a DeepSeek model in OpenCode uses the same OpenCode connection. Set credentials through the host's own login.
-Harness exposes MCP tools/resources but does not support MCP prompt templates: read role files from `.agents/agents/`.
-
-Installer integration tests run real subprocesses with temporary files (`tests/test_agent_clients.py`).
-Model inference requires separate credentials and is **NOT EXECUTED** by these tests.
-Contracts: [OpenCode MCP](https://opencode.ai/docs/en/mcp-servers),
-[DeepSeek Harness MCP](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/mcp/mcp-client).
-
-Reproduce the real host probe (Node 24.9+; sync/build this server first):
-
-```sh
-npm install --prefix /tmp/agent-hosts --ignore-scripts --no-audit --no-fund opencode-ai@1.19.4 @deepseek-ai/dsh@0.2.1-rc.2
-export AGENT_HOST_MODULES=/tmp/agent-hosts/node_modules
-export OPENCODE_BIN=$AGENT_HOST_MODULES/opencode-linux-x64-baseline/bin/opencode
-python scripts/test_agent_hosts.py
-```
-
-On Windows, use the absolute `opencode-windows-x64/bin/opencode.exe` path and PowerShell environment variables;
-on macOS use `opencode-darwin-arm64/bin/opencode` (or the package matching your CPU).
-The CI job **Agent host integrations** runs the same probe on Linux, with pinned host versions and no API key.
-Local Windows execution: OpenCode **1.19.4**, DeepSeek Harness runtime **0.2.1-rc.2**; discovery and
-read-only MCP execution passed. Paid/live model inference is **NOT EXECUTED**.
+<!-- readme-builder:signature:start -->
+<p align="center"><a href="https://github.com/robgallardof"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/brand/signature-en-dark.svg" /><img src="assets/readme/brand/signature-en-light.svg" alt="Resolve Forge / Roberto Gallardo" width="100%" /></picture></a></p>
+<!-- readme-builder:signature:end -->
