@@ -1,0 +1,23 @@
+name: Agent host integrations
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  hosts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --python 3.12
+        working-directory: mcp/resolve-forge
+      - name: Install isolated, pinned hosts
+        run: |
+          npm install --prefix "$RUNNER_TEMP/agent-hosts" --no-audit --no-fund --ignore-scripts opencode-ai@1.19.4 @deepseek-ai/dsh@0.2.1-rc.2
+          echo "AGENT_HOST_MODULES=$RUNNER_TEMP/agent-hosts/node_modules" >> "$GITHUB_ENV"
+          echo "OPENCODE_BIN=$RUNNER_TEMP/agent-hosts/node_modules/opencode-linux-x64-baseline/bin/opencode" >> "$GITHUB_ENV"
+      - name: Real host integration (no model inference)
+        run: python3 scripts/test_agent_hosts.py

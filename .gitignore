@@ -34,3 +34,7 @@ mcp/resolve-forge/src/resolve_forge/api/
 # personal backups unrelated to this project
 artifacts/
 *.bak
+
+# Local opt-in agent connections
+/opencode.json
+/.dsh/

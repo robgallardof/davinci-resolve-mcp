@@ -10,6 +10,8 @@ any folder (not only inside this workspace). Skills and roles travel inside the 
 Only the workspace's own servers are installed (those launched from inside it); shared ones such as
 @playwright/mcp are left to you so they are never duplicated.
 
+OpenCode and DeepSeek are explicit project-only opt-ins (--clients opencode,deepseek).
+They are excluded from the default all-detected install.
 Every file it edits is backed up first as <file>.bak. Idempotent.
 """
 
@@ -23,6 +25,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_clients import edit_agent
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "resolve-forge"  # current server name; main() sets it per server
@@ -50,6 +55,8 @@ def server() -> dict:
 
 # client -> (config file, style). style: json (mcpServers), vscode (servers + type), toml (codex)
 CLIENTS = {
+    "opencode": (ROOT / "opencode.json", "opencode"),
+    "deepseek": (ROOT / ".dsh" / "mcp.cordis.yml", "deepseek"),
     "claude-desktop": (APPDATA / "Claude" / "claude_desktop_config.json", "json"),
     "codex": (HOME / ".codex" / "config.toml", "toml"),
     "gemini-cli": (HOME / ".gemini" / "settings.json", "json"),
@@ -61,6 +68,8 @@ CLIENTS = {
 
 
 def detected(client: str) -> bool:
+    if client in ("opencode", "deepseek"):
+        return shutil.which("opencode" if client == "opencode" else "dsh") is not None
     if client == "claude-code":
         return shutil.which("claude") is not None
     path, _ = CLIENTS[client]
@@ -161,12 +170,17 @@ def main() -> int:
     global NAME
     root = Path(a.workspace).resolve()
     SERVERS.update(own_servers(root))
+    CLIENTS["opencode"] = (root / "opencode.json", "opencode")
+    CLIENTS["deepseek"] = (root / ".dsh" / "mcp.cordis.yml", "deepseek")
     names = ["claude-code", *CLIENTS]
     if a.list:
         for n in names:
             print(f"{n:15} {'detected' if detected(n) else '-':9} {CLIENTS[n][0] if n in CLIENTS else 'claude mcp --scope user'}")
         return 0
-    chosen = a.clients.split(",") if a.clients else [n for n in names if detected(n)]
+    chosen = a.clients.split(",") if a.clients else [n for n in names if n not in ("opencode", "deepseek") and detected(n)]
+    unknown = [n for n in chosen if n not in names]
+    if unknown:
+        ap.error("unknown clients: " + ", ".join(unknown))
     for NAME in SERVERS:
         print(f"== {NAME}")
         install_all(chosen, a)
@@ -182,11 +196,15 @@ def install_all(chosen: list[str], a) -> None:
         if n == "claude-code":
             result = claude_code(a.remove, a.dry_run)
         elif n not in CLIENTS:
-            result = f"unknown client (use {', '.join(names)})"
+            result = f"unknown client (use {', '.join(['claude-code', *CLIENTS])})"
         else:
             path, style = CLIENTS[n]
             if a.dry_run:
                 result = f"would {'remove from' if a.remove else 'write'} {path}"
+            elif style in ("opencode", "deepseek"):
+                result = edit_agent(path, NAME, server(), style, a.remove)
+                if style == "deepseek" and not a.remove:
+                    result += f'; start with dsh web --patch "{path}"'
             elif style == "toml":
                 result = edit_toml(path, a.remove)
             elif style == "vscode":
