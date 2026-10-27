@@ -69,3 +69,10 @@ Claude Desktop): `python scripts/install-mcp.py --with-skills`. The server also 
   `FORGE_BRIDGE_HOST`, translating media paths with `FORGE_PATH_MAP` (`bridge/path_map.py`). Real test against a bridge
   listener: `python scripts/test_docker.py`. Details: [docs/docker.md](docs/docker.md).
 - Commits: `git config core.hooksPath .githooks` once per clone; the `commit-msg` hook strips AI co-author trailers.
+
+## Commit language
+
+All new Git commit subjects and bodies must be written in English, including merge
+and squash messages. Keep the repository's existing message conventions.
+This applies to all contributors and coding agents, and only to new commits.
+Do not rewrite existing history to translate commit messages.
