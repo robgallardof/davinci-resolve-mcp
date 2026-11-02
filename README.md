@@ -11,7 +11,7 @@
 
 [![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-65%20tools-8A2BE2)
+![MCP](https://img.shields.io/badge/MCP-69%20tools-8A2BE2)
 ![Resolve](https://img.shields.io/badge/DaVinci%20Resolve-Free%20%26%20Studio-233A51)
 ![OS](https://img.shields.io/badge/Windows%20·%20macOS%20·%20Linux-555)
 
@@ -23,7 +23,7 @@
 <a href="#-why-its-different"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-why-it-s-different-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-why-it-s-different-outline-sm-light.svg" alt="Why it&#x27;s different" height="34" /></picture></a>
 <a href="#-quick-start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-quick-start-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-quick-start-outline-sm-light.svg" alt="Quick start" height="34" /></picture></a>
 <a href="#-what-it-does"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-what-it-does-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-what-it-does-outline-sm-light.svg" alt="What it does" height="34" /></picture></a>
-<a href="#-tools-65-tools"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-tools-65-tools-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-tools-65-tools-outline-sm-light.svg" alt="Tools (65 tools)" height="34" /></picture></a>
+<a href="#-tools-69-tools"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-tools-69-tools-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-tools-69-tools-outline-sm-light.svg" alt="Tools (69 tools)" height="34" /></picture></a>
 <a href="#-roles-and-skills"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-roles-and-skills-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-roles-and-skills-outline-sm-light.svg" alt="Roles and skills" height="34" /></picture></a>
 <a href="#-ask-it-like-an-editor"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-ask-it-like-an-editor-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-ask-it-like-an-editor-outline-sm-light.svg" alt="Ask it like an editor" height="34" /></picture></a>
 <a href="#-architecture"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-architecture-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-architecture-outline-sm-light.svg" alt="Architecture" height="34" /></picture></a>
@@ -171,8 +171,8 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 
 <p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
-<a id="-tools-65-tools"></a>
-## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Tools (65 tools)
+<a id="-tools-69-tools"></a>
+## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Tools (69 tools)
 
 | Job | Tools |
 |---|---|
@@ -191,6 +191,14 @@ Pairs with [social-publisher-mcp](https://github.com/robgallardof/social-publish
 | Finishing and pre-render checks | preflight_render, apply_grade_preset, enhance_audio |
 | Connection recovery | repair_bridge_connection |
 | Analysis and native AI | analyse_scenes, native_ai |
+| [Code Mode](docs/code-mode.md): scripts that compose the tools, in a sandbox | search, execute, approve_execution, cancel_execution |
+
+**Code Mode.** For several steps at once, an agent can write JavaScript that composes these tools, in a sandbox with no
+files, network, environment or processes: `search` → `execute` (edits become a plan, nothing changes) → you see the plan →
+`approve_execution` → read back. Edits still land on timeline copies, and nothing is rolled back if a step fails. In
+[replayed benchmarks](docs/code-mode-benchmarks.md) on a fake Resolve, multi-step work used about a third less traffic and a
+long edit took 4 round trips instead of 7; a single read took about 2.5 times the traffic, so simple calls stay direct.
+It has not been run against a real Resolve yet. [How it works and what it does not protect](docs/code-mode.md).
 
 <details>
 <summary>Notes on a few tools</summary>
@@ -214,6 +222,7 @@ mcp/resolve-forge/src/resolve_forge/
   analysis/    signals (faces, motion, audio)          services/  use cases, one per responsibility
   gateway · native_paths · bridge                      connection + our own Free-edition protocol
   tools.py · authoring_tools.py · production_tools.py · qa_tools.py · producer_tools.py · composition_tools.py
+  code_mode_tools.py · sandbox/   Code Mode: scripts in a no-permission Deno process that can only ask for these tools
                thin MCP schemas over one serial executor           server.py  composition root
 ```
 
@@ -242,8 +251,9 @@ CI runs the offline suite on Windows, macOS and Linux on every push. Commits: `g
 <a href="docs/install.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-02-dark.svg" /><img src="assets/readme-builder/kit/docs-en-02-light.svg" alt="Install" height="34" /></picture></a>&nbsp;
 <a href="docs/architecture.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-03-dark.svg" /><img src="assets/readme-builder/kit/docs-en-03-light.svg" alt="Architecture" height="34" /></picture></a>&nbsp;
 <a href="docs/clients.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-04-dark.svg" /><img src="assets/readme-builder/kit/docs-en-04-light.svg" alt="Clients" height="34" /></picture></a>&nbsp;
-<a href="docs/editing-playbook.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-05-dark.svg" /><img src="assets/readme-builder/kit/docs-en-05-light.svg" alt="Editing playbook" height="34" /></picture></a>&nbsp;
-<a href="docs/third-party-migration.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-06-dark.svg" /><img src="assets/readme-builder/kit/docs-en-06-light.svg" alt="Migration status" height="34" /></picture></a></p>
+<a href="docs/code-mode.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-05-dark.svg" /><img src="assets/readme-builder/kit/docs-en-05-light.svg" alt="Code Mode" height="34" /></picture></a>&nbsp;
+<a href="docs/editing-playbook.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-06-dark.svg" /><img src="assets/readme-builder/kit/docs-en-06-light.svg" alt="Editing playbook" height="34" /></picture></a>&nbsp;
+<a href="docs/third-party-migration.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-en-07-dark.svg" /><img src="assets/readme-builder/kit/docs-en-07-light.svg" alt="Migration status" height="34" /></picture></a></p>
 <!-- /kit:docs -->
 
 <br/>

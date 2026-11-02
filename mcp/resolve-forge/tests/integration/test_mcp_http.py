@@ -153,7 +153,7 @@ def test_real_http_official_mcp_client(servidor):
     info, herramientas, resultado = asyncio.run(flujo())
     assert info.serverInfo.name == "resolve-forge"
     assert {"forge_status", "apply_motion", "render_for", "list_styles"} <= herramientas
-    assert len(herramientas) == 65
+    assert len(herramientas) == 69
     assert not resultado.isError
 
 

@@ -1,6 +1,6 @@
 # Migration: our own tools, built from the competitive analysis
 
-Forge implements 65 tools of its own: editorial editing, production by genre, multi-source composition, sound,
+Forge implements 69 tools of its own: editorial editing, production by genre, multi-source composition, sound,
 finishing, project authoring, media, timeline, color, Fusion and QC. It neither imports nor packages code from the MCPs studied.
 
 ## How far along? (2026-10-04)
@@ -38,7 +38,7 @@ new server capabilities, and no live Resolve verification is claimed for this do
 | 9. Docs, skills and roles (English, agent replies in the user's language) | ✅ Done | README (table verified by test), 10 skills, 8 roles |
 | 10. Live re-run of the extended version | ⏳ Pending | `tests/live/`; needs the current Resolve bridge |
 
-In numbers: 65 tools, 677 tests without Resolve passing on 2026-10-04. The live suite has 13 cases. First connected
+In numbers on that date: the 65 original use-case tools, 677 tests without Resolve passing on 2026-10-04. The live suite has 13 cases. First connected
 pass: 10 passed and one SFX failure; after the fix, the isolated SFX test passed, as did the vertical framing/zoom pixel
 test. A second pass hit an orphaned bridge bound to a previous Resolve: not counted as passed. That helper was retired
 after verifying executable, script, port and dead parent.
@@ -129,7 +129,13 @@ the leftovers in resolve_forge/api/ stay local and ignored by Git; they are not 
 
 ## Status for the next agent (Claude, Codex…)
 
-Read this before continuing. Last update: 2026-10-26. Reply to the user in Spanish (their language).
+Read this before continuing. Last update: 2026-11-02. Reply to the user in Spanish (their language).
+
+Code Mode checkpoint (always on, by the user's decision on 2026-11-02): `search`, `execute`, `approve_execution`, `cancel_execution`
+on top of the other tools, 69 in total; Deno is a required dependency and the sandbox runs with all permissions denied. Full suite passes on Windows; the Code Mode suites pass on Linux
+in a container; macOS only through CI. **Live Resolve: NOT EXECUTED** (`uv run pytest -m live tests/live/test_live_code_mode.py`).
+Listed beside the direct tools it adds to the tool list; the measured gain is traffic and round trips on multi-step work, and simple reads are worse. See [code-mode.md](code-mode.md) and
+[code-mode-benchmarks.md](code-mode-benchmarks.md). Direct-tool change: `render_for` now refuses an existing output unless `overwrite=true`.
 
 Docker checkpoint: optional stdio/HTTP image and Compose, token/Host/Origin controls,
 host bridge configuration, media path translation and a Linux host-network override
@@ -138,7 +144,7 @@ stdio and HTTP calls reached a real signed bridge listener backed by the Resolve
 simulation; live Resolve from Docker remains NOT EXECUTED. See [docker.md](docker.md).
 
 ### Done
-- Forge of our own (65 tools), own bridge, no third-party code or servers; 677 tests without Resolve passing.
+- Forge of our own (69 tools), own bridge, no third-party code or servers; 677 tests without Resolve passing.
 - Designed text: `creator`, `studio`, `editorial`, `impact` styles with active word, brand accent, `fade/lift/pop/karaoke`,
   `reduced_motion`, PNG/WebP preview. Legacy `box/outline/yellow/dark` only on request.
 - Production by genre: `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`,
@@ -155,6 +161,8 @@ simulation; live Resolve from Docker remains NOT EXECUTED. See [docker.md](docke
   `test_cross_platform.py` simulates each OS end to end; GitHub Actions runs the suite on all three.
 
 ### Pending (by priority)
+0. **Code Mode with real Resolve and a real agent**: run the live test above, then try it in a real client on a real
+   edit, and compare with the replayed benchmarks.
 1. **Live verification**: `uv run pytest -m live` with Resolve open and the bridge started (Free: Workspace → Scripts →
    resolve_bridge). Karaoke, side framing, the new preset and `enhance_audio` on a real script are still pending.
    Also: `find_story_moments` on real comedy footage, layouts on real multi-person footage and

@@ -14,10 +14,16 @@ DEFAULT_OUTPUT = Path.home() / "Movies" / "resolve-forge"  # inside the Free bri
 
 
 def queue(session: Session, format_key: str, target_dir: str | None = None, *, name: str | None = None,
-          start: bool = True) -> dict:
+          start: bool = True, overwrite: bool = False) -> dict:
     ctx = current(session)
     fmt = formats.get(format_key)
     target_dir = str(target_dir or DEFAULT_OUTPUT)
+    # CustomName must be non-empty or Resolve rejects the whole payload.
+    custom = name or f"{ctx.timeline.GetName()}_{fmt.key}"
+    existing = Path(target_dir) / f"{custom}.{fmt.container}"
+    if existing.exists() and not overwrite:
+        raise ForgeError(f"{existing} already exists.", code=E.RENDER_REFUSED,
+                         hint="Pass a new name to keep both, or overwrite=true to replace it.")
     Path(target_dir).mkdir(parents=True, exist_ok=True)
     p = ctx.project
     from .native import accepted
@@ -30,8 +36,6 @@ def queue(session: Session, format_key: str, target_dir: str | None = None, *, n
             raise ForgeError(f"Resolve refused {fmt.container}/{fmt.codec} and {fmt.container}/H264.",
                              code=E.RENDER_REFUSED)
 
-    # CustomName must be non-empty or Resolve rejects the whole payload.
-    custom = name or f"{ctx.timeline.GetName()}_{fmt.key}"
     settings = {"SelectAllFrames": True, "TargetDir": str(target_dir), "CustomName": custom,
                 "FormatWidth": fmt.width, "FormatHeight": fmt.height}
     try:

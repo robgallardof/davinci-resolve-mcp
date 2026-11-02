@@ -11,7 +11,7 @@
 
 [![tests](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/robgallardof/davinci-resolve-mcp/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-65%20herramientas-8A2BE2)
+![MCP](https://img.shields.io/badge/MCP-69%20herramientas-8A2BE2)
 ![Resolve](https://img.shields.io/badge/DaVinci%20Resolve-Free%20y%20Studio-233A51)
 ![SO](https://img.shields.io/badge/Windows%20·%20macOS%20·%20Linux-555)
 
@@ -23,7 +23,7 @@
 <a href="#-qué-lo-hace-distinto"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-que-lo-hace-distinto-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-que-lo-hace-distinto-outline-sm-light.svg" alt="Qué lo hace distinto" height="34" /></picture></a>
 <a href="#-inicio-rápido"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-inicio-rapido-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-inicio-rapido-outline-sm-light.svg" alt="Inicio rápido" height="34" /></picture></a>
 <a href="#-qué-hace"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-que-hace-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-que-hace-outline-sm-light.svg" alt="Qué hace" height="34" /></picture></a>
-<a href="#-herramientas-65"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-herramientas-65-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-herramientas-65-outline-sm-light.svg" alt="Herramientas (65)" height="34" /></picture></a>
+<a href="#-herramientas-69"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-herramientas-69-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-herramientas-69-outline-sm-light.svg" alt="Herramientas (69)" height="34" /></picture></a>
 <a href="#-roles-y-skills"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-roles-y-skills-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-roles-y-skills-outline-sm-light.svg" alt="Roles y skills" height="34" /></picture></a>
 <a href="#-pídelo-como-a-un-editor"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-pidelo-como-a-un-editor-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-pidelo-como-a-un-editor-outline-sm-light.svg" alt="Pídelo como a un editor" height="34" /></picture></a>
 <a href="#-arquitectura"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/btn-arquitectura-outline-sm-dark.svg" /><img src="assets/readme-builder/kit/btn-arquitectura-outline-sm-light.svg" alt="Arquitectura" height="34" /></picture></a>
@@ -137,7 +137,7 @@ parte de estas pruebas.
 - **Autoría**: proyectos y respaldos, bins y metadatos, ediciones versionadas, marcadores, intercambio, CDL/LUT,
   stills, Fusion, silencios/escenas/sincronía/loudness, IA nativa y QC.
 
-La lista completa de las **65 herramientas** está en el [README en inglés](README.md#-tools-65-tools).
+La lista completa de las **69 herramientas** está en el [README en inglés](README.md#-tools-69-tools).
 
 <p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
@@ -168,8 +168,8 @@ Están en inglés para servir a cualquiera; el agente te responde en español.
 
 <p align="center"><img src="assets/readme-builder/kit/wave.svg" alt="" width="100%" /></p>
 
-<a id="-herramientas-65"></a>
-## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Herramientas (65)
+<a id="-herramientas-69"></a>
+## <img src="assets/readme-builder/icons/terminal.svg" width="24" height="24" alt="" /> Herramientas (69)
 
 | Trabajo | Herramientas |
 |---|---|
@@ -188,6 +188,15 @@ Están en inglés para servir a cualquiera; el agente te responde en español.
 | Acabado y revisiones antes del render | preflight_render, apply_grade_preset, enhance_audio |
 | Recuperar la conexión | repair_bridge_connection |
 | Análisis e IA nativa | analyse_scenes, native_ai |
+| [Code Mode](docs/code-mode.md): scripts que combinan las herramientas, en un sandbox | search, execute, approve_execution, cancel_execution |
+
+**Code Mode.** Para varios pasos a la vez, un agente puede escribir JavaScript que combina estas herramientas, en un sandbox
+sin archivos, red, entorno ni procesos: `search` → `execute` (las ediciones se vuelven un plan, nada cambia) → ves el plan →
+`approve_execution` → comprobación. Las ediciones siguen yendo a copias del timeline y nada se deshace si falla un paso. En
+[benchmarks reproducidos](docs/code-mode-benchmarks.md) sobre un Resolve simulado, el trabajo de varios pasos usó cerca de un
+tercio menos de tráfico y una edición larga bajó de 7 a 4 rondas; una sola lectura costó unas 2,5 veces más tráfico, así que
+las llamadas simples siguen siendo directas. Aún no se ha ejecutado contra un Resolve real.
+[Cómo funciona y qué no protege](docs/code-mode.md).
 
 <details>
 <summary>Notas sobre algunas herramientas</summary>
@@ -212,6 +221,7 @@ mcp/resolve-forge/src/resolve_forge/
   analysis/    señales (caras, movimiento, audio)       services/  casos de uso, uno por responsabilidad
   gateway · native_paths · bridge                      conexión + nuestro protocolo propio para la edición Free
   tools.py · authoring_tools.py · production_tools.py · qa_tools.py · producer_tools.py · composition_tools.py
+  code_mode_tools.py · sandbox/   Code Mode: scripts en un proceso Deno sin permisos que solo puede pedir estas herramientas
                esquemas MCP delgados sobre un solo ejecutor en serie       server.py  raíz de composición
 ```
 
@@ -237,8 +247,9 @@ python ../../scripts/test_docker.py   # imagen opcional contra un bridge real (s
 <a href="docs/install.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-02-dark.svg" /><img src="assets/readme-builder/kit/docs-es-02-light.svg" alt="Instalación" height="34" /></picture></a>&nbsp;
 <a href="docs/architecture.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-03-dark.svg" /><img src="assets/readme-builder/kit/docs-es-03-light.svg" alt="Arquitectura" height="34" /></picture></a>&nbsp;
 <a href="docs/clients.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-04-dark.svg" /><img src="assets/readme-builder/kit/docs-es-04-light.svg" alt="Clientes" height="34" /></picture></a>&nbsp;
-<a href="docs/editing-playbook.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-05-dark.svg" /><img src="assets/readme-builder/kit/docs-es-05-light.svg" alt="Manual de edición" height="34" /></picture></a>&nbsp;
-<a href="docs/third-party-migration.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-06-dark.svg" /><img src="assets/readme-builder/kit/docs-es-06-light.svg" alt="Estado de migración" height="34" /></picture></a></p>
+<a href="docs/code-mode.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-05-dark.svg" /><img src="assets/readme-builder/kit/docs-es-05-light.svg" alt="Code Mode" height="34" /></picture></a>&nbsp;
+<a href="docs/editing-playbook.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-06-dark.svg" /><img src="assets/readme-builder/kit/docs-es-06-light.svg" alt="Manual de edición" height="34" /></picture></a>&nbsp;
+<a href="docs/third-party-migration.md"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme-builder/kit/docs-es-07-dark.svg" /><img src="assets/readme-builder/kit/docs-es-07-light.svg" alt="Estado de migración" height="34" /></picture></a></p>
 <!-- /kit:docs -->
 
 <br/>

@@ -9,13 +9,14 @@ There is a single server with intent-based editing and API tools:
 
 | Server | What for |
 |---|---|
-| `resolve-forge` — intent (of 65 tools + 4 resources) | Intent: `apply_motion` (zooms and movement), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
+| `resolve-forge` — intent (of 69 tools + 4 resources) | Intent: `apply_motion` (zooms and movement), `make_platform_version` (vertical ↔ horizontal), `transcribe_timeline`, `add_captions`, `add_text_overlay`, `find_highlights`, `assemble_timeline`, `render_for`, `list_formats`, `forge_status` |
 | `resolve-forge` — pacing and focus | `plan_energized_edit` (detects action, faces and dead time; plan of short shots with alternating framing) → `energize_timeline` (one clip per shot with its zoom/focus). Skill `entertainment-pacing` |
 | `resolve-forge` — self-review | `review_shots` (before building: real crops, faces, text, color) and `review_video` (after rendering). Looking at the sheet is mandatory |
 | `resolve-forge` — several people | `plan_speaker_layout` / `build_speaker_layout`: frames whoever speaks and splits the screen when several speak (only if the user wants it) |
 | `resolve-forge` — multi-source composition | `plan_composition` / `build_composition`: mosaic or hero + support from different videos/photos with one explicit audio master; `plan_production`: work orders for the specialists |
 | `resolve-forge` — production | Direction by genre and music (skill `editorial-direction`): `plan_edit`, `find_story_moments`, `analyse_music`, `plan_beat_cuts`, `assemble_montage`, `create_music_visualizer`, `align_text` (exact lyrics/script), `place_sound_effects` (motivated SFX), `add_music_bed` (music under the voice with ducking); text design: `list_text_styles`, `preview_text_style` |
 | `resolve-forge` — authoring | Projects/backups, bins/media, markers/QC, tracks/versions, CDL/LUT, Fusion DAG, audio/scenes/loudness, capabilities |
+| `resolve-forge` — Code Mode | `search` → `execute` (JavaScript composing the tools; edits become a plan) → show the plan to the user → `approve_execution` → read back. `cancel_execution` stops a run. Worth it for several steps; for one simple call prefer a direct tool. Never approve a plan the user has not seen. See `docs/code-mode.md` |
 
 ## Startup (always)
 

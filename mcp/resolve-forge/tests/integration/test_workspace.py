@@ -128,10 +128,13 @@ def test_docs_list_every_registered_tool_and_the_real_count():
     import asyncio
 
     from mcp.server.fastmcp import FastMCP
-    from resolve_forge import tools
+    from resolve_forge import server, tools
     from resolve_forge.gateway import Session
     mcp = FastMCP("docs")
-    tools.register(mcp, Session([]))
+    session = Session([])
+    tools.register(mcp, session)
+    server.add_code_mode(mcp, session)
+    tools.set_write_gate(None)
     names = {tool.name for tool in asyncio.run(mcp.list_tools())}
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert not {name for name in names if name not in readme}, "README tool table is missing tools"

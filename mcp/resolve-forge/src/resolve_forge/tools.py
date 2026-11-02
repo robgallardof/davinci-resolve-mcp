@@ -28,11 +28,20 @@ from .services.subject import resolve_anchor
 # thread, and the stdio event loop stays free (a blocked loop on Windows holds
 # finished responses until the next message arrives).
 _RESOLVE_THREAD = ThreadPoolExecutor(max_workers=1, thread_name_prefix="resolve")
+_write_gate: Callable[[str, dict], dict | None] | None = None  # set by Code Mode
+
+
+def set_write_gate(gate: Callable[[str, dict], dict | None] | None) -> None:
+    """A check every tool passes first: lets Code Mode hold direct writes while it applies approved edits."""
+    global _write_gate
+    _write_gate = gate
 
 
 def _safe(fn: Callable[..., dict]) -> Callable[..., Any]:
     @functools.wraps(fn)
     async def wrapper(*args: Any, **kwargs: Any) -> dict:
+        if _write_gate is not None and (refusal := _write_gate(fn.__name__, kwargs)):
+            return refusal
         try:
             result = await asyncio.get_running_loop().run_in_executor(
                 _RESOLVE_THREAD, functools.partial(fn, *args, **kwargs))
@@ -163,13 +172,15 @@ def register(mcp: FastMCP, session: Session) -> None:
 
     @mcp.tool()
     @_safe
-    def render_for(format: str, target_dir: str | None = None, name: str | None = None, start: bool = True) -> dict:
+    def render_for(format: str, target_dir: str | None = None, name: str | None = None, start: bool = True,
+                   overwrite: bool = False) -> dict:
         """Queue a render of the current timeline with the platform's container, codec and resolution.
 
         target_dir defaults to ~/Movies/resolve-forge — on the Free edition the bridge only writes
         inside its allowed output roots (~/Movies by default), so keep renders under it.
+        An existing output file is refused unless overwrite=true: use a new name to keep both.
         """
-        return render_service.queue(session, format, target_dir, name=name, start=start)
+        return render_service.queue(session, format, target_dir, name=name, start=start, overwrite=overwrite)
 
     @mcp.tool()
     @_safe
@@ -269,4 +280,8 @@ def register(mcp: FastMCP, session: Session) -> None:
         """
         return assembly_service.assemble(session, source, cuts, name=name, format=format)
 
+    register_resources(mcp, session)
+
+
+def register_resources(mcp: FastMCP, session: Session) -> None:
     resources.register(mcp, session, run_in_resolve_thread)

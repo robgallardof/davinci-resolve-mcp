@@ -41,6 +41,9 @@ def run() -> list[Check]:
         Check("Face detection (optional)", faces.available(), "opencv" if faces.available() else "no opencv",
               "uv sync --extra vision"),
     ]
+    from .services.code_mode_sandbox import find_deno  # no process starts: this only looks for the binary
+    deno = find_deno()
+    checks.append(Check("Code Mode sandbox", deno is not None, deno or "no Deno runtime", "uv sync (Deno is a dependency)"))
     running = resolve_process_running()
     checks.append(Check("Resolve running", running, process_name() if running else "not running",
                         "Open DaVinci Resolve and a project."))

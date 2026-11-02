@@ -50,7 +50,8 @@ Claude Desktop): `python scripts/install-mcp.py --with-skills`. The server also 
 ## Developing resolve-forge
 
 - Layers: `domain/` (pure, no Resolve) → `services/` (use cases + backends) → thin MCP modules (`tools.py`,
-  `authoring_tools.py`, `production_tools.py`, `qa_tools.py`, `producer_tools.py`, `composition_tools.py`) → `server.py`.
+  `authoring_tools.py`, `production_tools.py`, `qa_tools.py`, `producer_tools.py`, `composition_tools.py`,
+  `code_mode_tools.py`) → `server.py`.
   `gateway.py` is the only module that knows how to connect to Resolve.
 - New motion style: register a function with `@style(...)` in `domain/styles.py`. Nothing else to touch.
 - New animation backend: implement `apply`/`clear` in `services/appliers.py` and register it in `APPLIERS`.
@@ -61,8 +62,10 @@ Claude Desktop): `python scripts/install-mcp.py --with-skills`. The server also 
 - Platform specs live in `domain/formats.py`; `references/platforms.md` is generated from there.
 - Before "discovering" odd API behaviour, look it up in `docs/api-behavior.md`.
 - After editing `config/` or `.agents/`, run `python scripts/sync.py`.
-- When adding a tool: add it to the README table and update the counts (`test_workspace` checks them),
+- When adding a tool: add it to the README table and update the counts (`test_workspace` checks them), classify its
+  risk in `domain/code_mode.py` (unclassified tools are denied in the sandbox and a test fails),
   mention it in the matching skill and log progress in the status section of `docs/third-party-migration.md`.
+- Code Mode (sandboxed JavaScript composing the same tools): [docs/code-mode.md](docs/code-mode.md).
 - Own implementations only: do not copy competitors' servers or modules. Keep domain → services → tools and isolated transports.
   Provenance and improvements log: `docs/third-party-migration.md`.
 - Docker (optional): `Dockerfile` + `compose.yaml`; the container is only the MCP and reaches the host bridge through

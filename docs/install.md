@@ -1,6 +1,6 @@
 # Install
 
-A single server: resolve-forge, with 65 tools of its own and the integrated Free bridge.
+A single server: resolve-forge, with 69 tools of its own and the integrated Free bridge.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap.ps1   # Windows
@@ -11,6 +11,8 @@ sh scripts/bootstrap.sh                                                     # ma
 ```
 
 The bootstrap installs Python 3.12, the Forge environment with vision/speech, the bundled bridge, runs the tests and syncs the agent configs. It does not download external MCPs.
+
+[Code Mode](code-mode.md) lets agents compose operations in sandboxed JavaScript. Its runtime, Deno (about 94 MB on Windows), installs as a regular dependency. PyPI has no Deno wheel for Windows on ARM.
 
 Open Resolve with a project. Free 21.0.x: Workspace → Scripts → resolve_bridge. Studio: enable External scripting using = Local. Then ask for `forge_status`.
 

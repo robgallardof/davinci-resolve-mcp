@@ -14,6 +14,7 @@ services:
     environment:
       RESOLVE_FORGE_MCP_TOKEN: ${RESOLVE_FORGE_MCP_TOKEN:?Set RESOLVE_FORGE_MCP_TOKEN to a random token of at least 32 characters}
       FORGE_BRIDGE_HOST: ${FORGE_BRIDGE_HOST:-host.docker.internal}
+      RESOLVE_FORGE_CODE_MODE_TRACE: /media/.resolve-forge/code-mode-traces.jsonl
       FORGE_PATH_MAP: /media=${FORGE_MEDIA:?Set FORGE_MEDIA to the host folder Resolve imports and renders in (e.g. C:/Users/me/Movies)}
     extra_hosts:
       - "host.docker.internal:host-gateway"

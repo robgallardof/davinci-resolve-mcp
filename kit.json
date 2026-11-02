@@ -27,6 +27,7 @@
       {"label": {"en": "Install", "es": "Instalación"}, "href": "docs/install.md", "icon": "download", "small": true},
       {"label": {"en": "Architecture", "es": "Arquitectura"}, "href": "docs/architecture.md", "icon": "layers", "small": true},
       {"label": {"en": "Clients", "es": "Clientes"}, "href": "docs/clients.md", "icon": "bot", "small": true},
+      {"label": "Code Mode", "href": "docs/code-mode.md", "icon": "terminal", "small": true},
       {"label": {"en": "Editing playbook", "es": "Manual de edición"}, "href": "docs/editing-playbook.md", "icon": "book", "small": true},
       {"label": {"en": "Migration status", "es": "Estado de migración"}, "href": "docs/third-party-migration.md", "icon": "check", "small": true}
     ]}

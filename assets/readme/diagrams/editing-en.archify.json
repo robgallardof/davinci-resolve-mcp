@@ -74,7 +74,7 @@
       "col": 3,
       "type": "backend",
       "label": "Edit a copy",
-      "sublabel": "motion, captions, color",
+      "sublabel": "tools or Code Mode",
       "sources": [
         {
           "path": "mcp/resolve-forge/src/resolve_forge/production_tools.py"

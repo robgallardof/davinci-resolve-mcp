@@ -932,15 +932,15 @@ been cleared for every commercial, promotional, or redistributive use.</metadata
           <text x="356" y="260.2" class="t-muted" font-size="8" text-anchor="middle">contact sheets</text>
         </g>
 
-        <g id="node-step3" data-node-id="step3" data-node-label="Edit a copy" tabindex="0" role="button" aria-label="Focus Edit a copy, motion, captions, color, Resolve Forge with Resolve" aria-pressed="false" data-node-kind="backend" data-node-sublabel="motion, captions, color" data-node-context="Resolve Forge with Resolve">
-          <title>Edit a copy · motion, captions, color · Resolve Forge with Resolve</title>
+        <g id="node-step3" data-node-id="step3" data-node-label="Edit a copy" tabindex="0" role="button" aria-label="Focus Edit a copy, tools or Code Mode, Resolve Forge with Resolve" aria-pressed="false" data-node-kind="backend" data-node-sublabel="tools or Code Mode" data-node-context="Resolve Forge with Resolve">
+          <title>Edit a copy · tools or Code Mode · Resolve Forge with Resolve</title>
           <rect x="450" y="217" width="92" height="52" rx="8" class="c-mask"/>
           <rect x="450" y="217" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step: 3; --flow-node-name: archify-relay-node-3;" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(456 223) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-node-label="" x="496" y="251.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Edit a copy</text>
-          <text x="496" y="263.7" class="t-muted" font-size="6" text-anchor="middle">motion, captions, color</text>
+          <text x="496" y="263.7" class="t-muted" font-size="6" text-anchor="middle">tools or Code Mode</text>
         </g>
 
         <g id="node-step4" data-node-id="step4" data-node-label="Render and check" tabindex="0" role="button" aria-label="Focus Render and check, preflight + review, Resolve Forge with Resolve" aria-pressed="false" data-node-kind="backend" data-node-sublabel="preflight + review" data-node-context="Resolve Forge with Resolve">

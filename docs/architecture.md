@@ -2,6 +2,7 @@
 
 ```
 tools.py ──► services/ ──► domain/          (pure: no Resolve, 100 % testable)
+code_mode_tools.py ──► sandbox (Deno, no permissions) ──► asks the host ──► the same tools
  (thin MCP)    │  motion_service   easing · keyframes · motion · styles · framing · formats
                │  format_service
                │  render_service
@@ -65,6 +66,17 @@ domain/story_moments, beat_cuts   punchline/reaction/question/stress candidates;
 services/story_service, music_service   transcript + source energy; rhythm analysis, beat cuts, visualizer
 ```
 
+### Code Mode
+
+```
+code_mode_tools.py             search, execute, approve_execution, cancel_execution
+domain/code_mode               the policy table, decide(), search ranking, overall status. Pure
+services/code_mode_service     plan/apply runs, approval, stale state, audit trace; calls tools through FastMCP's dispatch
+services/code_mode_sandbox     the Deno process, its flags and the message channel
+services/code_mode_limits      job object (Windows), rlimits and memory watchdog (Linux, macOS)
+sandbox/runner.js              runs inside the sandbox. Holds no security control: the host re-checks every message
+```
+
 Selection and provenance details: [third-party-migration.md](third-party-migration.md).
 
 Why PNG sequences for text? The API cannot trim titles or stills (a still always lasts 5 s and
@@ -78,8 +90,9 @@ The frames are hardlinks to a single PNG, so they take almost no disk space.
 - **LSP / ISP**: `Applier` is a minimal `Protocol` (`apply`, `clear`). Any backend that satisfies it is interchangeable.
 - **DIP**: services depend on `Session`, not the native module. Tests inject fakes.
 - **DRY**: a single definition of each easing curve, from which Resolve interpolation, Fusion handles and baked samples derive. A single MCP config source (`config/mcp.servers.json`). A single copy of skills and agents (`.agents/`, with links).
-- **KISS**: 65 use-case tools (editorial intent + authoring of project, media, color, audio,
-  Fusion and QC). No 1:1 API wrappers and no arbitrary code execution.
+- **KISS**: 69 use-case tools (editorial intent + authoring of project, media, color, audio,
+  Fusion, QC and Code Mode). No 1:1 API wrappers, and no code execution with access to Resolve or the machine.
+  [Code Mode](code-mode.md) runs scripts in a process with every permission denied; they can only ask the host to call these same tools.
 
 ## Motion model
 
