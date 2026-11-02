@@ -64,7 +64,9 @@ def test_karaoke_encodes_word_progress_and_accessible_fallback(forge):
     words = [dict(text="Muy", start=0, end=1), dict(text="bien", start=1.3, end=2)]
     result = forge("add_captions", style="creator", animation="karaoke", words=words)
     assert result["ok"] and result["animation"] == "karaoke"
-    sequence = sorted(next(Path(result["files"]).glob("cap*")).glob("*.png"))
+    # captions.srt also matches cap*: only the frame folder will do, whatever order the disk lists them in.
+    folder = next(path for path in Path(result["files"]).glob("cap*") if path.is_dir())
+    sequence = sorted(folder.glob("*.png"))
     with Image.open(sequence[3]) as early, Image.open(sequence[24]) as late:
         assert ImageChops.difference(early.convert("RGB"), late.convert("RGB")).getbbox() is not None
         assert early.getchannel("A").getbbox() == late.getchannel("A").getbbox()

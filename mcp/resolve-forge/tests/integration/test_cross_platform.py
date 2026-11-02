@@ -43,6 +43,8 @@ class Machine:
         self.platform, self.home, self.resolve_open = platform, root / "home", True
         self.home.mkdir()
         monkeypatch.setattr(sys, "platform", platform)
+        # The Deno lookup asks the real interpreter, which cannot answer for a faked OS.
+        monkeypatch.setattr("resolve_forge.services.code_mode_sandbox.find_deno", lambda: "deno")
         for name in ("HOME", "USERPROFILE"):
             monkeypatch.setenv(name, str(self.home))
         monkeypatch.setenv("APPDATA", str(self.home / "AppData/Roaming"))
