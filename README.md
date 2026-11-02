@@ -198,7 +198,7 @@ files, network, environment or processes: `search` → `execute` (edits become a
 `approve_execution` → read back. Edits still land on timeline copies, and nothing is rolled back if a step fails. In
 [replayed benchmarks](docs/code-mode-benchmarks.md) on a fake Resolve, multi-step work used about a third less traffic and a
 long edit took 4 round trips instead of 7; a single read took about 2.5 times the traffic, so simple calls stay direct.
-It has not been run against a real Resolve yet. [How it works and what it does not protect](docs/code-mode.md).
+A live test passed on Resolve Free 21.0.4.5 (plan, approve and read back markers on a copy); other edits through it have only run on the fake. [How it works and what it does not protect](docs/code-mode.md).
 
 <details>
 <summary>Notes on a few tools</summary>

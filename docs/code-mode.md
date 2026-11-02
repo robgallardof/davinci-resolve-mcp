@@ -242,6 +242,8 @@ Every run is logged to the trace file with its code, calls and outcome.
 |---|---|
 | Fake Resolve, real tools, real sandbox, real stdio (Windows) | Executed, passing |
 | Same suites on Linux in a container, non-root | Executed, passing |
-| Real Resolve (`uv run pytest -m live tests/live/test_live_code_mode.py`) | **Not executed yet.** Resolve was not running |
-| macOS | **Not executed yet.** CI runs the suites on `macos-latest` |
-| Real agents, real models | **Not executed.** Benchmarks replay fixed scripts |
+| Same suites on macOS, in CI | Executed, passing (fake Resolve) |
+| Real Resolve Free 21.0.4.5 on Windows, through the bridge (`uv run pytest -m live tests/live/test_live_code_mode.py`) | Executed once on 2026-11-02, passing: inspect a timeline, plan and approve markers on a copy, read back exact frames, source unchanged, plan refused on reuse |
+| Other edits on a real Resolve (zoom, captions, media organisation, render) | **Not executed.** Only on the fake |
+| Real Resolve Studio, or on macOS or Linux | **Not executed** |
+| Real agents, real models, a client's approval prompt | **Not executed.** Benchmarks replay fixed scripts; the live run approved by tool call |

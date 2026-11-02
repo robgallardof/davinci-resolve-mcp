@@ -195,7 +195,7 @@ sin archivos, red, entorno ni procesos: `search` → `execute` (las ediciones se
 `approve_execution` → comprobación. Las ediciones siguen yendo a copias del timeline y nada se deshace si falla un paso. En
 [benchmarks reproducidos](docs/code-mode-benchmarks.md) sobre un Resolve simulado, el trabajo de varios pasos usó cerca de un
 tercio menos de tráfico y una edición larga bajó de 7 a 4 rondas; una sola lectura costó unas 2,5 veces más tráfico, así que
-las llamadas simples siguen siendo directas. Aún no se ha ejecutado contra un Resolve real.
+las llamadas simples siguen siendo directas. Un test live pasó en Resolve Free 21.0.4.5 (planificar, aprobar y comprobar marcadores en una copia); las demás ediciones por esta vía solo se han ejecutado sobre el simulado.
 [Cómo funciona y qué no protege](docs/code-mode.md).
 
 <details>

@@ -133,7 +133,8 @@ Read this before continuing. Last update: 2026-11-02. Reply to the user in Spani
 
 Code Mode checkpoint (always on, by the user's decision on 2026-11-02): `search`, `execute`, `approve_execution`, `cancel_execution`
 on top of the other tools, 69 in total; Deno is a required dependency and the sandbox runs with all permissions denied. Full suite passes on Windows; the Code Mode suites pass on Linux
-in a container; macOS only through CI. **Live Resolve: NOT EXECUTED** (`uv run pytest -m live tests/live/test_live_code_mode.py`).
+in a container and macOS through CI. Live: `uv run pytest -m live tests/live/test_live_code_mode.py` passed once on Resolve Free 21.0.4.5
+(markers only: plan, approve, read back on a copy). Other edits through Code Mode, Studio, and real agents: NOT EXECUTED.
 Listed beside the direct tools it adds to the tool list; the measured gain is traffic and round trips on multi-step work, and simple reads are worse. See [code-mode.md](code-mode.md) and
 [code-mode-benchmarks.md](code-mode-benchmarks.md). Direct-tool change: `render_for` now refuses an existing output unless `overwrite=true`.
 
@@ -161,8 +162,8 @@ simulation; live Resolve from Docker remains NOT EXECUTED. See [docker.md](docke
   `test_cross_platform.py` simulates each OS end to end; GitHub Actions runs the suite on all three.
 
 ### Pending (by priority)
-0. **Code Mode with real Resolve and a real agent**: run the live test above, then try it in a real client on a real
-   edit, and compare with the replayed benchmarks.
+0. **Code Mode beyond markers**: extend the live test to zoom, captions, media organisation and render, then try it in a real
+   client on a real edit, and compare with the replayed benchmarks.
 1. **Live verification**: `uv run pytest -m live` with Resolve open and the bridge started (Free: Workspace → Scripts →
    resolve_bridge). Karaoke, side framing, the new preset and `enhance_audio` on a real script are still pending.
    Also: `find_story_moments` on real comedy footage, layouts on real multi-person footage and
